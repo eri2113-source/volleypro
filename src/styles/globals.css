@@ -1,0 +1,424 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 16px;
+  /* Background gradiente suave azul e laranja */
+  --background: #f0f7ff;
+  --foreground: #0f172a;
+  /* Cards com fundo suave colorido */
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  /* Cores principais vibrantes */
+  --primary: #0066ff;
+  --primary-foreground: #ffffff;
+  --secondary: #ff6b35;
+  --secondary-foreground: #ffffff;
+  /* Muted com toque de azul */
+  --muted: #e0f0ff;
+  --muted-foreground: #475569;
+  --accent: #ff6b35;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  /* Bordas mais suaves */
+  --border: #d1e5ff;
+  --input: transparent;
+  --input-background: #f0f7ff;
+  --switch-background: #cbd5e1;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --ring: #0066ff;
+  /* Cores dos charts mais vibrantes */
+  --chart-1: #0066ff;
+  --chart-2: #ff6b35;
+  --chart-3: #10b981;
+  --chart-4: #8b5cf6;
+  --chart-5: #f59e0b;
+  --chart-6: #ec4899;
+  --radius: 0.75rem;
+  /* Sidebar com gradiente sutil */
+  --sidebar: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #0066ff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e0f0ff;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #d1e5ff;
+  --sidebar-ring: #0066ff;
+  
+  /* Cores extras para templates e componentes */
+  --volleyball-blue: #0066ff;
+  --volleyball-orange: #ff6b35;
+  --volleyball-green: #10b981;
+  --volleyball-purple: #8b5cf6;
+  --volleyball-yellow: #f59e0b;
+  --volleyball-pink: #ec4899;
+  --volleyball-cyan: #06b6d4;
+  --volleyball-red: #ef4444;
+  
+  /* Backgrounds coloridos para cards especiais */
+  --card-blue: #eff6ff;
+  --card-orange: #fff7ed;
+  --card-green: #ecfdf5;
+  --card-purple: #faf5ff;
+  --card-yellow: #fefce8;
+  --card-pink: #fdf2f8;
+  --card-cyan: #ecfeff;
+}
+
+.dark {
+  --background: #0a0e1a;
+  --foreground: #f8fafc;
+  --card: #111827;
+  --card-foreground: #f8fafc;
+  --popover: #111827;
+  --popover-foreground: #f8fafc;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #ff6b35;
+  --secondary-foreground: #ffffff;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #ff6b35;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #3b82f6;
+  --font-weight-medium: 500;
+  --font-weight-normal: 400;
+  --chart-1: #3b82f6;
+  --chart-2: #ff6b35;
+  --chart-3: #22c55e;
+  --chart-4: #a855f7;
+  --chart-5: #eab308;
+  --sidebar: #0f172a;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #1e293b;
+  --sidebar-ring: #3b82f6;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Cores extras para templates e componentes */
+  --color-volleyball-blue: var(--volleyball-blue);
+  --color-volleyball-orange: var(--volleyball-orange);
+  --color-volleyball-green: var(--volleyball-green);
+  --color-volleyball-purple: var(--volleyball-purple);
+  --color-volleyball-yellow: var(--volleyball-yellow);
+  --color-volleyball-pink: var(--volleyball-pink);
+  --color-volleyball-cyan: var(--volleyball-cyan);
+  --color-volleyball-red: var(--volleyball-red);
+  
+  /* Backgrounds coloridos */
+  --color-card-blue: var(--card-blue);
+  --color-card-orange: var(--card-orange);
+  --color-card-green: var(--card-green);
+  --color-card-purple: var(--card-purple);
+  --color-card-yellow: var(--card-yellow);
+  --color-card-pink: var(--card-pink);
+  --color-card-cyan: var(--card-cyan);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(0, 102, 255, 0.05) 0%, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(255, 107, 53, 0.05) 0%, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  /* Screen reader only - visualmente escondido mas acessível */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  /* Animações suaves globais */
+  * {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
+  }
+  
+  /* Cards com sombra suave e bordas coloridas */
+  .volleyball-card-blue {
+    @apply bg-card-blue border-volleyball-blue/20;
+  }
+  
+  .volleyball-card-orange {
+    @apply bg-card-orange border-volleyball-orange/20;
+  }
+  
+  .volleyball-card-green {
+    @apply bg-card-green border-volleyball-green/20;
+  }
+  
+  .volleyball-card-purple {
+    @apply bg-card-purple border-volleyball-purple/20;
+  }
+  
+  .volleyball-card-yellow {
+    @apply bg-card-yellow border-volleyball-yellow/20;
+  }
+  
+  .volleyball-card-pink {
+    @apply bg-card-pink border-volleyball-pink/20;
+  }
+  
+  .volleyball-card-cyan {
+    @apply bg-card-cyan border-volleyball-cyan/20;
+  }
+  
+  /* Gradientes para backgrounds */
+  .gradient-blue {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  }
+  
+  .gradient-orange {
+    background: linear-gradient(135deg, #fff7ed 0%, #ffedd5 100%);
+  }
+  
+  .gradient-green {
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  }
+  
+  .gradient-purple {
+    background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%);
+  }
+  
+  .gradient-yellow {
+    background: linear-gradient(135deg, #fefce8 0%, #fef9c3 100%);
+  }
+  
+  .gradient-pink {
+    background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+  }
+  
+  .gradient-cyan {
+    background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+  }
+}
+
+/**
+ * Base typography. This is not applied to elements which have an ancestor with a Tailwind text class.
+ */
+@layer base {
+  :where(:not(:has([class*=" text-"]), :not(:has([class^="text-"])))) {
+    h1 {
+      font-size: var(--text-2xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h2 {
+      font-size: var(--text-xl);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h3 {
+      font-size: var(--text-lg);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    h4 {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    p {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+
+    label {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    button {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-medium);
+      line-height: 1.5;
+    }
+
+    input {
+      font-size: var(--text-base);
+      font-weight: var(--font-weight-normal);
+      line-height: 1.5;
+    }
+  }
+}
+
+html {
+  font-size: var(--font-size);
+}
+
+/* ============= LIVEKIT STYLES ============= */
+
+/* Customizar estilos do LiveKit para combinar com o tema VolleyPro */
+.livekit-room-broadcaster,
+.livekit-room-viewer {
+  aspect-ratio: 16/9;
+  background: black;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+/* Customizar barra de controles */
+.lk-control-bar {
+  background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.7), transparent) !important;
+  padding: 1.5rem !important;
+}
+
+/* Customizar botões do LiveKit */
+.lk-button {
+  background: rgba(255, 255, 255, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+  transition: all 0.2s !important;
+}
+
+.lk-button:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Customizar vídeo do participante */
+.lk-participant-tile {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+/* Customizar nome do participante */
+.lk-participant-name {
+  background: rgba(0, 0, 0, 0.7) !important;
+  backdrop-filter: blur(8px);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.75rem !important;
+}
+
+/* Customizar ícone de microfone mutado */
+.lk-participant-metadata-item {
+  background: rgba(239, 68, 68, 0.9) !important;
+  border-radius: 50%;
+}
+
+/* Customizar grid de vídeos */
+.lk-grid-layout {
+  gap: 0.5rem !important;
+  padding: 0.5rem !important;
+}
+
+/* Customizar chat (se ativado) */
+.lk-chat {
+  background: rgba(0, 0, 0, 0.8) !important;
+  backdrop-filter: blur(12px);
+  border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.lk-chat-message {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-radius: var(--radius-sm);
+  margin-bottom: 0.5rem !important;
+}
+
+/* Customizar botão de tela cheia */
+.lk-focus-toggle {
+  background: rgba(0, 102, 255, 0.9) !important;
+  color: white !important;
+}
+
+.lk-focus-toggle:hover {
+  background: rgba(0, 102, 255, 1) !important;
+}
+
+/* Loading spinner do LiveKit */
+.lk-participant-placeholder {
+  background: linear-gradient(135deg, #0a0e1a 0%, #1e293b 100%) !important;
+}
+
+/* Customizar indicador de conexão */
+.lk-connection-quality {
+  background: rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(4px);
+  border-radius: 50%;
+}
+
+/* Responsividade para mobile */
+@media (max-width: 768px) {
+  .lk-control-bar {
+    padding: 1rem !important;
+  }
+  
+  .lk-button {
+    padding: 0.5rem !important;
+  }
+  
+  .lk-participant-name {
+    font-size: 0.75rem !important;
+  }
+}
