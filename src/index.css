@@ -963,10 +963,6 @@
     margin-block: calc(var(--spacing) * 6);
   }
 
-  .-mt-2 {
-    margin-top: calc(var(--spacing) * -2);
-  }
-
   .-mt-4 {
     margin-top: calc(var(--spacing) * -4);
   }
@@ -1727,10 +1723,6 @@
     cursor: default;
   }
 
-  .cursor-not-allowed {
-    cursor: not-allowed;
-  }
-
   .cursor-pointer {
     cursor: pointer;
   }
@@ -2003,6 +1995,11 @@
 
   .rounded-xs {
     border-radius: var(--radius-xs);
+  }
+
+  .rounded-t-xl {
+    border-top-left-radius: calc(var(--radius)  + 8px);
+    border-top-right-radius: calc(var(--radius)  + 8px);
   }
 
   .border {
@@ -3701,10 +3698,6 @@
 
   .pr-8 {
     padding-right: calc(var(--spacing) * 8);
-  }
-
-  .pb-0 {
-    padding-bottom: calc(var(--spacing) * 0);
   }
 
   .pb-2 {
@@ -5800,18 +5793,6 @@
   }
 
   @media (width >= 40rem) {
-    .sm\:h-auto {
-      height: auto;
-    }
-  }
-
-  @media (width >= 40rem) {
-    .sm\:max-h-\[90vh\] {
-      max-height: 90vh;
-    }
-  }
-
-  @media (width >= 40rem) {
     .sm\:w-auto {
       width: auto;
     }
@@ -6746,6 +6727,11 @@
       color: var(--accent-foreground);
     }
   }
+
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
 }
 
 :root {
@@ -6950,6 +6936,19 @@ html {
 
   .lk-participant-name {
     font-size: .75rem !important;
+  }
+}
+
+@media (width <= 640px) {
+  [role="dialog"], [role="dialog"] [data-slot="dialog-content"] {
+    max-height: 95vh !important;
+    overflow: hidden !important;
+  }
+}
+
+@media (width <= 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
   }
 }
 

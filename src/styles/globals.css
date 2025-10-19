@@ -457,3 +457,33 @@ html {
     font-size: 0.75rem !important;
   }
 }
+
+/* ============= SCROLL MOBILE OTIMIZADO ============= */
+
+/* Garante scroll suave em mobile */
+@layer utilities {
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+}
+
+/* Força scroll correto em modals mobile */
+@media (max-width: 640px) {
+  [role="dialog"] {
+    max-height: 95vh !important;
+    overflow: hidden !important;
+  }
+  
+  [role="dialog"] [data-slot="dialog-content"] {
+    max-height: 95vh !important;
+    overflow: hidden !important;
+  }
+}
+
+/* Previne zoom em inputs mobile */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
