@@ -17,6 +17,7 @@
   
   const isFigmaMake = 
     hostname.includes('figma.com') || 
+    hostname.includes('figma.site') ||  // 🔥 CORREÇÃO CRÍTICA: Figma Make usa .figma.site
     hostname.includes('fig.ma') ||
     hostname.includes('make.fig') ||
     (hostname.includes('localhost') && !href.includes('vercel.app'));
