@@ -117,37 +117,9 @@ export function Referees() {
       if (!response.ok) return [];
       return await response.json();
     } catch (error) {
-      // Dados mock para demonstração
-      return [
-        {
-          id: "1",
-          name: "Federação Paulista de Árbitros de Vôlei",
-          description: "Principal federação de arbitragem do estado de São Paulo",
-          logo: "",
-          president: "user123",
-          createdAt: new Date().toISOString(),
-          city: "São Paulo",
-          state: "SP",
-          members: 45,
-          contactEmail: "contato@fpav.com.br",
-          contactPhone: "(11) 98765-4321",
-          contactWhatsapp: "(11) 98765-4321",
-        },
-        {
-          id: "2",
-          name: "Federação Carioca de Arbitragem",
-          description: "Federação oficial de árbitros do Rio de Janeiro",
-          logo: "",
-          president: "user456",
-          createdAt: new Date().toISOString(),
-          city: "Rio de Janeiro",
-          state: "RJ",
-          members: 32,
-          contactEmail: "fcav@arbitragem.rj.br",
-          contactPhone: "(21) 99876-5432",
-          contactWhatsapp: "(21) 99876-5432",
-        },
-      ];
+      console.log("⚠️ API de federações não disponível - retornando lista vazia");
+      // Retorna array vazio - apenas dados reais do banco serão exibidos
+      return [];
     }
   }
 

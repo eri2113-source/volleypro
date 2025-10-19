@@ -275,38 +275,40 @@ function ProfileEditModalContent({ open, onClose, onSuccess }: ProfileEditModalP
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh]" aria-describedby="profile-edit-description">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            Editar Perfil
-            {profile && (
-              <Badge variant="secondary" className="ml-2">
-                {getUserTypeIcon(profile.userType)}
-                <span className="ml-1">{getUserTypeLabel(profile.userType)}</span>
-              </Badge>
-            )}
-          </DialogTitle>
-          <DialogDescription id="profile-edit-description">
-            Atualize suas informações pessoais
-          </DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-[600px] h-[95vh] sm:h-auto sm:max-h-[90vh] flex flex-col p-0" aria-describedby="profile-edit-description">
+        <div className="p-6 pb-0">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              Editar Perfil
+              {profile && (
+                <Badge variant="secondary" className="ml-2">
+                  {getUserTypeIcon(profile.userType)}
+                  <span className="ml-1">{getUserTypeLabel(profile.userType)}</span>
+                </Badge>
+              )}
+            </DialogTitle>
+            <DialogDescription id="profile-edit-description">
+              Atualize suas informações pessoais
+            </DialogDescription>
+          </DialogHeader>
 
-        {error && (
-          <Alert variant="destructive">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="ml-2">
-              {error}
-              <Button 
-                variant="link" 
-                size="sm"
-                onClick={loadProfile}
-                className="ml-2 p-0 h-auto"
-              >
-                Tentar novamente
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
+          {error && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="ml-2">
+                {error}
+                <Button 
+                  variant="link" 
+                  size="sm"
+                  onClick={loadProfile}
+                  className="ml-2 p-0 h-auto"
+                >
+                  Tentar novamente
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+        </div>
 
         {fetchingProfile ? (
           <div className="py-12 flex flex-col items-center justify-center gap-4">
@@ -314,8 +316,8 @@ function ProfileEditModalContent({ open, onClose, onSuccess }: ProfileEditModalP
             <p className="text-sm text-muted-foreground">Carregando perfil...</p>
           </div>
         ) : profile ? (
-          <ScrollArea className="max-h-[60vh] pr-4">
-            <div className="space-y-4 py-4">
+          <ScrollArea className="flex-1 px-6">
+            <div className="space-y-4 pb-4">
               {/* Upload de Foto */}
               {userId ? (
                 <div className="flex justify-center py-4 border-b">
@@ -648,24 +650,27 @@ MVP do Torneio Regional 2023"
           </div>
         )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={loading}>
-            Cancelar
-          </Button>
-          <Button 
-            onClick={handleSave} 
-            disabled={loading || fetchingProfile || !profile || !!error}
-          >
-            {loading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Salvando...
-              </>
-            ) : (
-              "Salvar Alterações"
-            )}
-          </Button>
-        </DialogFooter>
+        <div className="p-6 pt-4 border-t bg-background">
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={handleClose} disabled={loading} className="w-full sm:w-auto">
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSave} 
+              disabled={loading || fetchingProfile || !profile || !!error}
+              className="w-full sm:w-auto"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Salvando...
+                </>
+              ) : (
+                "Salvar Alterações"
+              )}
+            </Button>
+          </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );

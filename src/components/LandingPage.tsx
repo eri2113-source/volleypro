@@ -62,9 +62,9 @@ export function LandingPage({ onLoginClick }: LandingPageProps) {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-background via-background to-primary/5">
       {/* Header/Navbar */}
-      <header className="border-b bg-gradient-to-r from-primary via-[#0052cc] to-primary shadow-lg sticky top-0 z-50 backdrop-blur-sm">
+      <header className="border-b bg-gradient-to-r from-primary via-[#0052cc] to-primary shadow-lg fixed top-0 left-0 right-0 z-50 backdrop-blur-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-6">
           <Logo variant="compact" className="[&_img]:w-9 [&_img]:h-9 [&_span]:text-white" withShadow />
           <Button 
@@ -76,6 +76,9 @@ export function LandingPage({ onLoginClick }: LandingPageProps) {
           </Button>
         </div>
       </header>
+
+      {/* Spacer para compensar o header fixo */}
+      <div className="h-16"></div>
 
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 md:py-32">

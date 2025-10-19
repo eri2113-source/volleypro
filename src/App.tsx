@@ -68,6 +68,25 @@ export default function App() {
   // 🔒 CONTROLE DE ACESSO FIGMA MAKE - Bloqueia usuários não autorizados
   const { isFigmaMake, hasAccess, isChecking } = useFigmaMakeAccess(userEmail);
 
+  // Controlar overflow do body baseado em autenticação
+  useEffect(() => {
+    if (isAuthenticated) {
+      // Quando logado, bloquear overflow do body (app controla internamente)
+      document.body.style.overflow = 'hidden';
+      document.body.style.height = '100vh';
+    } else {
+      // Quando não logado, permitir scroll normal (landing page)
+      document.body.style.overflow = 'auto';
+      document.body.style.height = 'auto';
+    }
+    
+    return () => {
+      // Limpar ao desmontar
+      document.body.style.overflow = '';
+      document.body.style.height = '';
+    };
+  }, [isAuthenticated]);
+
   // Limpar cache quando necessário
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
