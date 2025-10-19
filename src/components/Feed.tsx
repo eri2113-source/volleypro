@@ -76,6 +76,12 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
     emoji: string;
   } | null>(null);
   
+  // Confirmation dialog for deleting post
+  const [confirmDeletePost, setConfirmDeletePost] = useState<{
+    postId: string;
+    authorName: string;
+  } | null>(null);
+  
   // Content Inspiration
   const [showInspirationModal, setShowInspirationModal] = useState(false);
   
@@ -212,23 +218,35 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
     }
   }
 
-  async function handleDeletePost(postId: string) {
-    if (!isMaster) {
-      toast.error("Acesso negado");
+  function openDeleteConfirmation(post: any) {
+    if (!isMaster && currentUser?.id !== post.authorId) {
+      toast.error("Você não tem permissão para excluir esta postagem");
       return;
     }
+    
+    setConfirmDeletePost({
+      postId: post.id,
+      authorName: post.authorName
+    });
+  }
 
-    if (!confirm("Tem certeza que deseja deletar esta postagem? Esta ação não pode ser desfeita.")) {
-      return;
-    }
+  async function confirmPostDeletion() {
+    if (!confirmDeletePost) return;
 
     try {
-      await masterAdminApi.deletePost(postId);
-      toast.success("🗑️ Postagem removida com sucesso!");
+      if (isMaster) {
+        await masterAdminApi.deletePost(confirmDeletePost.postId);
+      } else {
+        // Se não for master, usar API normal de posts
+        await postApi.deletePost(confirmDeletePost.postId);
+      }
+      
+      toast.success("🗑️ Postagem excluída com sucesso!");
+      setConfirmDeletePost(null);
       await loadPosts();
     } catch (error: any) {
       console.error("❌ Erro ao deletar post:", error);
-      toast.error(error.message || "Erro ao remover postagem");
+      toast.error(error.message || "Erro ao excluir postagem");
     }
   }
 
@@ -740,10 +758,10 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
   const shouldShowWelcomeTips = isAuthenticated && isNewUser && !hasSeenWelcomeTips;
 
   return (
-    <div className="container mx-auto max-w-2xl py-6 space-y-6">
+    <div className="container mx-auto max-w-3xl py-8 px-4 sm:px-6 space-y-6">
       {/* Dicas de Boas-Vindas para Novos Usuários */}
       {shouldShowWelcomeTips && currentUser && (
-        <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5">
+        <Card className="border-2 border-primary/20 rounded-2xl animate-slide-up shadow-xl relative overflow-hidden bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5">
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
@@ -811,10 +829,10 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
       )}
 
       {isAuthenticated && (
-        <Card className="border-t-4 border-t-primary shadow-lg">
+        <Card className="border-t-4 border-t-primary rounded-2xl animate-fade-in shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative overflow-hidden">
         <CardHeader>
           <div className="flex items-start gap-4">
-            <Avatar className="ring-2 ring-primary/20">
+            <Avatar className="h-12 w-12 ring-2 ring-primary/30 shadow-lg">
               {currentUser?.photoUrl ? (
                 <AvatarImage 
                   src={currentUser.photoUrl} 
@@ -822,16 +840,16 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
                   className="object-cover"
                 />
               ) : null}
-              <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white">
+              <AvatarFallback className="gradient-primary text-white text-lg font-semibold">
                 {currentUser?.name?.[0]?.toUpperCase() || 'VP'}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 space-y-3">
+            <div className="flex-1 space-y-4">
               <Textarea
-                placeholder="Compartilhe suas conquistas, treinos e momentos do vôlei..."
+                placeholder="Compartilhe suas conquistas, treinos e momentos do vôlei... 🏐"
                 value={newPost}
                 onChange={(e) => setNewPost(e.target.value)}
-                className="min-h-[100px] resize-none"
+                className="min-h-[120px] resize-none border-border/50 focus:border-primary/50 rounded-xl transition-all"
               />
               
               {/* Media Preview */}
@@ -880,7 +898,7 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
             </div>
           </div>
         </CardHeader>
-        <CardFooter className="flex justify-between items-center">
+        <CardFooter className="flex justify-between items-center border-t border-border/50 pt-4">
           <div className="flex gap-2 flex-wrap">
             <input
               ref={fileInputRef}
@@ -891,38 +909,40 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
               id="media-upload"
             />
             <Button 
-              variant="outline" 
+              variant="ghost" 
               size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={!!selectedMedia || loading}
+              className="gap-2 hover:bg-primary/10 hover:text-primary rounded-xl"
             >
-              <ImageIcon className="h-4 w-4 mr-2" />
+              <ImageIcon className="h-5 w-5" />
               <span className="hidden sm:inline">Foto</span>
             </Button>
             <Button 
-              variant="outline" 
+              variant="ghost" 
               size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={!!selectedMedia || loading}
+              className="gap-2 hover:bg-accent/10 hover:text-accent rounded-xl"
             >
-              <VideoIcon className="h-4 w-4 mr-2" />
+              <VideoIcon className="h-5 w-5" />
               <span className="hidden sm:inline">Vídeo</span>
             </Button>
             <Button 
-              variant="outline" 
+              variant="ghost" 
               size="sm"
               onClick={() => setShowInspirationModal(true)}
-              className="gap-2 text-secondary border-secondary hover:bg-secondary hover:text-white"
               disabled={loading}
+              className="gap-2 hover:bg-secondary/10 hover:text-secondary rounded-xl"
             >
-              <Sparkles className="h-4 w-4" />
+              <Sparkles className="h-5 w-5" />
               <span className="hidden sm:inline">Inspiração</span>
             </Button>
           </div>
           <Button 
             disabled={(!newPost.trim() && !selectedMedia) || loading}
             onClick={handleCreatePost}
-            className="bg-gradient-to-r from-primary to-secondary shrink-0"
+            className="gradient-primary text-white shrink-0 rounded-xl font-semibold shadow-md hover:shadow-xl transition-all active:scale-95"
           >
             {loading ? "Publicando..." : "Publicar"}
           </Button>
@@ -982,26 +1002,26 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
               {index === 5 && <AdDisplay type="card" className="mb-6" />}
               {index === 8 && <AdDisplay type="card" className="mb-6" />}
               
-              <Card className={`hover:shadow-xl transition-all duration-300 border-l-4 ${
-          isOfficialPost ? 'border-l-secondary bg-gradient-to-r from-secondary/5 to-transparent' : 'border-l-primary/30'
+              <Card className={`rounded-2xl shadow-md border border-border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 animate-fade-in ${
+          isOfficialPost ? 'bg-gradient-to-br from-secondary/5 via-primary/5 to-transparent shadow-lg' : ''
         }`}>
-          <CardHeader>
+          <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3 flex-1">
-                <Avatar className={isOfficialPost ? 'ring-2 ring-secondary ring-offset-2' : ''}>
+                <Avatar className={`h-11 w-11 ${isOfficialPost ? 'ring-2 ring-secondary/50 shadow-lg' : 'ring-1 ring-border'}`}>
                   {post.authorPhotoUrl ? (
                     <AvatarImage src={post.authorPhotoUrl} alt={authorName} />
                   ) : (
-                    <AvatarFallback className={isOfficialPost ? 'bg-gradient-to-br from-secondary to-primary text-white' : ''}>
+                    <AvatarFallback className={isOfficialPost ? 'gradient-secondary text-white text-lg' : 'bg-muted'}>
                       {isOfficialPost ? '📰' : authorInitial}
                     </AvatarFallback>
                   )}
                 </Avatar>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={isOfficialPost ? 'font-semibold' : ''}>{authorName}</span>
+                    <span className={`${isOfficialPost ? 'font-semibold text-gradient-secondary' : 'font-medium'}`}>{authorName}</span>
                     {post.verified && (
-                      <Badge variant="secondary" className="h-5 px-1.5">
+                      <Badge variant="secondary" className="h-5 px-2 rounded-full bg-primary/10 text-primary">
                         ✓
                       </Badge>
                     )}
@@ -1034,13 +1054,14 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {isMaster && !isOfficialPost && (
+                {/* Botão de deletar: Master pode deletar qualquer post, usuário pode deletar apenas o próprio */}
+                {((isMaster && !isOfficialPost) || (currentUser && currentUser.id === post.authorId && !isOfficialPost)) && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleDeletePost(post.id)}
+                    onClick={() => openDeleteConfirmation(post)}
                     className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    title="Deletar postagem (Master)"
+                    title={isMaster ? "Deletar postagem (Master)" : "Excluir sua postagem"}
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -1088,7 +1109,7 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
               </div>
             )}
           </CardContent>
-          <CardFooter className="flex flex-col gap-4">
+          <CardFooter className="flex flex-col gap-4 pt-4">
             {/* Reações */}
             {postReactions[post.id] && Object.keys(postReactions[post.id] || {}).length > 0 && (
               <div className="w-full">
@@ -1100,30 +1121,30 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
               </div>
             )}
             
-            <div className="flex items-center justify-between w-full text-muted-foreground text-sm">
-              <span>{post.comments} comentários</span>
-              <span>{post.shares} compartilhamentos</span>
+            <div className="flex items-center justify-between w-full text-muted-foreground">
+              <span className="text-sm">{post.comments} comentários</span>
+              <span className="text-sm">{post.shares} compartilhamentos</span>
             </div>
-            <div className="flex items-center gap-2 w-full border-t pt-4">
+            <div className="flex items-center gap-2 w-full border-t border-border/50 pt-4">
               <div className="relative flex-1">
                 <Button 
                   variant="ghost" 
-                  className={`w-full hover:bg-primary/10 hover:text-primary transition-colors ${
-                    userReactions[post.id] ? 'text-primary' : ''
+                  className={`w-full rounded-xl gap-2 hover:bg-primary/10 hover:text-primary transition-all ${
+                    userReactions[post.id] ? 'text-primary bg-primary/5 font-semibold' : ''
                   }`}
                   onClick={() => handleLike(post.id)}
                 >
                   {userReactions[post.id] ? (
                     <>
-                      <span className="text-lg mr-2">{userReactions[post.id]}</span>
+                      <span className="text-lg">{userReactions[post.id]}</span>
                       <span className="hidden sm:inline">
                         {VOLLEYBALL_REACTIONS.find(r => r.emoji === userReactions[post.id])?.label || 'Reagir'}
                       </span>
                     </>
                   ) : (
                     <>
-                      <Smile className="h-4 w-4 mr-2" />
-                      Reagir
+                      <Smile className="h-5 w-5" />
+                      <span className="hidden sm:inline">Reagir</span>
                     </>
                   )}
                 </Button>
@@ -1137,21 +1158,21 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
               
               <Button 
                 variant="ghost" 
-                className={`flex-1 hover:bg-primary/10 hover:text-primary transition-colors ${
-                  expandedComments.has(post.id) ? 'bg-primary/10 text-primary' : ''
+                className={`flex-1 rounded-xl gap-2 hover:bg-accent/10 hover:text-accent transition-all ${
+                  expandedComments.has(post.id) ? 'bg-accent/10 text-accent font-semibold' : ''
                 }`}
                 onClick={() => handleToggleComments(post.id)}
               >
-                <MessageCircle className="h-4 w-4 mr-2" />
-                Comentar
+                <MessageCircle className="h-5 w-5" />
+                <span className="hidden sm:inline">Comentar</span>
               </Button>
               <Button 
                 variant="ghost" 
-                className="flex-1 hover:bg-primary/10 hover:text-primary transition-colors"
+                className="flex-1 rounded-xl gap-2 hover:bg-secondary/10 hover:text-secondary transition-all"
                 onClick={() => handleShare(post)}
               >
-                <Share2 className="h-4 w-4 mr-2" />
-                Compartilhar
+                <Share2 className="h-5 w-5" />
+                <span className="hidden sm:inline">Compartilhar</span>
               </Button>
             </div>
 
@@ -1391,6 +1412,40 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
           setNewPost(template);
         }}
       />
+
+      {/* Diálogo de confirmação para excluir postagem */}
+      <AlertDialog
+        open={!!confirmDeletePost}
+        onOpenChange={(open) => {
+          if (!open) setConfirmDeletePost(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-destructive" />
+              Excluir postagem?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                Tem certeza que deseja excluir esta postagem de <strong>{confirmDeletePost?.authorName}</strong>?
+              </p>
+              <p className="text-destructive">
+                ⚠️ Esta ação não pode ser desfeita. A postagem será removida permanentemente.
+              </p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmPostDeletion}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Sim, excluir postagem
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Diálogo de confirmação para remover reação */}
       <AlertDialog

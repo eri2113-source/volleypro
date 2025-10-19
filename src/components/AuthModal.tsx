@@ -80,8 +80,8 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
 
     try {
       // Validações
-      if (!signUpEmail || !signUpPassword || !signUpName) {
-        throw new Error("Por favor, preencha todos os campos obrigatórios");
+      if (!signUpEmail || !signUpPassword) {
+        throw new Error("Por favor, preencha email e senha");
       }
 
       // Validar email
@@ -94,24 +94,18 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
         throw new Error("A senha deve ter no mínimo 6 caracteres");
       }
 
+      // Nome padrão derivado do email
+      const defaultName = signUpEmail.split('@')[0];
       const additionalData: any = {};
-      
-      if (userType === "athlete" && position) {
-        additionalData.position = position;
-      }
-      
-      if (city) {
-        additionalData.city = city;
-      }
 
-      console.log("📝 Criando usuário...", { email: signUpEmail, userType });
+      console.log("📝 Criando usuário...", { email: signUpEmail });
 
-      // Criar usuário
+      // Criar usuário com tipo padrão "fan" (será definido no perfil depois)
       const signUpResult = await authApi.signUp(
         signUpEmail.trim().toLowerCase(),
         signUpPassword,
-        signUpName.trim(),
-        userType,
+        defaultName,
+        "fan",
         additionalData
       );
 
@@ -344,56 +338,9 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
               <p className="text-sm">
                 🏐 <strong>Junte-se ao VolleyPro!</strong> Crie sua conta gratuitamente!
               </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="signup-type">Tipo de Conta</Label>
-              <Select value={userType} onValueChange={(v) => setUserType(v as any)}>
-                <SelectTrigger id="signup-type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="fan">🏐 Fã / Torcedor</SelectItem>
-                  <SelectItem value="athlete">⭐ Atleta</SelectItem>
-                  <SelectItem value="team">🏆 Time / Clube</SelectItem>
-                </SelectContent>
-              </Select>
-
-              {userType === "athlete" && (
-                <p className="text-xs text-blue-600 dark:text-blue-400">
-                  ⭐ Compartilhe treinos, conquistas e conecte-se com times!
-                </p>
-              )}
-              {userType === "team" && (
-                <p className="text-xs text-orange-600 dark:text-orange-400">
-                  🏆 Recrute atletas, organize torneios e gerencie sua equipe!
-                </p>
-              )}
-              {userType === "fan" && (
-                <p className="text-xs text-green-600 dark:text-green-400">
-                  🏐 Acompanhe atletas e times favoritos, interaja e torça!
-                </p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="signup-name">
-                {userType === "fan" && "Seu Nome"}
-                {userType === "athlete" && "Nome do Atleta"}
-                {userType === "team" && "Nome do Time/Clube"}
-              </Label>
-              <Input
-                id="signup-name"
-                placeholder={
-                  userType === "fan" ? "Ex: João Silva" :
-                  userType === "athlete" ? "Ex: Maria Santos" :
-                  "Ex: Vôlei Clube São Paulo"
-                }
-                value={signUpName}
-                onChange={(e) => setSignUpName(e.target.value)}
-                disabled={loading}
-                autoComplete="name"
-              />
+              <p className="text-xs text-muted-foreground mt-1">
+                💡 Defina seu tipo de conta (atleta, time, fã, árbitro, federação) depois no perfil
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -422,45 +369,6 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
               />
             </div>
 
-            {userType === "athlete" && (
-              <div className="space-y-2">
-                <Label htmlFor="position">Posição (Opcional)</Label>
-                <Select value={position} onValueChange={setPosition} disabled={loading}>
-                  <SelectTrigger id="position">
-                    <SelectValue placeholder="Selecione sua posição" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Levantador">Levantador</SelectItem>
-                    <SelectItem value="Ponteiro">Ponteiro</SelectItem>
-                    <SelectItem value="Central">Central</SelectItem>
-                    <SelectItem value="Oposto">Oposto</SelectItem>
-                    <SelectItem value="Líbero">Líbero</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
-            {(userType === "team" || userType === "fan") && (
-              <div className="space-y-2">
-                <Label htmlFor="city">
-                  Cidade {userType === "fan" ? "(Opcional)" : ""}
-                </Label>
-                <Input
-                  id="city"
-                  placeholder="Ex: São Paulo, SP"
-                  value={city}
-                  onChange={(e) => setCity(e.target.value)}
-                  disabled={loading}
-                  autoComplete="address-level2"
-                />
-                {userType === "fan" && (
-                  <p className="text-xs text-muted-foreground">
-                    💡 Ajuda a conectar com a comunidade local
-                  </p>
-                )}
-              </div>
-            )}
-
             {error && (
               <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 flex items-start gap-2">
                 <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
@@ -471,7 +379,7 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
             <Button
               className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90"
               onClick={handleSignUp}
-              disabled={loading || !signUpEmail || !signUpPassword || !signUpName}
+              disabled={loading || !signUpEmail || !signUpPassword}
             >
               {loading ? (
                 <div className="flex items-center gap-2">

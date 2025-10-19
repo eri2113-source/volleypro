@@ -14,6 +14,7 @@ import { Videos } from "./components/Videos";
 import { Verified } from "./components/Verified";
 import { Monetization } from "./components/Monetization";
 import { Ads } from "./components/Ads";
+import { Referees } from "./components/Referees";
 import { AthleteProfile } from "./components/AthleteProfile";
 import { TeamProfile } from "./components/TeamProfile";
 import { MyProfile } from "./components/MyProfile";
@@ -39,7 +40,8 @@ import { authApi, userApi } from "./lib/api";
 import { showConsoleHelp } from "./utils/consoleHelp";
 import { useFigmaMakeAccess } from "./hooks/useFigmaMakeAccess";
 import { Button } from "./components/ui/button";
-import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, Megaphone } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover";
+import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, Megaphone, MoreHorizontal, Flag } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -61,6 +63,7 @@ export default function App() {
   const [userType, setUserType] = useState<"athlete" | "team" | "fan">("fan");
   const [showFirstAccessGuide, setShowFirstAccessGuide] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   
   // 🔒 CONTROLE DE ACESSO FIGMA MAKE - Bloqueia usuários não autorizados
   const { isFigmaMake, hasAccess, isChecking } = useFigmaMakeAccess(userEmail);
@@ -359,6 +362,8 @@ export default function App() {
         return <Verified />;
       case "monetization":
         return <Monetization />;
+      case "referees":
+        return <Referees />;
       default:
         return <Feed {...authProps} />;
     }
@@ -448,14 +453,20 @@ export default function App() {
   }
 
   // Menus principais que vão na barra horizontal
-  const mainMenuItems = [
+  // Itens principais (sempre visíveis)
+  const primaryMenuItems = [
     { id: "feed", label: "Feed", icon: Home },
     { id: "athletes", label: "Atletas", icon: Users },
     { id: "teams", label: "Times", icon: Shield },
     { id: "tournaments", label: "Torneios", icon: Trophy },
+  ];
+
+  // Itens secundários (aparecem ao clicar em "Mais...")
+  const secondaryMenuItems = [
     { id: "showcase", label: "Vitrine", icon: Store },
     { id: "lives", label: "Lives", icon: Radio },
     { id: "invitations", label: "Convites", icon: Mail },
+    { id: "referees", label: "Arbitragem", icon: Flag },
     { id: "ads", label: "Anúncios", icon: Megaphone },
     { id: "monetization", label: "Monetização", icon: Crown },
   ];
@@ -474,24 +485,25 @@ export default function App() {
       
       <CacheBuster />
       <SidebarProvider>
-        <div className="flex min-h-screen w-full overflow-x-hidden">
+        <div className="flex h-screen w-full overflow-hidden">
           <AppSidebar 
             currentView={currentView} 
             onNavigate={setCurrentView}
             isAuthenticated={isAuthenticated}
             onProfileClick={() => setShowMyProfile(true)}
           />
-          <main className="flex-1 min-w-0 w-0 bg-gradient-to-br from-background via-muted/30 to-primary/10">
-            {/* Barra azul STICKY com navegação horizontal */}
-            <div className="sticky top-0 z-40 border-b bg-gradient-to-r from-primary via-[#0052cc] to-primary shadow-lg">
-              <div className="w-full overflow-x-auto px-3 sm:px-6">
+          <main className="flex-1 min-w-0 w-0 bg-background overflow-y-auto overflow-x-hidden">
+            {/* Barra de navegação moderna com glassmorphism - SEMPRE TRAVADA NO TOPO */}
+            <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-md">
+              <div className="w-full overflow-x-auto px-4 sm:px-6">
                 <div className="flex h-16 items-center justify-between gap-2 sm:gap-4">
                   {/* Logo */}
-                  <Logo variant="compact" className="[&_img]:w-10 [&_img]:h-10 sm:[&_img]:w-12 sm:[&_img]:h-12 shrink-0" withShadow />
+                  <Logo variant="compact" className="shrink-0" />
                   
                   {/* Navegação horizontal - menus principais */}
                   <nav className="flex items-center gap-0.5 sm:gap-1 flex-1 justify-center flex-wrap">
-                    {mainMenuItems.map((item) => {
+                    {/* Itens principais (sempre visíveis) */}
+                    {primaryMenuItems.map((item) => {
                       const Icon = item.icon;
                       const isActive = currentView === item.id;
                       
@@ -508,19 +520,73 @@ export default function App() {
                             setShowMyProfile(false);
                           }}
                           className={`
-                            gap-1 sm:gap-2 text-white hover:bg-white/20 hover:text-white transition-all px-2 sm:px-3 whitespace-nowrap
-                            ${isActive ? 'bg-white/20 shadow-sm' : ''}
+                            gap-2 hover:bg-primary/10 transition-all px-3 py-2 rounded-xl whitespace-nowrap
+                            ${isActive ? 'bg-primary/10 text-primary font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'}
                           `}
                         >
-                          <Icon className="h-4 w-4 shrink-0" />
-                          <span className="hidden xl:inline text-sm">{item.label}</span>
+                          <Icon className="h-5 w-5 shrink-0" />
+                          <span className="hidden xl:inline">{item.label}</span>
                         </Button>
                       );
                     })}
+                    
+                    {/* Botão "Mais..." com dropdown em cascata */}
+                    <Popover open={showMoreMenu} onOpenChange={setShowMoreMenu}>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`
+                            gap-2 hover:bg-primary/10 transition-all px-3 py-2 rounded-xl whitespace-nowrap
+                            ${showMoreMenu ? 'bg-primary/10 text-primary font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'}
+                          `}
+                          title={showMoreMenu ? "Ocultar menu" : "Mais opções"}
+                        >
+                          <MoreHorizontal className="h-5 w-5 shrink-0" />
+                          <span className="hidden xl:inline">Mais...</span>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent 
+                        className="w-56 p-2 rounded-2xl shadow-xl bg-background/95 backdrop-blur-xl border border-border/50" 
+                        align="end"
+                        sideOffset={12}
+                      >
+                        <div className="flex flex-col gap-1">
+                          {/* Itens secundários em lista vertical */}
+                          {secondaryMenuItems.map((item) => {
+                            const Icon = item.icon;
+                            const isActive = currentView === item.id;
+                            
+                            return (
+                              <Button
+                                key={item.id}
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setCurrentView(item.id);
+                                  setSelectedAthlete(null);
+                                  setSelectedTeam(null);
+                                  setSelectedTournament(null);
+                                  setShowMyProfile(false);
+                                  setShowMoreMenu(false); // Fecha o dropdown ao clicar
+                                }}
+                                className={`
+                                  w-full justify-start gap-3 hover:bg-primary/10 transition-all py-3 rounded-xl
+                                  ${isActive ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground'}
+                                `}
+                              >
+                                <Icon className="h-5 w-5 shrink-0" />
+                                <span>{item.label}</span>
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </nav>
                   
                   {/* Botões de perfil e sair */}
-                  <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -530,26 +596,26 @@ export default function App() {
                         setSelectedTeam(null);
                         setSelectedTournament(null);
                       }}
-                      className="text-white hover:bg-white/20 hover:text-white px-2 sm:px-3"
+                      className="gap-2 hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-all px-3 py-2 rounded-xl"
                     >
-                      <User className="h-4 w-4 shrink-0" />
-                      <span className="hidden xl:inline ml-2">Perfil</span>
+                      <User className="h-5 w-5 shrink-0" />
+                      <span className="hidden xl:inline">Perfil</span>
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={handleSignOut} 
-                      className="text-white hover:bg-white/20 hover:text-white px-2 sm:px-3"
+                      className="gap-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all px-3 py-2 rounded-xl"
                     >
-                      <LogOut className="h-4 w-4 shrink-0" />
-                      <span className="hidden xl:inline ml-2">Sair</span>
+                      <LogOut className="h-5 w-5 shrink-0" />
+                      <span className="hidden xl:inline">Sair</span>
                     </Button>
                   </div>
                 </div>
               </div>
             </div>
             
-            {/* Conteúdo */}
+            {/* Conteúdo Principal - Com scroll */}
             <div className="w-full max-w-full overflow-x-hidden">
               {renderView()}
             </div>

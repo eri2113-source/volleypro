@@ -519,6 +519,46 @@ app.post('/make-server-0ea22bba/posts/:postId/like', authMiddleware, async (c) =
   }
 });
 
+// Delete post (user can delete their own posts)
+app.delete('/make-server-0ea22bba/posts/:postId', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const postId = c.req.param('postId');
+    
+    // Get post to check ownership
+    const post = await kv.get(`post:${postId}`);
+    if (!post) {
+      return c.json({ error: 'Post not found' }, 404);
+    }
+    
+    // Check if user owns the post
+    if (post.authorId !== userId) {
+      return c.json({ error: 'You can only delete your own posts' }, 403);
+    }
+    
+    // Delete the post
+    await kv.del(`post:${postId}`);
+    
+    // Delete all comments for this post
+    const comments = await kv.getByPrefix(`comment:${postId}:`);
+    for (const comment of comments) {
+      await kv.del(`comment:${postId}:${comment.id}`);
+    }
+    
+    // Delete all likes for this post
+    const likes = await kv.getByPrefix(`like:${postId}:`);
+    for (const like of likes) {
+      await kv.del(`like:${postId}:${like.userId}`);
+    }
+    
+    console.log('✅ Post deleted:', postId);
+    return c.json({ success: true, message: 'Post deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting post:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // ============= COMMENTS ROUTES =============
 
 // Get comments for a post

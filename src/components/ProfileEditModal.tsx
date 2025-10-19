@@ -58,6 +58,11 @@ function ProfileEditModalContent({ open, onClose, onSuccess }: ProfileEditModalP
   const [achievements, setAchievements] = useState("");
   const [cpf, setCpf] = useState("");
 
+  // Campos de contato profissional (árbitros e federações)
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactWhatsapp, setContactWhatsapp] = useState("");
+
   useEffect(() => {
     if (open) {
       setError(null);
@@ -121,6 +126,11 @@ function ProfileEditModalContent({ open, onClose, onSuccess }: ProfileEditModalP
       setAchievements(achievementsStr);
       
       setCpf(userProfile.cpf || "");
+
+      // Campos de contato profissional (árbitros e federações)
+      setContactEmail(userProfile.contactEmail || "");
+      setContactPhone(userProfile.contactPhone || "");
+      setContactWhatsapp(userProfile.contactWhatsapp || "");
       
     } catch (error: any) {
       console.error("❌ Erro ao carregar perfil:", error);
@@ -162,6 +172,7 @@ function ProfileEditModalContent({ open, onClose, onSuccess }: ProfileEditModalP
         city: city.trim() || null,
         bio: bio.trim() || null,
         photoUrl: photoUrl || null,
+        userType: profile.userType || 'fan',
       };
 
       // Campos específicos por tipo de usuário
@@ -198,6 +209,13 @@ function ProfileEditModalContent({ open, onClose, onSuccess }: ProfileEditModalP
         updates.cpf = cpf.trim() || null;
       }
 
+      // Campos de contato profissional (árbitros e federações)
+      if (profile.userType === 'referee' || profile.userType === 'federation') {
+        updates.contactEmail = contactEmail.trim() || null;
+        updates.contactPhone = contactPhone.trim() || null;
+        updates.contactWhatsapp = contactWhatsapp.trim() || null;
+      }
+
       console.log("💾 Salvando perfil completo:", updates);
       
       const { profile: updatedProfile } = await userApi.updateCurrentUser(updates);
@@ -232,6 +250,8 @@ function ProfileEditModalContent({ open, onClose, onSuccess }: ProfileEditModalP
       case 'athlete': return 'Atleta';
       case 'team': return 'Time';
       case 'fan': return 'Fã/Torcedor';
+      case 'referee': return 'Árbitro';
+      case 'federation': return 'Federação';
       default: return type;
     }
   };
@@ -241,6 +261,8 @@ function ProfileEditModalContent({ open, onClose, onSuccess }: ProfileEditModalP
       case 'athlete': return <User className="h-4 w-4" />;
       case 'team': return <Shield className="h-4 w-4" />;
       case 'fan': return <Users className="h-4 w-4" />;
+      case 'referee': return <User className="h-4 w-4" />;
+      case 'federation': return <Shield className="h-4 w-4" />;
       default: return <User className="h-4 w-4" />;
     }
   };
@@ -313,11 +335,41 @@ function ProfileEditModalContent({ open, onClose, onSuccess }: ProfileEditModalP
                 </div>
               )}
 
+              {/* Tipo de Conta */}
+              <div className="space-y-2">
+                <Label htmlFor="userType">
+                  Tipo de Conta
+                  <span className="text-destructive ml-1">*</span>
+                </Label>
+                <Select 
+                  value={profile.userType} 
+                  onValueChange={(value) => {
+                    setProfile({ ...profile, userType: value });
+                  }}
+                >
+                  <SelectTrigger id="userType">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fan">🏐 Fã / Torcedor</SelectItem>
+                    <SelectItem value="athlete">⭐ Atleta</SelectItem>
+                    <SelectItem value="team">🏆 Time / Clube</SelectItem>
+                    <SelectItem value="referee">🎯 Árbitro</SelectItem>
+                    <SelectItem value="federation">🏛️ Federação de Arbitragem</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  💡 Defina o tipo de conta para personalizar sua experiência
+                </p>
+              </div>
+
               {/* Nome */}
               <div className="space-y-2">
                 <Label htmlFor="name">
                   {profile.userType === 'athlete' && 'Nome Completo'}
                   {profile.userType === 'team' && 'Nome do Time/Clube'}
+                  {profile.userType === 'federation' && 'Nome da Federação'}
+                  {profile.userType === 'referee' && 'Nome Completo'}
                   {(!profile.userType || profile.userType === 'fan') && 'Seu Nome'}
                   <span className="text-destructive ml-1">*</span>
                 </Label>
@@ -326,6 +378,8 @@ function ProfileEditModalContent({ open, onClose, onSuccess }: ProfileEditModalP
                   placeholder={
                     profile.userType === 'athlete' ? "Ex: Maria Santos" :
                     profile.userType === 'team' ? "Ex: Vôlei Clube São Paulo" :
+                    profile.userType === 'federation' ? "Ex: Federação Paulista de Arbitragem" :
+                    profile.userType === 'referee' ? "Ex: João Silva" :
                     "Ex: João Silva"
                   }
                   value={name}
@@ -505,6 +559,59 @@ MVP do Torneio Regional 2023"
                 </>
               )}
 
+              {/* Contatos Profissionais (árbitros e federações) */}
+              {(profile.userType === 'referee' || profile.userType === 'federation') && (
+                <div className="border-t pt-4 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-primary" />
+                    <Label className="text-base">
+                      Contatos para Trabalhos de Arbitragem
+                    </Label>
+                  </div>
+                  <p className="text-sm text-muted-foreground -mt-2">
+                    💡 Estes contatos serão exibidos para times e organizadores de torneios
+                  </p>
+
+                  <div className="space-y-3">
+                    <div className="space-y-2">
+                      <Label htmlFor="contactEmail">Email de Contato Profissional</Label>
+                      <Input
+                        id="contactEmail"
+                        type="email"
+                        placeholder="contato@exemplo.com"
+                        value={contactEmail}
+                        onChange={(e) => setContactEmail(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="contactPhone">Telefone de Contato</Label>
+                      <Input
+                        id="contactPhone"
+                        type="tel"
+                        placeholder="(11) 98888-7777"
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="contactWhatsapp">WhatsApp</Label>
+                      <Input
+                        id="contactWhatsapp"
+                        type="tel"
+                        placeholder="(11) 98888-7777"
+                        value={contactWhatsapp}
+                        onChange={(e) => setContactWhatsapp(e.target.value)}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        ✅ Recomendado para contato rápido sobre trabalhos
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Cidade (todos os tipos) */}
               <div className="space-y-2">
                 <Label htmlFor="city">Cidade</Label>
@@ -524,6 +631,8 @@ MVP do Torneio Regional 2023"
                   placeholder={
                     profile.userType === 'athlete' ? "Conte um pouco sobre sua carreira e objetivos..." :
                     profile.userType === 'team' ? "Apresente seu time ou clube..." :
+                    profile.userType === 'referee' ? "Conte sobre sua experiência como árbitro..." :
+                    profile.userType === 'federation' ? "Apresente sua federação de arbitragem..." :
                     "Conte um pouco sobre você..."
                   }
                   value={bio}

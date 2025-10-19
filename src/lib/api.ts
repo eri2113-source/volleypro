@@ -502,6 +502,12 @@ export const postApi = {
       method: 'DELETE',
     });
   },
+
+  async deletePost(postId: string) {
+    return apiCall(`/posts/${postId}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 // Follow APIs
