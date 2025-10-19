@@ -625,7 +625,7 @@ export const invitationApi = {
   // Get all invitations for the current user
   async getInvitations() {
     try {
-      return await apiCall('/invitations/me');
+      return await apiCall('/invitations');
     } catch (error) {
       console.error('❌ Error fetching invitations:', error);
       // Return empty array if endpoint doesn't exist yet
