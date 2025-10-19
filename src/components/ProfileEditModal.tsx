@@ -654,12 +654,15 @@ export function ProfileEditModal(props: ProfileEditModalProps) {
   if (hasError) {
     return (
       <Dialog open={props.open} onOpenChange={props.onClose}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[500px]" aria-describedby="profile-error-description">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-destructive">
               <AlertCircle className="h-5 w-5" />
               Erro ao Carregar Editor
             </DialogTitle>
+            <DialogDescription id="profile-error-description">
+              Detalhes do erro ao carregar o editor de perfil
+            </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">

@@ -201,7 +201,10 @@ export function TournamentAthleteView({
   if (loading) {
     return (
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="tournament-loading-description">
+          <DialogDescription id="tournament-loading-description" className="sr-only">
+            Carregando informações do torneio
+          </DialogDescription>
           <div className="flex items-center justify-center py-12">
             <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
           </div>

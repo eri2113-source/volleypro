@@ -174,17 +174,18 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      <div className="bg-gradient-to-br from-primary via-primary to-secondary pb-32 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 w-full max-w-full overflow-x-hidden">
+      <div className="bg-gradient-to-br from-primary via-primary to-secondary pb-20 sm:pb-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDE0YzMuMzEgMCA2IDIuNjkgNiA2cy0yLjY5IDYtNiA2LTYtMi42OS02LTYgMi42OS02IDYtNnpNNiAzNGMzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA2LTZ6TTM2IDM0YzMuMzEgMCA2IDIuNjkgNiA2cy0yLjY5IDYtNiA2LTYtMi42OS02LTYgMi42OS02IDYtNnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30"></div>
-        <div className="container mx-auto py-6 relative z-10">
-          <Button variant="ghost" onClick={onBack} className="mb-6 text-white hover:bg-white/20 hover:text-white">
+        <div className="container mx-auto py-4 sm:py-6 relative z-10 px-4">
+          <Button variant="ghost" onClick={onBack} className="mb-4 sm:mb-6 text-white hover:bg-white/20 hover:text-white">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Voltar
           </Button>
 
-          <div className="flex items-start gap-8">
-            <Avatar className="h-40 w-40 border-4 border-white shadow-2xl ring-4 ring-white/20">
+          {/* Layout responsivo: vertical em mobile, horizontal em desktop */}
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-8">
+            <Avatar className="h-28 w-28 sm:h-40 sm:w-40 border-4 border-white shadow-2xl ring-4 ring-white/20 shrink-0">
               {athlete.photoUrl ? (
                 <AvatarImage 
                   src={athlete.photoUrl} 
@@ -196,60 +197,62 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
                 {athlete.name.split(' ').map(n => n[0]).join('')}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-white">{athlete.name}</h1>
+            <div className="flex-1 w-full">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
+                <div className="text-center sm:text-left">
+                  <div className="flex items-center justify-center sm:justify-start gap-2 sm:gap-3 mb-2">
+                    <h1 className="text-white text-xl sm:text-2xl md:text-3xl">{athlete.name}</h1>
                     {athlete.verified && (
-                      <CheckCircle2 className="h-6 w-6 text-white" />
+                      <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6 text-white shrink-0" />
                     )}
                   </div>
-                  <p className="text-white/90 text-xl">{athlete.position}</p>
+                  <p className="text-white/90 text-base sm:text-lg md:text-xl">{athlete.position}</p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 justify-center sm:justify-start flex-wrap">
                   <Button 
                     onClick={handleFollowToggle}
                     disabled={loading}
+                    size="sm"
                     className={
                       isFollowing 
                         ? "bg-muted text-foreground hover:bg-muted/80"
                         : "bg-white text-primary hover:bg-white/90"
                     }
                   >
-                    <Heart className={`h-4 w-4 mr-2 ${isFollowing ? 'fill-current' : ''}`} />
-                    {loading ? 'Aguarde...' : isFollowing ? 'Seguindo' : 'Seguir'}
+                    <Heart className={`h-4 w-4 mr-1 sm:mr-2 ${isFollowing ? 'fill-current' : ''}`} />
+                    <span className="text-xs sm:text-sm">{loading ? 'Aguarde...' : isFollowing ? 'Seguindo' : 'Seguir'}</span>
                   </Button>
-                  <Button className="bg-secondary hover:bg-secondary/90">
-                    Enviar Mensagem
+                  <Button size="sm" className="bg-secondary hover:bg-secondary/90">
+                    <span className="text-xs sm:text-sm">Mensagem</span>
                   </Button>
                 </div>
               </div>
 
               {!athlete.currentTeam && (
-                <Badge variant="secondary" className="mb-4">
+                <Badge variant="secondary" className="mb-3 sm:mb-4 mx-auto sm:mx-0 block w-fit">
                   <MapPin className="h-3 w-3 mr-1" />
                   Livre no mercado
                 </Badge>
               )}
 
-              <div className="grid grid-cols-3 gap-4">
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-muted-foreground text-sm">Seguidores</p>
-                    <p className="text-2xl">{(athlete.followers || 0).toLocaleString('pt-BR')}</p>
+              {/* Grid responsivo: 3 colunas em mobile pequeno, melhor espaçamento */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                <Card className="overflow-hidden">
+                  <CardContent className="p-2 sm:p-4 text-center">
+                    <p className="text-muted-foreground text-xs sm:text-sm">Seguidores</p>
+                    <p className="text-base sm:text-xl md:text-2xl font-semibold">{(athlete.followers || 0).toLocaleString('pt-BR')}</p>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-muted-foreground text-sm">Idade</p>
-                    <p className="text-2xl">{athlete.age || '-'}</p>
+                <Card className="overflow-hidden">
+                  <CardContent className="p-2 sm:p-4 text-center">
+                    <p className="text-muted-foreground text-xs sm:text-sm">Idade</p>
+                    <p className="text-base sm:text-xl md:text-2xl font-semibold">{athlete.age || '-'}</p>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-muted-foreground text-sm">Altura</p>
-                    <p className="text-2xl">{formatHeight(athlete.height)}</p>
+                <Card className="overflow-hidden">
+                  <CardContent className="p-2 sm:p-4 text-center">
+                    <p className="text-muted-foreground text-xs sm:text-sm">Altura</p>
+                    <p className="text-base sm:text-xl md:text-2xl font-semibold">{formatHeight(athlete.height)}</p>
                   </CardContent>
                 </Card>
               </div>
@@ -258,15 +261,17 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
         </div>
       </div>
 
-      <div className="container mx-auto -mt-24">
-        <Tabs defaultValue="posts" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="posts">Postagens</TabsTrigger>
-            <TabsTrigger value="panel">Painel</TabsTrigger>
-            <TabsTrigger value="stats">Estatísticas</TabsTrigger>
-            <TabsTrigger value="achievements">Conquistas</TabsTrigger>
-            <TabsTrigger value="gallery">Galeria</TabsTrigger>
-          </TabsList>
+      <div className="container mx-auto -mt-16 sm:-mt-24 px-4">
+        <Tabs defaultValue="posts" className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
+          <div className="overflow-x-auto scrollbar-hide">
+            <TabsList className="inline-flex w-auto min-w-full sm:min-w-0">
+              <TabsTrigger value="posts" className="text-xs sm:text-sm px-2 sm:px-4">Postagens</TabsTrigger>
+              <TabsTrigger value="panel" className="text-xs sm:text-sm px-2 sm:px-4">Painel</TabsTrigger>
+              <TabsTrigger value="stats" className="text-xs sm:text-sm px-2 sm:px-4">Estatísticas</TabsTrigger>
+              <TabsTrigger value="achievements" className="text-xs sm:text-sm px-2 sm:px-4">Conquistas</TabsTrigger>
+              <TabsTrigger value="gallery" className="text-xs sm:text-sm px-2 sm:px-4">Galeria</TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="posts" className="space-y-6">
             {/* Estado vazio - aguardando implementação do backend */}

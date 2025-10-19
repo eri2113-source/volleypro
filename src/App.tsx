@@ -511,16 +511,16 @@ export default function App() {
             isAuthenticated={isAuthenticated}
             onProfileClick={() => setShowMyProfile(true)}
           />
-          <main className="flex-1 min-w-0 w-0 bg-background overflow-y-auto overflow-x-hidden">
+          <main className="flex-1 w-full bg-background overflow-y-auto overflow-x-hidden">
             {/* Barra de navegação moderna com glassmorphism - SEMPRE TRAVADA NO TOPO */}
             <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-md">
-              <div className="w-full overflow-x-auto px-4 sm:px-6">
-                <div className="flex h-16 items-center justify-between gap-2 sm:gap-4">
+              <div className="w-full px-2 sm:px-4 md:px-6">
+                <div className="flex h-14 sm:h-16 items-center justify-between gap-1 sm:gap-2 md:gap-4 max-w-full">
                   {/* Logo */}
-                  <Logo variant="compact" className="shrink-0" />
+                  <Logo variant="compact" className="shrink-0 scale-75 sm:scale-100" />
                   
                   {/* Navegação horizontal - menus principais */}
-                  <nav className="flex items-center gap-0.5 sm:gap-1 flex-1 justify-center flex-wrap">
+                  <nav className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-1 justify-center overflow-x-auto scrollbar-hide">
                     {/* Itens principais (sempre visíveis) */}
                     {primaryMenuItems.map((item) => {
                       const Icon = item.icon;
@@ -539,12 +539,13 @@ export default function App() {
                             setShowMyProfile(false);
                           }}
                           className={`
-                            gap-2 hover:bg-primary/10 transition-all px-3 py-2 rounded-xl whitespace-nowrap
+                            gap-1 sm:gap-2 hover:bg-primary/10 transition-all px-2 sm:px-3 py-2 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0
                             ${isActive ? 'bg-primary/10 text-primary font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'}
                           `}
+                          title={item.label}
                         >
-                          <Icon className="h-5 w-5 shrink-0" />
-                          <span className="hidden xl:inline">{item.label}</span>
+                          <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                          <span className="hidden sm:inline text-xs md:text-sm">{item.label}</span>
                         </Button>
                       );
                     })}
@@ -556,13 +557,13 @@ export default function App() {
                           variant="ghost"
                           size="sm"
                           className={`
-                            gap-2 hover:bg-primary/10 transition-all px-3 py-2 rounded-xl whitespace-nowrap
+                            gap-1 sm:gap-2 hover:bg-primary/10 transition-all px-2 sm:px-3 py-2 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0
                             ${showMoreMenu ? 'bg-primary/10 text-primary font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'}
                           `}
                           title={showMoreMenu ? "Ocultar menu" : "Mais opções"}
                         >
-                          <MoreHorizontal className="h-5 w-5 shrink-0" />
-                          <span className="hidden xl:inline">Mais...</span>
+                          <MoreHorizontal className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                          <span className="hidden sm:inline text-xs md:text-sm">Mais...</span>
                         </Button>
                       </PopoverTrigger>
                       <PopoverContent 
@@ -605,7 +606,7 @@ export default function App() {
                   </nav>
                   
                   {/* Botões de perfil e sair */}
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1 shrink-0">
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -615,19 +616,21 @@ export default function App() {
                         setSelectedTeam(null);
                         setSelectedTournament(null);
                       }}
-                      className="gap-2 hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-all px-3 py-2 rounded-xl"
+                      className="gap-1 sm:gap-2 hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-all px-2 sm:px-3 py-2 rounded-lg sm:rounded-xl"
+                      title="Meu Perfil"
                     >
-                      <User className="h-5 w-5 shrink-0" />
-                      <span className="hidden xl:inline">Perfil</span>
+                      <User className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                      <span className="hidden md:inline text-xs md:text-sm">Perfil</span>
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={handleSignOut} 
-                      className="gap-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all px-3 py-2 rounded-xl"
+                      className="gap-1 sm:gap-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all px-2 sm:px-3 py-2 rounded-lg sm:rounded-xl"
+                      title="Sair"
                     >
-                      <LogOut className="h-5 w-5 shrink-0" />
-                      <span className="hidden xl:inline">Sair</span>
+                      <LogOut className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                      <span className="hidden md:inline text-xs md:text-sm">Sair</span>
                     </Button>
                   </div>
                 </div>
