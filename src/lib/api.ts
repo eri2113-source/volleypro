@@ -51,10 +51,10 @@ async function getAuthToken() {
 }
 
 // Generic API call helper
-async function apiCall(endpoint: string, options: RequestInit = {}) {
+async function apiCall(endpoint: string, options: RequestInit = {}, silent = false) {
   const token = await getAuthToken();
   
-  if (!token) {
+  if (!token && !silent) {
     console.warn('⚠️ Nenhum token de autenticação encontrado');
   }
   
@@ -90,7 +90,7 @@ async function apiCall(endpoint: string, options: RequestInit = {}) {
   if (!response.ok) {
     // Se o erro indica que precisa refresh, tentar renovar a sessão
     if (data.needsRefresh || data.code === 'TOKEN_INVALID') {
-      console.log('🔄 Token inválido, tentando refresh...');
+      if (!silent) console.log('🔄 Token inválido, tentando refresh...');
       
       try {
         const { createClient } = await import('../utils/supabase/client');
@@ -100,7 +100,7 @@ async function apiCall(endpoint: string, options: RequestInit = {}) {
         const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
         
         if (!refreshError && refreshData.session) {
-          console.log('✅ Sessão renovada com sucesso');
+          if (!silent) console.log('✅ Sessão renovada com sucesso');
           
           // Salvar novo token
           if (typeof window !== 'undefined') {
@@ -128,17 +128,26 @@ async function apiCall(endpoint: string, options: RequestInit = {}) {
           
           return retryData;
         } else {
-          console.error('❌ Erro ao renovar sessão:', refreshError);
-          // Se não conseguir renovar, fazer logout
+          if (!silent) console.error('❌ Erro ao renovar sessão:', refreshError);
+          // Se não conseguir renovar, fazer logout (apenas se não for silent)
+          if (!silent) {
+            await authApi.signOut();
+            window.location.reload();
+          }
+        }
+      } catch (refreshError) {
+        if (!silent) console.error('❌ Erro crítico ao renovar sessão:', refreshError);
+        // Logout e reload (apenas se não for silent)
+        if (!silent) {
           await authApi.signOut();
           window.location.reload();
         }
-      } catch (refreshError) {
-        console.error('❌ Erro crítico ao renovar sessão:', refreshError);
-        // Logout e reload
-        await authApi.signOut();
-        window.location.reload();
       }
+    }
+    
+    // Se for silent, não lançar erro - apenas retornar resposta vazia
+    if (silent) {
+      return { error: data.error || 'API request failed', silent: true };
     }
     
     throw new Error(data.error || 'API request failed');
@@ -692,7 +701,24 @@ export const invitationApi = {
 export const masterAdminApi = {
   // Check if current user is master
   async checkMasterStatus() {
-    return retryWithDelay(() => apiCall('/admin/check-master'));
+    try {
+      // Verificar se usuário está autenticado antes
+      const token = await getAuthToken();
+      if (!token) {
+        // Usuário não autenticado - retornar false silenciosamente
+        return { isMaster: false };
+      }
+      // Usar modo silent para não exibir erros no console
+      const result = await apiCall('/admin/check-master', {}, true);
+      // Se retornou com erro silencioso, retornar false
+      if (result.silent) {
+        return { isMaster: false };
+      }
+      return result;
+    } catch (error: any) {
+      // Não logar erro no console - apenas retornar false
+      return { isMaster: false };
+    }
   },
 
   // Delete post (master only)

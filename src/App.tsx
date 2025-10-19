@@ -433,7 +433,7 @@ export default function App() {
   // Se ESTIVER autenticado, mostrar aplicação completa
   return (
     <ErrorBoundary>
-      <MigrationNotice />
+      {/* <MigrationNotice /> */}
       <CacheBuster />
       <SidebarProvider>
         <div className="flex min-h-screen w-full overflow-x-hidden">

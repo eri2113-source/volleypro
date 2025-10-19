@@ -87,7 +87,10 @@ async function authMiddleware(c: any, next: any) {
     const { data: { user }, error } = await supabase.auth.getUser(accessToken);
     
     if (error) {
-      console.error('❌ Auth error:', error.message);
+      // Apenas logar se não for erro de sessão (comum e esperado)
+      if (!error.message?.includes('session missing')) {
+        console.error('❌ Auth error:', error.message);
+      }
       // Retornar erro específico para o frontend saber que precisa refresh
       return c.json({ 
         error: `Unauthorized - ${error.message}`,
