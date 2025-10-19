@@ -391,10 +391,10 @@ export function Showcase({ onSelectAthlete }: ShowcaseProps) {
 
       {/* Modal de Convite */}
       <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
-        <DialogContent>
+        <DialogContent aria-describedby="invite-athlete-description">
           <DialogHeader>
             <DialogTitle>Convocar Atleta</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="invite-athlete-description">
               Envie uma mensagem para este atleta convidando-o para seu time.
             </DialogDescription>
           </DialogHeader>

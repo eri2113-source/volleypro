@@ -20,6 +20,7 @@ import {
 import { authApi } from "../lib/api";
 import { Shield, AlertCircle } from "lucide-react";
 import { toast } from "sonner@2.0.3";
+import { ForgotPasswordModal } from "./ForgotPasswordModal";
 
 interface AuthModalProps {
   open: boolean;
@@ -31,6 +32,7 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signup");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   // Sign up state
   const [signUpEmail, setSignUpEmail] = useState("");
@@ -49,6 +51,7 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
     if (open) {
       setError("");
       setLoading(false);
+      setShowForgotPassword(false); // Garantir que o modal de recuperação está fechado
     } else {
       // Limpar formulários ao fechar
       setTimeout(() => {
@@ -60,6 +63,7 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
         setSignInEmail("");
         setSignInPassword("");
         setError("");
+        setShowForgotPassword(false);
       }, 300);
     }
   }, [open]);
@@ -168,11 +172,13 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
 
   const handleSignIn = async () => {
     console.log("🔐 [Chrome-Optimized] Iniciando login...");
+    console.log("📝 Email:", signInEmail, "| Senha length:", signInPassword?.length);
     setError("");
     setLoading(true);
 
     try {
       if (!signInEmail || !signInPassword) {
+        console.error("❌ Campos vazios - Email:", !!signInEmail, "| Senha:", !!signInPassword);
         throw new Error("Por favor, preencha email e senha");
       }
 
@@ -232,13 +238,16 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
     }
   };
 
-  if (!open) {
-    return null;
-  }
-
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+    <>
+      <ForgotPasswordModal
+        open={showForgotPassword && !loading}
+        onClose={() => setShowForgotPassword(false)}
+      />
+      
+      {!showForgotPassword && (
+      <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto" aria-describedby="auth-description">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-2">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
@@ -246,7 +255,7 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
             </div>
             <DialogTitle>VolleyPro</DialogTitle>
           </div>
-          <DialogDescription>
+          <DialogDescription id="auth-description">
             Entre ou crie sua conta para acessar a rede social do vôlei
           </DialogDescription>
         </DialogHeader>
@@ -313,6 +322,17 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
                 "Entrar"
               )}
             </Button>
+
+            <div className="flex items-center justify-center">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-primary hover:underline"
+                disabled={loading}
+              >
+                Esqueci minha senha
+              </button>
+            </div>
 
             <p className="text-xs text-center text-muted-foreground">
               Não tem uma conta? Clique em "Criar Conta" acima.
@@ -470,5 +490,7 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
         </Tabs>
       </DialogContent>
     </Dialog>
+      )}
+    </>
   );
 }

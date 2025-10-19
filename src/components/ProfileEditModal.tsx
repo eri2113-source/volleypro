@@ -253,7 +253,7 @@ function ProfileEditModalContent({ open, onClose, onSuccess }: ProfileEditModalP
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh]" aria-describedby="profile-edit-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             Editar Perfil
@@ -264,7 +264,7 @@ function ProfileEditModalContent({ open, onClose, onSuccess }: ProfileEditModalP
               </Badge>
             )}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="profile-edit-description">
             Atualize suas informações pessoais
           </DialogDescription>
         </DialogHeader>

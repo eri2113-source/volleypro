@@ -343,7 +343,10 @@ export function Photos() {
 
       {/* Photo Detail Dialog */}
       <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
-        <DialogContent className="max-w-4xl p-0">
+        <DialogContent className="max-w-4xl p-0" aria-describedby="photo-detail-description">
+          <DialogDescription id="photo-detail-description" className="sr-only">
+            Visualização detalhada da foto
+          </DialogDescription>
           {selectedPhoto && (
             <div className="grid md:grid-cols-2">
               <div className="bg-black flex items-center justify-center">

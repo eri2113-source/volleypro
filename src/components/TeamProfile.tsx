@@ -899,10 +899,10 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
 
       {/* Modal de Escalação */}
       <Dialog open={showRosterModal} onOpenChange={setShowRosterModal}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="roster-edit-description">
           <DialogHeader>
             <DialogTitle>Editar Escalação</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="roster-edit-description">
               Defina os jogadores titulares para cada posição
             </DialogDescription>
           </DialogHeader>
@@ -944,10 +944,10 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
 
       {/* Modal de Avaliação de Atleta */}
       <Dialog open={showEvaluationModal} onOpenChange={setShowEvaluationModal}>
-        <DialogContent>
+        <DialogContent aria-describedby="evaluation-description">
           <DialogHeader>
             <DialogTitle>Avaliar {selectedPlayer?.name}</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="evaluation-description">
               Avalie o desempenho do atleta em diferentes aspectos
             </DialogDescription>
           </DialogHeader>

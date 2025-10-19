@@ -84,7 +84,7 @@ export function ContentInspirationModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] p-0">
+      <DialogContent className="max-w-5xl max-h-[90vh] p-0" aria-describedby="content-inspiration-description">
         <DialogHeader className="px-6 pt-6">
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
@@ -92,7 +92,7 @@ export function ContentInspirationModal({
             </div>
             <div>
               <DialogTitle className="text-2xl">Ferramentas de Inspiração</DialogTitle>
-              <DialogDescription>
+              <DialogDescription id="content-inspiration-description">
                 Templates, ideias e dicas para criar conteúdo incrível! 🏐✨
               </DialogDescription>
             </div>

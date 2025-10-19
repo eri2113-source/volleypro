@@ -1,0 +1,21 @@
+VOLLEYPRO BUILD TIMESTAMP
+========================
+
+Versão: 2.3.0
+Feature: Sistema de Anúncios Completo
+Data: 2024-01-19 18:45:00
+Build ID: ads-system-v2-complete
+
+Mudanças neste build:
+- ✅ Sistema de anúncios funcionando 100%
+- ✅ Componente AdDisplay.tsx
+- ✅ Componente Ads.tsx  
+- ✅ Componente AdsManagement.tsx
+- ✅ Componente CreateAdModal.tsx
+- ✅ Menu "Anúncios" na barra horizontal
+- ✅ Menu "Anúncios" na sidebar lateral
+- ✅ 6 rotas backend para anúncios
+- ✅ Integração completa no App.tsx
+
+Este arquivo força a Vercel a fazer rebuild completo.
+Timestamp: 1737320700

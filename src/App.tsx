@@ -13,11 +13,13 @@ import { Photos } from "./components/Photos";
 import { Videos } from "./components/Videos";
 import { Verified } from "./components/Verified";
 import { Monetization } from "./components/Monetization";
+import { Ads } from "./components/Ads";
 import { AthleteProfile } from "./components/AthleteProfile";
 import { TeamProfile } from "./components/TeamProfile";
 import { MyProfile } from "./components/MyProfile";
 import { AuthModal } from "./components/AuthModal";
 import { ProfileEditModal } from "./components/ProfileEditModal";
+import { ResetPasswordModal } from "./components/ResetPasswordModal";
 import { LoadingScreen } from "./components/LoadingScreen";
 import { LandingPage } from "./components/LandingPage";
 import { Logo } from "./components/Logo";
@@ -29,13 +31,17 @@ import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { OfflineIndicator } from "./components/OfflineIndicator";
 import { IconGenerator } from "./components/IconGenerator";
 import { PWATestPanel } from "./components/PWATestPanel";
+import { MigrationNotice } from "./components/MigrationNotice";
 import { authApi, userApi } from "./lib/api";
 import { showConsoleHelp } from "./utils/consoleHelp";
 import { Button } from "./components/ui/button";
-import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown } from "lucide-react";
+import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, Megaphone } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+
+// 🚀 VERSÃO: 2.3.0 - Sistema de Anúncios Completo - Build: 20240119-1845
+// ✅ Última atualização: Sistema de anúncios com aprovação administrativa
 
 export default function App() {
   const [currentView, setCurrentView] = useState("feed");
@@ -44,6 +50,7 @@ export default function App() {
   const [showMyProfile, setShowMyProfile] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileEditModal, setShowProfileEditModal] = useState(false);
+  const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [userType, setUserType] = useState<"athlete" | "team" | "fan">("fan");
@@ -70,10 +77,22 @@ export default function App() {
     }
   }, []);
 
-  // Listener para navegação via hash
+  // Listener para navegação via hash e detecção de reset de senha
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.substring(1);
+      
+      // Detectar se é um reset de senha (vem do email do Supabase)
+      if (hash.includes('reset-password') || hash.includes('type=recovery')) {
+        console.log('🔐 Link de recuperação de senha detectado!');
+        setShowResetPasswordModal(true);
+        // Limpar o hash após abrir o modal
+        setTimeout(() => {
+          window.history.replaceState(null, '', window.location.pathname);
+        }, 100);
+        return;
+      }
+      
       if (hash === 'monetization') {
         setCurrentView('monetization');
         setSelectedAthlete(null);
@@ -310,6 +329,8 @@ export default function App() {
         return <Lives {...authProps} />;
       case "invitations":
         return <Invitations {...authProps} />;
+      case "ads":
+        return <Ads />;
       case "polls":
         return <Polls />;
       case "photos":
@@ -377,6 +398,17 @@ export default function App() {
             });
           }}
         />
+
+        <ResetPasswordModal
+          open={showResetPasswordModal}
+          onClose={() => setShowResetPasswordModal(false)}
+          onSuccess={() => {
+            toast.success("Senha atualizada!", {
+              description: "Você já pode fazer login com sua nova senha"
+            });
+            setShowAuthModal(true);
+          }}
+        />
         
         <PWAInstallPrompt />
         <VersionChecker />
@@ -394,31 +426,33 @@ export default function App() {
     { id: "showcase", label: "Vitrine", icon: Store },
     { id: "lives", label: "Lives", icon: Radio },
     { id: "invitations", label: "Convites", icon: Mail },
+    { id: "ads", label: "Anúncios", icon: Megaphone },
     { id: "monetization", label: "Monetização", icon: Crown },
   ];
 
   // Se ESTIVER autenticado, mostrar aplicação completa
   return (
     <ErrorBoundary>
+      <MigrationNotice />
       <CacheBuster />
       <SidebarProvider>
-        <div className="flex min-h-screen w-full">
+        <div className="flex min-h-screen w-full overflow-x-hidden">
           <AppSidebar 
             currentView={currentView} 
             onNavigate={setCurrentView}
             isAuthenticated={isAuthenticated}
             onProfileClick={() => setShowMyProfile(true)}
           />
-          <main className="flex-1 bg-gradient-to-br from-background via-muted/30 to-primary/10">
+          <main className="flex-1 min-w-0 w-0 bg-gradient-to-br from-background via-muted/30 to-primary/10">
             {/* Barra azul STICKY com navegação horizontal */}
             <div className="sticky top-0 z-40 border-b bg-gradient-to-r from-primary via-[#0052cc] to-primary shadow-lg">
-              <div className="container mx-auto px-6">
-                <div className="flex h-16 items-center justify-between gap-4">
+              <div className="w-full overflow-x-auto px-3 sm:px-6">
+                <div className="flex h-16 items-center justify-between gap-2 sm:gap-4">
                   {/* Logo */}
-                  <Logo variant="compact" className="[&_img]:w-16 [&_img]:h-16 shrink-0" withShadow />
+                  <Logo variant="compact" className="[&_img]:w-10 [&_img]:h-10 sm:[&_img]:w-12 sm:[&_img]:h-12 shrink-0" withShadow />
                   
                   {/* Navegação horizontal - menus principais */}
-                  <nav className="flex items-center gap-1 flex-1 justify-center">
+                  <nav className="flex items-center gap-0.5 sm:gap-1 flex-1 justify-center flex-wrap">
                     {mainMenuItems.map((item) => {
                       const Icon = item.icon;
                       const isActive = currentView === item.id;
@@ -435,36 +469,19 @@ export default function App() {
                             setShowMyProfile(false);
                           }}
                           className={`
-                            gap-2 text-white hover:bg-white/20 hover:text-white transition-all
+                            gap-1 sm:gap-2 text-white hover:bg-white/20 hover:text-white transition-all px-2 sm:px-3 whitespace-nowrap
                             ${isActive ? 'bg-white/20 shadow-sm' : ''}
                           `}
                         >
-                          <Icon className="h-4 w-4" />
-                          <span className="hidden lg:inline">{item.label}</span>
+                          <Icon className="h-4 w-4 shrink-0" />
+                          <span className="hidden xl:inline text-sm">{item.label}</span>
                         </Button>
                       );
                     })}
                   </nav>
                   
                   {/* Botões de perfil e sair */}
-                  <div className="flex items-center gap-2 shrink-0">
-                    {/* BOTÃO TEMPORÁRIO - TESTE PWA */}
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => {
-                        setCurrentView('pwa-test');
-                        setSelectedAthlete(null);
-                        setSelectedTeam(null);
-                        setShowMyProfile(false);
-                      }}
-                      className="text-white bg-white/10 hover:bg-white/20 hover:text-white border border-white/30"
-                      title="Testar PWA"
-                    >
-                      🧪
-                      <span className="hidden lg:inline ml-2">PWA</span>
-                    </Button>
-                    
+                  <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -473,19 +490,19 @@ export default function App() {
                         setSelectedAthlete(null);
                         setSelectedTeam(null);
                       }}
-                      className="text-white hover:bg-white/20 hover:text-white"
+                      className="text-white hover:bg-white/20 hover:text-white px-2 sm:px-3"
                     >
-                      <User className="h-4 w-4 lg:mr-2" />
-                      <span className="hidden lg:inline">Perfil</span>
+                      <User className="h-4 w-4 shrink-0" />
+                      <span className="hidden xl:inline ml-2">Perfil</span>
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={handleSignOut} 
-                      className="text-white hover:bg-white/20 hover:text-white"
+                      className="text-white hover:bg-white/20 hover:text-white px-2 sm:px-3"
                     >
-                      <LogOut className="h-4 w-4 lg:mr-2" />
-                      <span className="hidden lg:inline">Sair</span>
+                      <LogOut className="h-4 w-4 shrink-0" />
+                      <span className="hidden xl:inline ml-2">Sair</span>
                     </Button>
                   </div>
                 </div>
@@ -493,7 +510,9 @@ export default function App() {
             </div>
             
             {/* Conteúdo */}
-            {renderView()}
+            <div className="w-full max-w-full overflow-x-hidden">
+              {renderView()}
+            </div>
           </main>
         </div>
       </SidebarProvider>
@@ -507,6 +526,17 @@ export default function App() {
           if (showMyProfile) {
             window.location.reload(); // Reload para atualizar dados
           }
+        }}
+      />
+
+      <ResetPasswordModal
+        open={showResetPasswordModal}
+        onClose={() => setShowResetPasswordModal(false)}
+        onSuccess={() => {
+          toast.success("Senha atualizada!", {
+            description: "Você já pode fazer login com sua nova senha"
+          });
+          setShowAuthModal(true);
         }}
       />
 

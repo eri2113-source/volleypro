@@ -1,0 +1,5 @@
+# Cole este código no arquivo src/components/AdsManagement.tsx
+
+Copie TODO o conteúdo abaixo (SEM incluir este título):
+
+---INÍCIO DO CÓDIGO---

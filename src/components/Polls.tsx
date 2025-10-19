@@ -149,10 +149,10 @@ export function Polls() {
               Criar Enquete
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg" aria-describedby="create-poll-description">
             <DialogHeader>
               <DialogTitle>Criar Nova Enquete</DialogTitle>
-              <DialogDescription>
+              <DialogDescription id="create-poll-description">
                 Crie uma enquete para coletar a opinião da comunidade
               </DialogDescription>
             </DialogHeader>

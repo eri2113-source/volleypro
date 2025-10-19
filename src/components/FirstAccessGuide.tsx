@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { X, Camera, UserCircle2, Trophy, Radio, Users, ArrowRight } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
 import { Badge } from "./ui/badge";
 
 interface FirstAccessGuideProps {
@@ -133,12 +133,15 @@ export function FirstAccessGuide({ userType, onComplete }: FirstAccessGuideProps
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleComplete()}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl" aria-describedby="first-access-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="text-2xl">👋</span>
             Bem-vindo ao VolleyPro!
           </DialogTitle>
+          <DialogDescription id="first-access-description" className="sr-only">
+            Guia de primeiros passos para conhecer a plataforma
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">

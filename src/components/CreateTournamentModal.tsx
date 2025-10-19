@@ -72,10 +72,10 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md" aria-describedby="create-tournament-description">
         <DialogHeader>
           <DialogTitle>Criar Novo Torneio</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="create-tournament-description">
             Organize um torneio e convide times para participar
           </DialogDescription>
         </DialogHeader>

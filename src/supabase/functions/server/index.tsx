@@ -2736,6 +2736,163 @@ app.delete('/make-server-0ea22bba/lives/:liveId', authMiddleware, async (c) => {
   }
 });
 
+// ============= ADS / ANÚNCIOS ROUTES =============
+
+// Create ad
+app.post('/make-server-0ea22bba/ads/create', async (c) => {
+  try {
+    const ad = await c.req.json();
+    
+    if (!ad.id || !ad.title || !ad.imageUrl) {
+      return c.json({ error: 'Missing required fields' }, 400);
+    }
+    
+    // Save ad with pending status
+    await kv.set(ad.id, ad);
+    
+    console.log(`✅ Ad created (pending approval): ${ad.id} - ${ad.title}`);
+    
+    return c.json({ success: true, ad });
+  } catch (error: any) {
+    console.error('❌ Error creating ad:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// List all ads (for admin)
+app.get('/make-server-0ea22bba/ads/list', async (c) => {
+  try {
+    const allAds = await kv.getByPrefix('ad_');
+    
+    // Sort by creation date, newest first
+    allAds.sort((a: any, b: any) => {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+    
+    console.log(`📋 Returning ${allAds.length} ads`);
+    return c.json({ ads: allAds });
+  } catch (error: any) {
+    console.error('❌ Error listing ads:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get approved ads (public)
+app.get('/make-server-0ea22bba/ads/approved', async (c) => {
+  try {
+    const allAds = await kv.getByPrefix('ad_');
+    const approvedAds = allAds.filter((ad: any) => ad.status === 'approved');
+    
+    // Sort by approval date, newest first
+    approvedAds.sort((a: any, b: any) => {
+      const dateA = a.approvedAt ? new Date(a.approvedAt).getTime() : 0;
+      const dateB = b.approvedAt ? new Date(b.approvedAt).getTime() : 0;
+      return dateB - dateA;
+    });
+    
+    console.log(`📋 Returning ${approvedAds.length} approved ads`);
+    return c.json({ ads: approvedAds });
+  } catch (error: any) {
+    console.error('❌ Error getting approved ads:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Approve ad (master only)
+app.post('/make-server-0ea22bba/ads/approve', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const { adId } = await c.req.json();
+    
+    // Check if user is master
+    const isMaster = await isMasterUser(userId);
+    if (!isMaster) {
+      return c.json({ error: 'Master access required' }, 403);
+    }
+    
+    const ad = await kv.get(adId);
+    if (!ad) {
+      return c.json({ error: 'Ad not found' }, 404);
+    }
+    
+    // Update ad status
+    ad.status = 'approved';
+    ad.approvedBy = userId;
+    ad.approvedAt = new Date().toISOString();
+    
+    await kv.set(adId, ad);
+    
+    console.log(`✅ [MASTER] Ad approved: ${adId} - ${ad.title}`);
+    
+    return c.json({ success: true, ad });
+  } catch (error: any) {
+    console.error('❌ Error approving ad:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Reject ad (master only)
+app.post('/make-server-0ea22bba/ads/reject', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const { adId, reason } = await c.req.json();
+    
+    // Check if user is master
+    const isMaster = await isMasterUser(userId);
+    if (!isMaster) {
+      return c.json({ error: 'Master access required' }, 403);
+    }
+    
+    const ad = await kv.get(adId);
+    if (!ad) {
+      return c.json({ error: 'Ad not found' }, 404);
+    }
+    
+    // Update ad status
+    ad.status = 'rejected';
+    ad.rejectedBy = userId;
+    ad.rejectedAt = new Date().toISOString();
+    ad.rejectionReason = reason || 'Not approved';
+    
+    await kv.set(adId, ad);
+    
+    console.log(`❌ [MASTER] Ad rejected: ${adId} - ${ad.title}`);
+    
+    return c.json({ success: true, ad });
+  } catch (error: any) {
+    console.error('❌ Error rejecting ad:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Delete ad (master only)
+app.delete('/make-server-0ea22bba/ads/delete', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const { adId } = await c.req.json();
+    
+    // Check if user is master
+    const isMaster = await isMasterUser(userId);
+    if (!isMaster) {
+      return c.json({ error: 'Master access required' }, 403);
+    }
+    
+    const ad = await kv.get(adId);
+    if (!ad) {
+      return c.json({ error: 'Ad not found' }, 404);
+    }
+    
+    await kv.del(adId);
+    
+    console.log(`🗑️ [MASTER] Ad deleted: ${adId} - ${ad.title}`);
+    
+    return c.json({ success: true, message: 'Ad deleted successfully' });
+  } catch (error: any) {
+    console.error('❌ Error deleting ad:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // ============= LIVEKIT ROUTES =============
 app.route('/', livekitRoutes);
 

@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from "react";
 import { ReactionPicker, ReactionDisplay, VOLLEYBALL_REACTIONS } from "./ReactionPicker";
 import { ContentInspirationModal } from "./ContentInspirationModal";
 import { UpgradeBanner } from "./UpgradeBanner";
+import { AdDisplay } from "./AdDisplay";
 import { useUserPlan } from "../hooks/useUserPlan";
 import {
   DropdownMenu,
@@ -927,7 +928,7 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
           )}
         </Card>
       ) : (
-        posts.map((post) => {
+        posts.map((post, index) => {
           if (!post || !post.id) return null;
           
           const authorInitial = post.authorName?.[0] || 'U';
@@ -935,7 +936,13 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
           const isOfficialPost = post.isOfficial === true;
           
           return (
-        <Card key={post.id} className={`hover:shadow-xl transition-all duration-300 border-l-4 ${
+            <div key={post.id}>
+              {/* Inserir anúncios em posições estratégicas */}
+              {index === 2 && <AdDisplay type="banner" className="mb-6" />}
+              {index === 5 && <AdDisplay type="card" className="mb-6" />}
+              {index === 8 && <AdDisplay type="card" className="mb-6" />}
+              
+              <Card className={`hover:shadow-xl transition-all duration-300 border-l-4 ${
           isOfficialPost ? 'border-l-secondary bg-gradient-to-r from-secondary/5 to-transparent' : 'border-l-primary/30'
         }`}>
           <CardHeader>
@@ -1206,19 +1213,20 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
             )}
           </CardFooter>
         </Card>
+            </div>
           );
-        }).filter(Boolean)
+        })
       )}
 
       {/* Share Dialog */}
       <Dialog open={shareDialogOpen} onOpenChange={setShareDialogOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md" aria-describedby="share-post-description">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Share2 className="h-5 w-5 text-primary" />
               Compartilhar Publicação
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="share-post-description">
               Escolha como você quer compartilhar esta publicação
             </DialogDescription>
           </DialogHeader>

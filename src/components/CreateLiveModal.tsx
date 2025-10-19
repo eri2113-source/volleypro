@@ -130,7 +130,7 @@ export function CreateLiveModal({ open, onClose, onSuccess }: CreateLiveModalPro
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px]" aria-describedby="create-live-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Radio className="h-5 w-5 text-red-500" />
@@ -139,7 +139,7 @@ export function CreateLiveModal({ open, onClose, onSuccess }: CreateLiveModalPro
               Todos os perfis
             </Badge>
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="create-live-description">
             {isScheduled 
               ? "Agende uma transmissão ao vivo para uma data futura. Disponível para fãs, atletas e times!"
               : "Comece a transmitir agora mesmo! Qualquer perfil pode criar lives e compartilhar com o mundo."

@@ -1,9 +1,9 @@
-json
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "installCommand": "npm install",
+  "installCommand": "npm install --legacy-peer-deps",
+  "ignoreCommand": "git diff --quiet HEAD^ HEAD",
   "headers": [
     {
       "source": "/service-worker.js",

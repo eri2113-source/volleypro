@@ -1,0 +1,75 @@
+# ⚡ Configuração Netlify - VolleyPro
+# Deploy automático, rápido e SEM problemas de cache!
+
+[build]
+  # Comando de build
+  command = "npm install && npm run build"
+  
+  # Diretório de saída
+  publish = "dist"
+  
+  # Variáveis de ambiente do build
+  environment = { NODE_VERSION = "18" }
+
+# Redirects para SPA (Single Page Application)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers de segurança e cache
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Service Worker sem cache agressivo
+[[headers]]
+  for = "/service-worker.js"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+    Service-Worker-Allowed = "/"
+
+# Manifest do PWA
+[[headers]]
+  for = "/manifest.json"
+  [headers.values]
+    Content-Type = "application/manifest+json"
+    Cache-Control = "public, max-age=3600"
+
+# Ícones do PWA com cache longo
+[[headers]]
+  for = "/icon-*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Assets com cache
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Build plugins (otimizações automáticas)
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
+
+# Configurações de deploy
+[build.processing]
+  skip_processing = false
+
+[build.processing.css]
+  bundle = true
+  minify = true
+
+[build.processing.js]
+  bundle = true
+  minify = true
+
+[build.processing.html]
+  pretty_urls = true
+
+[build.processing.images]
+  compress = true
