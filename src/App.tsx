@@ -32,8 +32,12 @@ import { OfflineIndicator } from "./components/OfflineIndicator";
 import { IconGenerator } from "./components/IconGenerator";
 import { PWATestPanel } from "./components/PWATestPanel";
 import { MigrationNotice } from "./components/MigrationNotice";
+import { FigmaMakeAccessControl } from "./components/FigmaMakeAccessControl";
+import { FigmaMakeWarning } from "./components/FigmaMakeWarning";
+import { TournamentDetails } from "./components/TournamentDetails";
 import { authApi, userApi } from "./lib/api";
 import { showConsoleHelp } from "./utils/consoleHelp";
+import { useFigmaMakeAccess } from "./hooks/useFigmaMakeAccess";
 import { Button } from "./components/ui/button";
 import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, Megaphone } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
@@ -47,6 +51,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState("feed");
   const [selectedAthlete, setSelectedAthlete] = useState<number | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
+  const [selectedTournament, setSelectedTournament] = useState<number | null>(null);
   const [showMyProfile, setShowMyProfile] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileEditModal, setShowProfileEditModal] = useState(false);
@@ -55,6 +60,10 @@ export default function App() {
   const [isInitializing, setIsInitializing] = useState(true);
   const [userType, setUserType] = useState<"athlete" | "team" | "fan">("fan");
   const [showFirstAccessGuide, setShowFirstAccessGuide] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  
+  // 🔒 CONTROLE DE ACESSO FIGMA MAKE - Bloqueia usuários não autorizados
+  const { isFigmaMake, hasAccess, isChecking } = useFigmaMakeAccess(userEmail);
 
   // Limpar cache quando necessário
   useEffect(() => {
@@ -148,6 +157,7 @@ export default function App() {
           if (event === 'SIGNED_IN' && session) {
             console.log("✅ Usuário autenticado!");
             setIsAuthenticated(true);
+            setUserEmail(session.user.email || null);
             
             // Salvar tokens no localStorage
             if (typeof window !== 'undefined') {
@@ -162,6 +172,7 @@ export default function App() {
           } else if (event === 'SIGNED_OUT') {
             console.log("🚪 Usuário deslogou");
             setIsAuthenticated(false);
+            setUserEmail(null);
             
             // Limpar dados locais
             if (typeof window !== 'undefined') {
@@ -215,6 +226,9 @@ export default function App() {
       }
       
       console.log("✅ Sessão encontrada para:", session.user.email);
+      
+      // Salvar email do usuário
+      setUserEmail(session.user.email || null);
       
       // Garantir que o token está salvo no localStorage
       if (typeof window !== 'undefined') {
@@ -307,6 +321,10 @@ export default function App() {
     if (selectedTeam !== null) {
       return <TeamProfile teamId={selectedTeam} onBack={() => setSelectedTeam(null)} />;
     }
+    
+    if (selectedTournament !== null) {
+      return <TournamentDetails tournamentId={selectedTournament} onBack={() => setSelectedTournament(null)} />;
+    }
 
     // Passar props de autenticação para todos os componentes
     const authProps = {
@@ -322,7 +340,7 @@ export default function App() {
       case "teams":
         return <Teams onSelectTeam={setSelectedTeam} {...authProps} />;
       case "tournaments":
-        return <Tournaments {...authProps} />;
+        return <Tournaments {...authProps} onViewDetails={setSelectedTournament} />;
       case "showcase":
         return <Showcase onSelectAthlete={setSelectedAthlete} {...authProps} />;
       case "lives":
@@ -375,10 +393,22 @@ export default function App() {
     );
   }
 
+  // 🔒 SE ESTÁ NO FIGMA MAKE E NÃO TEM ACESSO, BLOQUEAR TUDO
+  if (isFigmaMake && !hasAccess) {
+    return (
+      <ErrorBoundary>
+        <FigmaMakeAccessControl userEmail={userEmail} />
+      </ErrorBoundary>
+    );
+  }
+
   // Se NÃO estiver autenticado, mostrar Landing Page
   if (!isAuthenticated) {
     return (
       <ErrorBoundary>
+        {/* Aviso do Figma Make para usuários não logados */}
+        {isFigmaMake && <FigmaMakeWarning />}
+        
         <PWAManager />
         <CacheBuster />
         <LandingPage onLoginClick={() => setShowAuthModal(true)} />
@@ -433,7 +463,15 @@ export default function App() {
   // Se ESTIVER autenticado, mostrar aplicação completa
   return (
     <ErrorBoundary>
-      {/* <MigrationNotice /> */}
+      {/* 🔒 Controle de Acesso Figma Make */}
+      <FigmaMakeAccessControl userEmail={userEmail} />
+      
+      {/* ⚠️ Aviso Visual para todos os usuários */}
+      <FigmaMakeWarning />
+      
+      {/* ⚠️ Aviso de Migração (apenas no Figma Make) */}
+      <MigrationNotice />
+      
       <CacheBuster />
       <SidebarProvider>
         <div className="flex min-h-screen w-full overflow-x-hidden">
@@ -466,6 +504,7 @@ export default function App() {
                             setCurrentView(item.id);
                             setSelectedAthlete(null);
                             setSelectedTeam(null);
+                            setSelectedTournament(null);
                             setShowMyProfile(false);
                           }}
                           className={`
@@ -489,6 +528,7 @@ export default function App() {
                         setShowMyProfile(true);
                         setSelectedAthlete(null);
                         setSelectedTeam(null);
+                        setSelectedTournament(null);
                       }}
                       className="text-white hover:bg-white/20 hover:text-white px-2 sm:px-3"
                     >

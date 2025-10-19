@@ -133,27 +133,25 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
       setPosts(allPosts);
       console.log("📰 Posts totais (usuários + notícias):", allPosts.length);
       
-      // Inicializar reações dos posts (dados mockados por enquanto)
-      // TODO: Carregar reações reais do backend
-      const initialReactions: { [postId: string]: { [emoji: string]: number } } = {};
-      allPosts?.forEach((post: any) => {
-        // Gerar algumas reações aleatórias para demonstração
-        const randomReactions: { [emoji: string]: number } = {};
-        const numReactions = Math.floor(Math.random() * 3); // 0-2 tipos de reações
-        const usedEmojis = new Set<string>();
+      // ✅ CARREGAR REAÇÕES DO LOCALSTORAGE (persistentes)
+      try {
+        const savedReactions = localStorage.getItem('volleypro_post_reactions');
+        const savedUserReactions = localStorage.getItem('volleypro_user_reactions');
         
-        for (let i = 0; i < numReactions; i++) {
-          const randomReaction = VOLLEYBALL_REACTIONS[Math.floor(Math.random() * VOLLEYBALL_REACTIONS.length)];
-          if (!usedEmojis.has(randomReaction.emoji)) {
-            randomReactions[randomReaction.emoji] = Math.floor(Math.random() * 5) + 1; // 1-5 reações
-            usedEmojis.add(randomReaction.emoji);
-          }
+        if (savedReactions) {
+          const parsedReactions = JSON.parse(savedReactions);
+          setPostReactions(parsedReactions);
+          console.log('✅ Reações carregadas do cache:', Object.keys(parsedReactions).length, 'posts');
         }
         
-        initialReactions[post.id] = randomReactions;
-      });
-      
-      setPostReactions(initialReactions);
+        if (savedUserReactions) {
+          const parsedUserReactions = JSON.parse(savedUserReactions);
+          setUserReactions(parsedUserReactions);
+          console.log('✅ Reações do usuário carregadas:', Object.keys(parsedUserReactions).length, 'posts');
+        }
+      } catch (error) {
+        console.error('❌ Erro ao carregar reações do cache:', error);
+      }
     } catch (error) {
       console.error("❌ Erro ao carregar posts:", error);
       // Não mostrar erro se for primeira carga
@@ -411,16 +409,31 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
         setUserReactions(prev => {
           const newReactions = { ...prev };
           delete newReactions[postId];
+          // ✅ SALVAR NO LOCALSTORAGE
+          try {
+            localStorage.setItem('volleypro_user_reactions', JSON.stringify(newReactions));
+          } catch (e) {
+            console.error('Erro ao salvar reações do usuário:', e);
+          }
           return newReactions;
         });
         
-        setPostReactions(prev => ({
-          ...prev,
-          [postId]: {
-            ...currentReactions,
-            [emoji]: Math.max(0, (currentReactions[emoji] || 0) - 1)
+        setPostReactions(prev => {
+          const updated = {
+            ...prev,
+            [postId]: {
+              ...currentReactions,
+              [emoji]: Math.max(0, (currentReactions[emoji] || 0) - 1)
+            }
+          };
+          // ✅ SALVAR NO LOCALSTORAGE
+          try {
+            localStorage.setItem('volleypro_post_reactions', JSON.stringify(updated));
+          } catch (e) {
+            console.error('Erro ao salvar reações dos posts:', e);
           }
-        }));
+          return updated;
+        });
         
         toast.success("Reação removida");
       } else {
@@ -432,25 +445,52 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
             [emoji]: (currentReactions[emoji] || 0) + 1
           };
           
-          setPostReactions(prev => ({
-            ...prev,
-            [postId]: newReactions
-          }));
+          setPostReactions(prev => {
+            const updated = {
+              ...prev,
+              [postId]: newReactions
+            };
+            // ✅ SALVAR NO LOCALSTORAGE
+            try {
+              localStorage.setItem('volleypro_post_reactions', JSON.stringify(updated));
+            } catch (e) {
+              console.error('Erro ao salvar reações dos posts:', e);
+            }
+            return updated;
+          });
         } else {
           // Adiciona nova reação
-          setPostReactions(prev => ({
-            ...prev,
-            [postId]: {
-              ...(prev[postId] || {}),
-              [emoji]: ((prev[postId] || {})[emoji] || 0) + 1
+          setPostReactions(prev => {
+            const updated = {
+              ...prev,
+              [postId]: {
+                ...(prev[postId] || {}),
+                [emoji]: ((prev[postId] || {})[emoji] || 0) + 1
+              }
+            };
+            // ✅ SALVAR NO LOCALSTORAGE
+            try {
+              localStorage.setItem('volleypro_post_reactions', JSON.stringify(updated));
+            } catch (e) {
+              console.error('Erro ao salvar reações dos posts:', e);
             }
-          }));
+            return updated;
+          });
         }
         
-        setUserReactions(prev => ({
-          ...prev,
-          [postId]: emoji
-        }));
+        setUserReactions(prev => {
+          const updated = {
+            ...prev,
+            [postId]: emoji
+          };
+          // ✅ SALVAR NO LOCALSTORAGE
+          try {
+            localStorage.setItem('volleypro_user_reactions', JSON.stringify(updated));
+          } catch (e) {
+            console.error('Erro ao salvar reações do usuário:', e);
+          }
+          return updated;
+        });
         
         const reactionData = VOLLEYBALL_REACTIONS.find(r => r.emoji === emoji);
         toast.success(`${emoji} ${reactionData?.label || 'Reação'} adicionada!`);

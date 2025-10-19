@@ -13,6 +13,15 @@ export function UpgradeBanner({ onUpgrade, dismissible = true }: UpgradeBannerPr
     return localStorage.getItem('upgrade_banner_dismissed') === 'true';
   });
 
+  // 🎯 ATIVAR APENAS APÓS O TORNEIO (07, 08 e 09 de novembro = ativa em 10/11/2025)
+  const ACTIVATION_DATE = new Date('2025-11-10T00:00:00-03:00'); // 10 de novembro de 2025
+  const currentDate = new Date();
+  
+  // Se ainda não chegou a data de ativação, não mostrar
+  if (currentDate < ACTIVATION_DATE) {
+    return null;
+  }
+
   const handleDismiss = () => {
     setDismissed(true);
     localStorage.setItem('upgrade_banner_dismissed', 'true');

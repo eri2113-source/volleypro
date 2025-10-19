@@ -2896,6 +2896,349 @@ app.delete('/make-server-0ea22bba/ads/delete', authMiddleware, async (c) => {
   }
 });
 
+// ============= TOURNAMENT RESULTS & NOTIFICATIONS (REAL-TIME) =============
+
+// Submit match result with automatic standings update and notifications
+app.post('/make-server-0ea22bba/tournament/match/result', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const { tournamentId, matchId, category, division, result } = await c.req.json();
+    
+    console.log('📊 Registrando resultado:', { tournamentId, matchId, category, division });
+    
+    // Verify organizer permissions
+    const tournamentKey = `tournament:${tournamentId}`;
+    const tournament = await kv.get(tournamentKey);
+    
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    if (tournament.organizerId !== userId) {
+      return c.json({ error: 'Only organizer can submit results' }, 403);
+    }
+    
+    // Save match result
+    const matchKey = `match:${tournamentId}:${category}:${division}:${matchId}`;
+    const match = await kv.get(matchKey) || {
+      id: matchId,
+      tournamentId,
+      category,
+      division
+    };
+    
+    match.homeScore = result.homeScore;
+    match.awayScore = result.awayScore;
+    match.homeSets = result.homeSets;
+    match.awaySets = result.awaySets;
+    match.setScores = result.setScores;
+    match.winnerId = result.winnerId;
+    match.status = 'finished';
+    match.finishedAt = new Date().toISOString();
+    
+    await kv.set(matchKey, match);
+    
+    // Calculate standings automatically
+    await calculateStandings(tournamentId, category, division);
+    
+    // Notify participants
+    const notificationCount = await notifyParticipants(tournamentId, category, division, match);
+    
+    console.log(`✅ Resultado registrado. ${notificationCount} participantes notificados.`);
+    
+    return c.json({ 
+      success: true,
+      match,
+      notifications: notificationCount
+    });
+  } catch (error: any) {
+    console.error('❌ Error submitting result:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Helper function to calculate standings
+async function calculateStandings(tournamentId: string, category: string, division: string) {
+  try {
+    const matchesKey = `match:${tournamentId}:${category}:${division}:`;
+    const allMatches = await kv.getByPrefix(matchesKey);
+    const finishedMatches = allMatches.filter((m: any) => m.status === 'finished');
+    
+    // Calculate points: win = 3, loss = 0
+    const standings: any = {};
+    
+    for (const match of finishedMatches) {
+      const homeTeamId = match.homeTeamId;
+      const awayTeamId = match.awayTeamId;
+      
+      if (!standings[homeTeamId]) {
+        standings[homeTeamId] = {
+          teamId: homeTeamId,
+          played: 0,
+          wins: 0,
+          losses: 0,
+          setsWon: 0,
+          setsLost: 0,
+          pointsWon: 0,
+          pointsLost: 0,
+          points: 0
+        };
+      }
+      
+      if (!standings[awayTeamId]) {
+        standings[awayTeamId] = {
+          teamId: awayTeamId,
+          played: 0,
+          wins: 0,
+          losses: 0,
+          setsWon: 0,
+          setsLost: 0,
+          pointsWon: 0,
+          pointsLost: 0,
+          points: 0
+        };
+      }
+      
+      standings[homeTeamId].played++;
+      standings[awayTeamId].played++;
+      
+      standings[homeTeamId].setsWon += match.homeSets || 0;
+      standings[homeTeamId].setsLost += match.awaySets || 0;
+      standings[awayTeamId].setsWon += match.awaySets || 0;
+      standings[awayTeamId].setsLost += match.homeSets || 0;
+      
+      standings[homeTeamId].pointsWon += match.homeScore || 0;
+      standings[homeTeamId].pointsLost += match.awayScore || 0;
+      standings[awayTeamId].pointsWon += match.awayScore || 0;
+      standings[awayTeamId].pointsLost += match.homeScore || 0;
+      
+      if (match.winnerId === homeTeamId) {
+        standings[homeTeamId].wins++;
+        standings[homeTeamId].points += 3;
+        standings[awayTeamId].losses++;
+      } else {
+        standings[awayTeamId].wins++;
+        standings[awayTeamId].points += 3;
+        standings[homeTeamId].losses++;
+      }
+    }
+    
+    // Save standings
+    const standingsKey = `standings:${tournamentId}:${category}:${division}`;
+    await kv.set(standingsKey, {
+      tournamentId,
+      category,
+      division,
+      standings: Object.values(standings),
+      updatedAt: new Date().toISOString()
+    });
+    
+    console.log(`✅ Classificação atualizada: ${category} - ${division}ª Divisão`);
+  } catch (error) {
+    console.error('❌ Error calculating standings:', error);
+  }
+}
+
+// Helper function to notify participants
+async function notifyParticipants(tournamentId: string, category: string, division: string, match: any) {
+  try {
+    // Get all participants from this category/division
+    const tournamentKey = `tournament:${tournamentId}`;
+    const tournament = await kv.get(tournamentKey);
+    
+    if (!tournament || !tournament.registeredTeams) {
+      return 0;
+    }
+    
+    // Get team members
+    const participants: string[] = [];
+    for (const teamId of tournament.registeredTeams) {
+      const team = await kv.get(`user:${teamId}`);
+      if (team && team.teamMembers) {
+        participants.push(...team.teamMembers);
+      }
+      // Add team itself
+      participants.push(teamId);
+    }
+    
+    // Create notification
+    const notificationId = crypto.randomUUID();
+    const notification = {
+      id: notificationId,
+      tournamentId,
+      category,
+      division,
+      matchId: match.id,
+      type: 'match_result',
+      title: 'Resultado Registrado',
+      message: `Resultado: ${match.homeTeamName || match.homeTeamId} ${match.homeSets} × ${match.awaySets} ${match.awayTeamName || match.awayTeamId}`,
+      timestamp: new Date().toISOString(),
+      read: false
+    };
+    
+    // Save notification for each participant
+    for (const participantId of participants) {
+      const key = `notification:${participantId}:${notificationId}`;
+      await kv.set(key, notification);
+    }
+    
+    console.log(`📧 ${participants.length} participantes notificados`);
+    return participants.length;
+  } catch (error) {
+    console.error('❌ Error notifying participants:', error);
+    return 0;
+  }
+}
+
+// Start match (set status to live)
+app.post('/make-server-0ea22bba/tournament/match/start', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const { tournamentId, matchId, category, division } = await c.req.json();
+    
+    const tournamentKey = `tournament:${tournamentId}`;
+    const tournament = await kv.get(tournamentKey);
+    
+    if (!tournament || tournament.organizerId !== userId) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    const matchKey = `match:${tournamentId}:${category}:${division}:${matchId}`;
+    const match = await kv.get(matchKey);
+    
+    if (!match) {
+      return c.json({ error: 'Match not found' }, 404);
+    }
+    
+    match.status = 'live';
+    match.startedAt = new Date().toISOString();
+    await kv.set(matchKey, match);
+    
+    // Notify participants
+    await notifyMatchStarting(tournamentId, category, division, match);
+    
+    return c.json({ success: true, match });
+  } catch (error: any) {
+    console.error('❌ Error starting match:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+async function notifyMatchStarting(tournamentId: string, category: string, division: string, match: any) {
+  const notificationId = crypto.randomUUID();
+  const notification = {
+    id: notificationId,
+    tournamentId,
+    category,
+    division,
+    matchId: match.id,
+    type: 'match_starting',
+    title: 'Partida Iniciada',
+    message: `Jogo ao vivo: ${match.homeTeamName || match.homeTeamId} vs ${match.awayTeamName || match.awayTeamId}`,
+    timestamp: new Date().toISOString(),
+    read: false
+  };
+  
+  // Salvar notificações (simplificado)
+  const key = `notification:tournament:${tournamentId}:${notificationId}`;
+  await kv.set(key, notification);
+}
+
+// Get notifications for user
+app.get('/make-server-0ea22bba/tournament/notifications', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.query('tournamentId');
+    const category = c.req.query('category');
+    const division = c.req.query('division');
+    
+    // Get user notifications
+    const allNotifications = await kv.getByPrefix(`notification:${userId}:`);
+    
+    // Filter by tournament/category/division if provided
+    let notifications = allNotifications;
+    if (tournamentId) {
+      notifications = notifications.filter((n: any) => n.tournamentId === tournamentId);
+    }
+    if (category) {
+      notifications = notifications.filter((n: any) => n.category === category);
+    }
+    if (division) {
+      notifications = notifications.filter((n: any) => n.division === division);
+    }
+    
+    // Sort by timestamp, newest first
+    notifications.sort((a: any, b: any) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+    
+    return c.json({ notifications });
+  } catch (error: any) {
+    console.error('❌ Error getting notifications:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get notification history
+app.get('/make-server-0ea22bba/tournament/notifications/history', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.query('tournamentId');
+    
+    const allNotifications = await kv.getByPrefix(`notification:${userId}:`);
+    
+    let notifications = allNotifications;
+    if (tournamentId) {
+      notifications = notifications.filter((n: any) => n.tournamentId === tournamentId);
+    }
+    
+    notifications.sort((a: any, b: any) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+    
+    return c.json({ notifications: notifications.slice(0, 50) }); // últimas 50
+  } catch (error: any) {
+    console.error('❌ Error getting notification history:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get current standings
+app.get('/make-server-0ea22bba/tournament/standings', async (c) => {
+  try {
+    const tournamentId = c.req.query('tournamentId');
+    const category = c.req.query('category');
+    const division = c.req.query('division');
+    
+    if (!tournamentId || !category || !division) {
+      return c.json({ error: 'Missing required parameters' }, 400);
+    }
+    
+    const standingsKey = `standings:${tournamentId}:${category}:${division}`;
+    const standingsData = await kv.get(standingsKey);
+    
+    if (!standingsData) {
+      return c.json({ standings: [] });
+    }
+    
+    // Sort standings by points, then by set difference
+    const standings = standingsData.standings || [];
+    standings.sort((a: any, b: any) => {
+      if (b.points !== a.points) {
+        return b.points - a.points;
+      }
+      const aSetDiff = a.setsWon - a.setsLost;
+      const bSetDiff = b.setsWon - b.setsLost;
+      return bSetDiff - aSetDiff;
+    });
+    
+    return c.json({ standings, updatedAt: standingsData.updatedAt });
+  } catch (error: any) {
+    console.error('❌ Error getting standings:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // ============= LIVEKIT ROUTES =============
 app.route('/', livekitRoutes);
 

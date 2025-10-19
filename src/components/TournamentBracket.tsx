@@ -1,228 +1,230 @@
-import { Card, CardContent } from "./ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Trophy, Play, CheckCircle2 } from "lucide-react";
-import { Match, getRoundName } from "../lib/tournamentSystem";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
+import { Trophy, ChevronRight } from "lucide-react";
 
 interface TournamentBracketProps {
-  matches: Match[];
-  format: string;
-  onMatchClick?: (match: Match) => void;
-  canEditResults?: boolean;
+  tournament: any;
 }
 
-export function TournamentBracket({ 
-  matches, 
-  format,
-  onMatchClick,
-  canEditResults = false 
-}: TournamentBracketProps) {
-  // Agrupar partidas por rodada
-  const rounds: { [round: number]: Match[] } = {};
-  matches.forEach((match) => {
-    if (!rounds[match.round]) {
-      rounds[match.round] = [];
+export function TournamentBracket({ tournament }: TournamentBracketProps) {
+  // Simulando chaveamento
+  const bracket = {
+    quarterfinals: [
+      {
+        id: 1,
+        team1: { id: 1, name: "Vôlei Campeões", logo: "https://ui-avatars.com/api/?name=VC&background=0052cc&color=fff", score: 3 },
+        team2: { id: 8, name: "Nova Geração", logo: "https://ui-avatars.com/api/?name=NG&background=ff9ff3&color=000", score: 0 },
+        winner: 1,
+        status: "finished"
+      },
+      {
+        id: 2,
+        team1: { id: 5, name: "Gigantes SC", logo: "https://ui-avatars.com/api/?name=GSC&background=5f27cd&color=fff", score: 3 },
+        team2: { id: 4, name: "Força Jovem", logo: "https://ui-avatars.com/api/?name=FJ&background=f7b731&color=fff", score: 1 },
+        winner: 5,
+        status: "finished"
+      },
+      {
+        id: 3,
+        team1: { id: 2, name: "Estrelas do Vôlei", logo: "https://ui-avatars.com/api/?name=EV&background=ff6b35&color=fff" },
+        team2: { id: 7, name: "Relâmpago VB", logo: "https://ui-avatars.com/api/?name=RVB&background=1dd1a1&color=fff" },
+        status: "scheduled"
+      },
+      {
+        id: 4,
+        team1: { id: 3, name: "Unidos FC", logo: "https://ui-avatars.com/api/?name=UFC&background=4ecdc4&color=fff" },
+        team2: { id: 6, name: "Atlético VM", logo: "https://ui-avatars.com/api/?name=AVM&background=ee5a6f&color=fff" },
+        status: "scheduled"
+      }
+    ],
+    semifinals: [
+      {
+        id: 5,
+        team1: { id: 1, name: "Vôlei Campeões", logo: "https://ui-avatars.com/api/?name=VC&background=0052cc&color=fff" },
+        team2: { id: 5, name: "Gigantes SC", logo: "https://ui-avatars.com/api/?name=GSC&background=5f27cd&color=fff" },
+        status: "scheduled"
+      },
+      {
+        id: 6,
+        status: "pending"
+      }
+    ],
+    final: {
+      id: 7,
+      status: "pending"
     }
-    rounds[match.round].push(match);
-  });
-  
-  const totalRounds = Math.max(...Object.keys(rounds).map(Number));
-  const roundNumbers = Object.keys(rounds)
-    .map(Number)
-    .sort((a, b) => a - b);
+  };
 
-  return (
-    <div className="space-y-6">
-      {roundNumbers.map((roundNum) => {
-        const roundMatches = rounds[roundNum];
-        const roundName = getRoundName(roundNum, totalRounds, format as any);
-        
-        return (
-          <div key={roundNum}>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-1 bg-primary rounded-full" />
-              <h3 className="text-lg">{roundName}</h3>
-              <Badge variant="secondary">
-                {roundMatches.length} {roundMatches.length === 1 ? 'partida' : 'partidas'}
-              </Badge>
-            </div>
-            
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {roundMatches.map((match) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  onClick={onMatchClick}
-                  canEdit={canEditResults}
-                />
-              ))}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
+  function renderMatch(match: any, roundName: string) {
+    if (match.status === "pending") {
+      return (
+        <Card className="bg-muted/30 border-dashed">
+          <CardContent className="p-4 text-center text-sm text-muted-foreground">
+            Aguardando definição
+          </CardContent>
+        </Card>
+      );
+    }
 
-interface MatchCardProps {
-  match: Match;
-  onClick?: (match: Match) => void;
-  canEdit: boolean;
-}
-
-function MatchCard({ match, onClick, canEdit }: MatchCardProps) {
-  const isFinished = match.status === 'finished';
-  const isOngoing = match.status === 'ongoing';
-  const isTBD = match.homeTeamId === 'TBD' || match.awayTeamId === 'TBD';
-  
-  const homeWon = isFinished && match.homeSets > match.awaySets;
-  const awayWon = isFinished && match.awaySets > match.homeSets;
-
-  return (
-    <Card 
-      className={`
-        transition-all hover:shadow-lg
-        ${isOngoing ? 'border-primary border-2 animate-pulse' : ''}
-        ${isFinished ? 'opacity-90' : ''}
-        ${isTBD ? 'opacity-60' : ''}
-        ${onClick && !isTBD ? 'cursor-pointer' : ''}
-      `}
-      onClick={() => !isTBD && onClick && onClick(match)}
-    >
-      <CardContent className="p-4 space-y-3">
-        {/* Header com status */}
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">
-            Jogo #{match.matchNumber}
-          </span>
-          <div className="flex items-center gap-2">
-            {isOngoing && (
-              <Badge variant="default" className="gap-1">
-                <Play className="h-3 w-3" />
-                Ao vivo
-              </Badge>
-            )}
-            {isFinished && (
-              <Badge variant="secondary" className="gap-1">
-                <CheckCircle2 className="h-3 w-3" />
-                Finalizado
-              </Badge>
-            )}
-            {match.liveStreamId && (
-              <Badge variant="destructive" className="gap-1">
-                📹 Live
-              </Badge>
-            )}
-          </div>
-        </div>
-
-        {/* Times e placar */}
-        {isTBD ? (
-          <div className="text-center py-6 text-muted-foreground text-sm">
-            <Trophy className="h-8 w-8 mx-auto mb-2 opacity-30" />
-            <p>Aguardando definição</p>
-            <p className="text-xs mt-1">
-              {match.homeTeamId !== 'TBD' ? match.homeTeamId : match.awayTeamId !== 'TBD' ? match.awayTeamId : 'Times a definir'}
-            </p>
-          </div>
-        ) : (
+    return (
+      <Card className={match.status === "finished" ? "bg-muted/50" : "border-primary"}>
+        <CardContent className="p-4">
           <div className="space-y-2">
-            {/* Time da casa */}
-            <div 
-              className={`
-                flex items-center justify-between p-3 rounded-lg transition-all
-                ${homeWon ? 'bg-primary/10 border-2 border-primary' : 'bg-muted/50'}
-              `}
-            >
-              <div className="flex items-center gap-2 flex-1">
-                {homeWon && <Trophy className="h-4 w-4 text-primary" />}
-                <span className={homeWon ? 'font-bold' : ''}>
-                  {match.homeTeamName || match.homeTeamId}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                {isFinished && (
-                  <>
-                    <span className="text-xs text-muted-foreground">
-                      {match.homeSets} sets
-                    </span>
-                    <span className={`text-2xl ${homeWon ? 'font-bold text-primary' : 'text-muted-foreground'}`}>
-                      {match.homeScore}
-                    </span>
-                  </>
-                )}
-              </div>
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
+              <span>{roundName}</span>
+              <Badge variant={match.status === "finished" ? "secondary" : "default"}>
+                {match.status === "finished" ? "Encerrado" : 
+                 match.status === "live" ? "Ao Vivo" : "Agendado"}
+              </Badge>
             </div>
 
-            {/* Placar do meio */}
-            <div className="text-center text-xs text-muted-foreground">
-              {isFinished ? (
-                <span>Final</span>
-              ) : match.scheduledDate ? (
-                <span>{new Date(match.scheduledDate).toLocaleDateString('pt-BR')}</span>
-              ) : (
-                <span>A definir</span>
+            {/* Time 1 */}
+            <div className={`flex items-center gap-2 p-2 rounded ${
+              match.winner === match.team1?.id ? "bg-green-50 dark:bg-green-950/20" : ""
+            }`}>
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={match.team1?.logo} />
+                <AvatarFallback>{match.team1?.name?.substring(0, 2)}</AvatarFallback>
+              </Avatar>
+              <span className="flex-1 text-sm font-medium truncate">{match.team1?.name}</span>
+              {match.team1?.score !== undefined && (
+                <span className="text-lg font-bold">{match.team1.score}</span>
               )}
             </div>
 
-            {/* Time visitante */}
-            <div 
-              className={`
-                flex items-center justify-between p-3 rounded-lg transition-all
-                ${awayWon ? 'bg-primary/10 border-2 border-primary' : 'bg-muted/50'}
-              `}
-            >
-              <div className="flex items-center gap-2 flex-1">
-                {awayWon && <Trophy className="h-4 w-4 text-primary" />}
-                <span className={awayWon ? 'font-bold' : ''}>
-                  {match.awayTeamName || match.awayTeamId}
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                {isFinished && (
-                  <>
-                    <span className="text-xs text-muted-foreground">
-                      {match.awaySets} sets
-                    </span>
-                    <span className={`text-2xl ${awayWon ? 'font-bold text-primary' : 'text-muted-foreground'}`}>
-                      {match.awayScore}
-                    </span>
-                  </>
-                )}
-              </div>
+            <div className="text-center text-xs text-muted-foreground">vs</div>
+
+            {/* Time 2 */}
+            <div className={`flex items-center gap-2 p-2 rounded ${
+              match.winner === match.team2?.id ? "bg-green-50 dark:bg-green-950/20" : ""
+            }`}>
+              <Avatar className="h-8 w-8">
+                <AvatarImage src={match.team2?.logo} />
+                <AvatarFallback>{match.team2?.name?.substring(0, 2)}</AvatarFallback>
+              </Avatar>
+              <span className="flex-1 text-sm font-medium truncate">{match.team2?.name}</span>
+              {match.team2?.score !== undefined && (
+                <span className="text-lg font-bold">{match.team2.score}</span>
+              )}
             </div>
           </div>
-        )}
+        </CardContent>
+      </Card>
+    );
+  }
 
-        {/* Detalhes dos sets */}
-        {isFinished && match.setScores && match.setScores.length > 0 && (
-          <div className="pt-2 border-t">
-            <div className="flex items-center justify-center gap-2 text-xs">
-              <span className="text-muted-foreground">Sets:</span>
-              {match.setScores.map((setScore, idx) => (
-                <span key={idx} className="font-mono">
-                  {setScore[0]}-{setScore[1]}
-                </span>
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-6 w-6" />
+            Chaveamento - Fase Eliminatória
+          </CardTitle>
+          <CardDescription>Acompanhe os confrontos do mata-mata</CardDescription>
+        </CardHeader>
+      </Card>
+
+      {/* Chaveamento Visual */}
+      <div className="overflow-x-auto pb-4">
+        <div className="min-w-[800px] space-y-8">
+          {/* Quartas de Final */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              Quartas de Final
+              <Badge variant="outline">{bracket.quarterfinals.length} jogos</Badge>
+            </h3>
+            <div className="grid grid-cols-4 gap-4">
+              {bracket.quarterfinals.map((match) => (
+                <div key={match.id}>
+                  {renderMatch(match, `Jogo ${match.id}`)}
+                </div>
               ))}
             </div>
           </div>
-        )}
 
-        {/* Ações */}
-        {canEdit && !isFinished && !isTBD && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full"
-            onClick={(e) => {
-              e.stopPropagation();
-              onClick && onClick(match);
-            }}
-          >
-            {isOngoing ? 'Atualizar Placar' : 'Registrar Resultado'}
-          </Button>
-        )}
-      </CardContent>
-    </Card>
+          {/* Setas */}
+          <div className="flex items-center justify-center gap-4 text-muted-foreground">
+            <ChevronRight className="h-6 w-6" />
+            <ChevronRight className="h-6 w-6" />
+            <ChevronRight className="h-6 w-6" />
+          </div>
+
+          {/* Semifinais */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              Semifinais
+              <Badge variant="outline">{bracket.semifinals.length} jogos</Badge>
+            </h3>
+            <div className="grid grid-cols-2 gap-8 max-w-3xl mx-auto">
+              {bracket.semifinals.map((match) => (
+                <div key={match.id}>
+                  {renderMatch(match, `Semifinal ${match.id - 4}`)}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Seta */}
+          <div className="flex items-center justify-center text-muted-foreground">
+            <ChevronRight className="h-6 w-6" />
+          </div>
+
+          {/* Final */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2 justify-center">
+              <Trophy className="h-6 w-6 text-yellow-500" />
+              FINAL
+            </h3>
+            <div className="max-w-md mx-auto">
+              {renderMatch(bracket.final, "Grande Final")}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Legenda */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-wrap items-center gap-6 text-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded bg-green-100 dark:bg-green-950/20 border border-green-500"></div>
+              <span className="text-muted-foreground">Vencedor</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary">Encerrado</Badge>
+              <span className="text-muted-foreground">Jogo finalizado</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="default">Agendado</Badge>
+              <span className="text-muted-foreground">Próximo jogo</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded border-2 border-dashed border-muted"></div>
+              <span className="text-muted-foreground">Aguardando definição</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Caminho até a Final */}
+      <Card className="bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-950/20 dark:to-orange-950/20 border-yellow-500">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-yellow-500" />
+            Caminho para o Título
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="text-sm text-muted-foreground space-y-2">
+            <p>• Fase de Grupos → Top 2 de cada grupo classificados</p>
+            <p>• Quartas de Final → Confrontos entre grupos (A vs D, B vs C)</p>
+            <p>• Semifinais → Melhores de 5 sets</p>
+            <p>• Final → Melhor de 5 sets + Troféu + Premiação</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

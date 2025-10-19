@@ -24,9 +24,10 @@ import { Trash2, Eye } from "lucide-react";
 interface TournamentsProps {
   isAuthenticated?: boolean;
   onLoginPrompt?: () => void;
+  onViewDetails?: (tournamentId: number) => void;
 }
 
-export function Tournaments({ isAuthenticated: authProp, onLoginPrompt }: TournamentsProps = {}) {
+export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDetails }: TournamentsProps = {}) {
   const [tournaments, setTournaments] = useState<any[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -289,8 +290,14 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt }: Tourna
                 key={tournament.id} 
                 className="border-l-4 border-l-primary hover:shadow-xl transition-all duration-300 cursor-pointer"
                 onClick={() => {
-                  console.log('🎯 Abrindo torneio:', tournament.id, tournament.name);
-                  setSelectedTournamentId(tournament.id);
+                  console.log('🎯 Abrindo torneio em andamento:', tournament.id, tournament.name);
+                  // Se tem callback onViewDetails, usar ele (nova página completa)
+                  if (onViewDetails) {
+                    onViewDetails(parseInt(tournament.id));
+                  } else {
+                    // Fallback para modal antigo
+                    setSelectedTournamentId(tournament.id);
+                  }
                 }}
               >
                 <CardHeader>

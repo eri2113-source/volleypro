@@ -7,9 +7,26 @@ import { useState, useEffect } from "react";
 export function MigrationNotice() {
   const [isVisible, setIsVisible] = useState(true);
   const [dismissed, setDismissed] = useState(false);
+  const [isFigmaMake, setIsFigmaMake] = useState(false);
 
   useEffect(() => {
-    // Verificar se usuário já dispensou a mensagem
+    // 🎯 APENAS MOSTRAR NO FIGMA MAKE, NÃO NA VERCEL
+    const hostname = window.location.hostname;
+    const isFigma = 
+      hostname.includes('figma.com') || 
+      hostname.includes('fig.ma') ||
+      (hostname.includes('localhost') && !window.location.href.includes('vercel.app'));
+    
+    setIsFigmaMake(isFigma);
+
+    // Se NÃO está no Figma Make (está na Vercel), não mostrar NUNCA
+    if (!isFigma) {
+      setIsVisible(false);
+      setDismissed(true);
+      return;
+    }
+
+    // Se está no Figma Make, verificar se usuário já dispensou a mensagem
     const wasDismissed = localStorage.getItem('migration-notice-dismissed');
     if (wasDismissed === 'true') {
       setIsVisible(false);
@@ -27,7 +44,8 @@ export function MigrationNotice() {
     window.location.href = 'https://volleypro-zw96.vercel.app';
   };
 
-  if (!isVisible || dismissed) return null;
+  // Não mostrar se não está visível, foi dispensado, OU se não está no Figma Make
+  if (!isVisible || dismissed || !isFigmaMake) return null;
 
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
