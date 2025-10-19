@@ -41,7 +41,7 @@ import { showConsoleHelp } from "./utils/consoleHelp";
 import { useFigmaMakeAccess } from "./hooks/useFigmaMakeAccess";
 import { Button } from "./components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover";
-import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, Megaphone, MoreHorizontal, Flag } from "lucide-react";
+import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, Megaphone, MoreHorizontal, Flag, Camera, Video, FileText } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -486,6 +486,9 @@ export default function App() {
     { id: "lives", label: "Lives", icon: Radio },
     { id: "invitations", label: "Convites", icon: Mail },
     { id: "referees", label: "Arbitragem", icon: Flag },
+    { id: "polls", label: "Recursos", icon: FileText },
+    { id: "photos", label: "Fotos", icon: Camera },
+    { id: "videos", label: "Vídeos", icon: Video },
     { id: "ads", label: "Anúncios", icon: Megaphone },
     { id: "monetization", label: "Monetização", icon: Crown },
   ];
@@ -520,7 +523,7 @@ export default function App() {
                   <Logo variant="compact" className="shrink-0 scale-75 sm:scale-100" />
                   
                   {/* Navegação horizontal - menus principais */}
-                  <nav className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-1 justify-center overflow-x-auto scrollbar-hide">
+                  <nav className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-1 justify-center">
                     {/* Itens principais (sempre visíveis) */}
                     {primaryMenuItems.map((item) => {
                       const Icon = item.icon;
@@ -539,7 +542,7 @@ export default function App() {
                             setShowMyProfile(false);
                           }}
                           className={`
-                            gap-1 sm:gap-2 hover:bg-primary/10 transition-all px-2 sm:px-3 py-2 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0
+                            gap-1 sm:gap-2 hover:bg-primary/10 transition-all px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0 min-w-0
                             ${isActive ? 'bg-primary/10 text-primary font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'}
                           `}
                           title={item.label}
@@ -557,7 +560,7 @@ export default function App() {
                           variant="ghost"
                           size="sm"
                           className={`
-                            gap-1 sm:gap-2 hover:bg-primary/10 transition-all px-2 sm:px-3 py-2 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0
+                            gap-1 sm:gap-2 hover:bg-primary/10 transition-all px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0 min-w-0
                             ${showMoreMenu ? 'bg-primary/10 text-primary font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'}
                           `}
                           title={showMoreMenu ? "Ocultar menu" : "Mais opções"}
@@ -606,7 +609,7 @@ export default function App() {
                   </nav>
                   
                   {/* Botões de perfil e sair */}
-                  <div className="flex items-center gap-1 shrink-0">
+                  <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -616,7 +619,7 @@ export default function App() {
                         setSelectedTeam(null);
                         setSelectedTournament(null);
                       }}
-                      className="gap-1 sm:gap-2 hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-all px-2 sm:px-3 py-2 rounded-lg sm:rounded-xl"
+                      className="gap-1 sm:gap-2 hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-all px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-xl min-w-0"
                       title="Meu Perfil"
                     >
                       <User className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
@@ -626,7 +629,7 @@ export default function App() {
                       variant="ghost" 
                       size="sm" 
                       onClick={handleSignOut} 
-                      className="gap-1 sm:gap-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all px-2 sm:px-3 py-2 rounded-lg sm:rounded-xl"
+                      className="gap-1 sm:gap-2 hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-xl min-w-0"
                       title="Sair"
                     >
                       <LogOut className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
