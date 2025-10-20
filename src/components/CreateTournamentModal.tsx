@@ -30,6 +30,7 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
+  const [arena, setArena] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [maxTeams, setMaxTeams] = useState("16");
@@ -42,11 +43,18 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
       return;
     }
 
+    // Para vôlei de praia, arena é obrigatória
+    if (modalityType === 'beach' && !arena) {
+      toast.error("Preencha o campo Arena para torneios de vôlei de praia");
+      return;
+    }
+
     setLoading(true);
     try {
       await tournamentApi.createTournament({
         name,
         location,
+        arena: modalityType === 'beach' ? arena : undefined,
         startDate,
         endDate,
         maxTeams: parseInt(maxTeams),
@@ -61,6 +69,7 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
       // Reset form
       setName("");
       setLocation("");
+      setArena("");
       setStartDate("");
       setEndDate("");
       setMaxTeams("16");
@@ -74,8 +83,8 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md" aria-describedby="create-tournament-description">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-md max-h-[90vh] flex flex-col" aria-describedby="create-tournament-description">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Criar Novo Torneio</DialogTitle>
           <DialogDescription id="create-tournament-description">
             {modalityType === 'beach' 
@@ -85,7 +94,7 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="space-y-4 py-4 overflow-y-auto flex-1">
           {/* Tipo de Modalidade */}
           <div className="space-y-2">
             <Label htmlFor="modality-type">Modalidade</Label>
@@ -125,6 +134,24 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
               onChange={(e) => setLocation(e.target.value)}
             />
           </div>
+
+          {/* Campo Arena - apenas para vôlei de praia */}
+          {modalityType === 'beach' && (
+            <div className="space-y-2">
+              <Label htmlFor="tournament-arena">
+                Arena <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="tournament-arena"
+                placeholder="Ex: Arena Beach Park, Praia de Copacabana"
+                value={arena}
+                onChange={(e) => setArena(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                🏖️ Nome da arena ou praia onde o torneio será disputado
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -184,13 +211,13 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0">
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
           <Button 
             onClick={handleCreate} 
-            disabled={loading || !name || !location || !startDate || !endDate}
+            disabled={loading || !name || !location || !startDate || !endDate || (modalityType === 'beach' && !arena)}
           >
             {loading ? "Criando..." : "Criar Torneio"}
           </Button>

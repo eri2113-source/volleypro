@@ -530,6 +530,7 @@ export const tournamentApi = {
     startDate: string;
     endDate: string;
     location: string;
+    arena?: string;
     maxTeams?: number;
     format?: 'single_elimination' | 'double_elimination' | 'round_robin' | 'swiss';
     modalityType?: 'indoor' | 'beach';

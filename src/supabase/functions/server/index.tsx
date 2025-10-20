@@ -2785,10 +2785,15 @@ app.delete('/make-server-0ea22bba/lives/:liveId', authMiddleware, async (c) => {
 app.post('/make-server-0ea22bba/tournaments', authMiddleware, async (c) => {
   try {
     const userId = c.get('userId');
-    const { name, location, startDate, endDate, maxTeams, format, modalityType } = await c.req.json();
+    const { name, location, arena, startDate, endDate, maxTeams, format, modalityType } = await c.req.json();
     
     if (!name || !location || !startDate || !endDate) {
       return c.json({ error: 'Missing required fields' }, 400);
+    }
+    
+    // Para vôlei de praia, arena é obrigatória
+    if (modalityType === 'beach' && !arena) {
+      return c.json({ error: 'Arena is required for beach volleyball tournaments' }, 400);
     }
     
     // Get organizer info
@@ -2802,6 +2807,7 @@ app.post('/make-server-0ea22bba/tournaments', authMiddleware, async (c) => {
       id: tournamentId,
       name,
       location,
+      arena: modalityType === 'beach' ? arena : undefined,
       startDate,
       endDate,
       maxTeams: maxTeams || 16,
@@ -2817,7 +2823,7 @@ app.post('/make-server-0ea22bba/tournaments', authMiddleware, async (c) => {
     };
     
     await kv.set(tournamentId, tournament);
-    console.log(`🏆 Torneio criado: ${name} (${modalityType})`);
+    console.log(`🏆 Torneio criado: ${name} (${modalityType})${arena ? ` na arena: ${arena}` : ''}`);
     
     return c.json({ tournament });
   } catch (error: any) {

@@ -345,15 +345,15 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <div className="text-sm">
-                        <p className="text-muted-foreground">Local</p>
-                        <p>{tournament.location}</p>
+                        <p className="text-muted-foreground">{tournament.modalityType === 'beach' && tournament.arena ? 'Arena' : 'Local'}</p>
+                        <p>{tournament.modalityType === 'beach' && tournament.arena ? tournament.arena : tournament.location}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <div className="text-sm">
-                        <p className="text-muted-foreground">Times</p>
-                        <p>{tournament.registeredTeams?.length || 0} participantes</p>
+                        <p className="text-muted-foreground">{tournament.modalityType === 'beach' ? 'Duplas' : 'Times'}</p>
+                        <p>{tournament.modalityType === 'beach' ? (tournament.registeredPlayers?.length || 0) : (tournament.registeredTeams?.length || 0)} participantes</p>
                       </div>
                     </div>
                   </div>
@@ -450,15 +450,15 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <div className="text-sm">
-                        <p className="text-muted-foreground">Local</p>
-                        <p>{tournament.location}</p>
+                        <p className="text-muted-foreground">{tournament.modalityType === 'beach' && tournament.arena ? 'Arena' : 'Local'}</p>
+                        <p>{tournament.modalityType === 'beach' && tournament.arena ? tournament.arena : tournament.location}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <div className="text-sm">
                         <p className="text-muted-foreground">Vagas</p>
-                        <p>{tournament.registeredTeams?.length || 0}/{tournament.maxTeams}</p>
+                        <p>{tournament.modalityType === 'beach' ? (tournament.registeredPlayers?.length || 0) : (tournament.registeredTeams?.length || 0)}/{tournament.maxTeams}</p>
                       </div>
                     </div>
                   </div>
@@ -469,6 +469,7 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                         console.log('🎯 Button clicked - Opening tournament for registration:', {
                           tournamentId: tournament.id,
                           tournamentName: tournament.name,
+                          modalityType: tournament.modalityType,
                           currentUserId: currentUser?.id,
                           currentUserType: currentUser?.userType,
                           isAuthenticated
@@ -478,7 +479,10 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                       disabled={!isAuthenticated}
                       className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
                     >
-                      {currentUser?.userType === 'team' ? '🏐 Inscrever Time' : 'Ver Detalhes'}
+                      {tournament.modalityType === 'beach' 
+                        ? '🏖️ Inscrever-se' 
+                        : (currentUser?.userType === 'team' ? '🏐 Inscrever Time' : 'Ver Detalhes')
+                      }
                     </Button>
                     <Button 
                       variant="outline" 
@@ -558,15 +562,15 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <div className="text-sm">
-                        <p className="text-muted-foreground">Local</p>
-                        <p>{tournament.location}</p>
+                        <p className="text-muted-foreground">{tournament.modalityType === 'beach' && tournament.arena ? 'Arena' : 'Local'}</p>
+                        <p>{tournament.modalityType === 'beach' && tournament.arena ? tournament.arena : tournament.location}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <div className="text-sm">
-                        <p className="text-muted-foreground">Times inscritos</p>
-                        <p>{tournament.registeredTeams?.length || 0}</p>
+                        <p className="text-muted-foreground">{tournament.modalityType === 'beach' ? 'Duplas inscritas' : 'Times inscritos'}</p>
+                        <p>{tournament.modalityType === 'beach' ? (tournament.registeredPlayers?.length || 0) : (tournament.registeredTeams?.length || 0)}</p>
                       </div>
                     </div>
                   </div>
