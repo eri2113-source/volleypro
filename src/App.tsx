@@ -516,126 +516,124 @@ export default function App() {
             isAuthenticated={isAuthenticated}
             onProfileClick={() => setShowMyProfile(true)}
           />
-          <main className="flex-1 w-full min-w-0 bg-background overflow-y-auto overflow-x-hidden">
+          <main className="flex-1 bg-background overflow-y-auto overflow-x-hidden">
             {/* Barra de navegação moderna com glassmorphism - SEMPRE TRAVADA NO TOPO */}
             <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-md">
-              <div className="w-full px-1 sm:px-4 md:px-6">
-                <div className="flex h-14 sm:h-16 items-center justify-between gap-1 sm:gap-2 md:gap-4 max-w-full">
-                  {/* Logo - Menor em mobile */}
-                  <Logo variant="compact" className="shrink-0 scale-[0.6] sm:scale-100 -ml-2 sm:ml-0" />
-                  
-                  {/* Navegação horizontal - menus principais */}
-                  <nav className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-1">
-                    {/* Itens principais (sempre visíveis) */}
-                    {primaryMenuItems.map((item) => {
-                      const Icon = item.icon;
-                      const isActive = currentView === item.id;
-                      
-                      return (
-                        <Button
-                          key={item.id}
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setCurrentView(item.id);
-                            setSelectedAthlete(null);
-                            setSelectedTeam(null);
-                            setSelectedTournament(null);
-                            setShowMyProfile(false);
-                          }}
-                          className={`
-                            gap-1 sm:gap-2 hover:bg-primary/10 transition-all px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0 min-w-0
-                            ${isActive ? 'bg-primary/10 text-primary font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'}
-                          `}
-                          title={item.label}
-                        >
-                          <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                          <span className="hidden sm:inline text-xs md:text-sm">{item.label}</span>
-                        </Button>
-                      );
-                    })}
+              <div className="flex h-14 sm:h-16 items-center justify-between gap-1 sm:gap-2 px-2 sm:px-4 md:px-6">
+                {/* Logo - Menor em mobile */}
+                <Logo variant="compact" className="shrink-0 scale-[0.5] sm:scale-75 md:scale-100 -ml-1 sm:ml-0" />
+                
+                {/* Navegação horizontal - menus principais */}
+                <nav className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-1 overflow-x-auto scrollbar-hide">
+                  {/* Itens principais (sempre visíveis) */}
+                  {primaryMenuItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = currentView === item.id;
                     
-                    {/* Botão "Mais..." com dropdown em cascata */}
-                    <Popover open={showMoreMenu} onOpenChange={setShowMoreMenu}>
-                      <PopoverTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className={`
-                            gap-1 sm:gap-2 hover:bg-primary/10 transition-all px-1.5 sm:px-3 py-2 rounded-lg sm:rounded-xl whitespace-nowrap shrink-0 min-w-0
-                            ${showMoreMenu ? 'bg-primary/10 text-primary font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'}
-                          `}
-                          title={showMoreMenu ? "Ocultar menu" : "Mais opções"}
-                        >
-                          <MoreHorizontal className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                          <span className="hidden sm:inline text-xs md:text-sm">Mais...</span>
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent 
-                        className="w-56 p-2 rounded-2xl shadow-xl bg-background/95 backdrop-blur-xl border border-border/50" 
-                        align="end"
-                        sideOffset={12}
+                    return (
+                      <Button
+                        key={item.id}
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setCurrentView(item.id);
+                          setSelectedAthlete(null);
+                          setSelectedTeam(null);
+                          setSelectedTournament(null);
+                          setShowMyProfile(false);
+                        }}
+                        className={`
+                          gap-1 sm:gap-2 hover:bg-primary/10 transition-all px-2 sm:px-3 py-2 rounded-lg sm:rounded-xl shrink-0
+                          ${isActive ? 'bg-primary/10 text-primary font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'}
+                        `}
+                        title={item.label}
                       >
-                        <div className="flex flex-col gap-1">
-                          {/* Itens secundários em lista vertical */}
-                          {secondaryMenuItems.map((item) => {
-                            const Icon = item.icon;
-                            const isActive = currentView === item.id;
-                            
-                            return (
-                              <Button
-                                key={item.id}
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  setCurrentView(item.id);
-                                  setSelectedAthlete(null);
-                                  setSelectedTeam(null);
-                                  setSelectedTournament(null);
-                                  setShowMyProfile(false);
-                                  setShowMoreMenu(false); // Fecha o dropdown ao clicar
-                                }}
-                                className={`
-                                  w-full justify-start gap-3 hover:bg-primary/10 transition-all py-3 rounded-xl
-                                  ${isActive ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground'}
-                                `}
-                              >
-                                <Icon className="h-5 w-5 shrink-0" />
-                                <span>{item.label}</span>
-                              </Button>
-                            );
-                          })}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </nav>
+                        <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                        <span className="hidden sm:inline text-xs md:text-sm">{item.label}</span>
+                      </Button>
+                    );
+                  })}
                   
-                  {/* Botões de perfil e sair - SEMPRE VISÍVEIS */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => {
-                        setShowMyProfile(true);
-                        setSelectedAthlete(null);
-                        setSelectedTeam(null);
-                        setSelectedTournament(null);
-                      }}
-                      className="hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-all p-2 rounded-lg sm:rounded-xl"
-                      title="Meu Perfil"
+                  {/* Botão "Mais..." com dropdown em cascata */}
+                  <Popover open={showMoreMenu} onOpenChange={setShowMoreMenu}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className={`
+                          gap-1 sm:gap-2 hover:bg-primary/10 transition-all px-2 sm:px-3 py-2 rounded-lg sm:rounded-xl shrink-0
+                          ${showMoreMenu ? 'bg-primary/10 text-primary font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground'}
+                        `}
+                        title={showMoreMenu ? "Ocultar menu" : "Mais opções"}
+                      >
+                        <MoreHorizontal className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                        <span className="hidden sm:inline text-xs md:text-sm">Mais...</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent 
+                      className="w-56 p-2 rounded-2xl shadow-xl bg-background/95 backdrop-blur-xl border border-border/50" 
+                      align="end"
+                      sideOffset={12}
                     >
-                      <User className="h-5 w-5 shrink-0" />
-                    </Button>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={handleSignOut} 
-                      className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all p-2 rounded-lg sm:rounded-xl"
-                      title="Sair"
-                    >
-                      <LogOut className="h-5 w-5 shrink-0" />
-                    </Button>
-                  </div>
+                      <div className="flex flex-col gap-1">
+                        {/* Itens secundários em lista vertical */}
+                        {secondaryMenuItems.map((item) => {
+                          const Icon = item.icon;
+                          const isActive = currentView === item.id;
+                          
+                          return (
+                            <Button
+                              key={item.id}
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setCurrentView(item.id);
+                                setSelectedAthlete(null);
+                                setSelectedTeam(null);
+                                setSelectedTournament(null);
+                                setShowMyProfile(false);
+                                setShowMoreMenu(false); // Fecha o dropdown ao clicar
+                              }}
+                              className={`
+                                w-full justify-start gap-3 hover:bg-primary/10 transition-all py-3 rounded-xl
+                                ${isActive ? 'bg-primary/10 text-primary font-semibold' : 'text-foreground'}
+                              `}
+                            >
+                              <Icon className="h-5 w-5 shrink-0" />
+                              <span>{item.label}</span>
+                            </Button>
+                          );
+                        })}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </nav>
+                
+                {/* Botões de perfil e sair - SEMPRE VISÍVEIS */}
+                <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={() => {
+                      setShowMyProfile(true);
+                      setSelectedAthlete(null);
+                      setSelectedTeam(null);
+                      setSelectedTournament(null);
+                    }}
+                    className="hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-all p-2 rounded-lg sm:rounded-xl"
+                    title="Meu Perfil"
+                  >
+                    <User className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={handleSignOut} 
+                    className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all p-2 rounded-lg sm:rounded-xl"
+                    title="Sair"
+                  >
+                    <LogOut className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                  </Button>
                 </div>
               </div>
             </div>
