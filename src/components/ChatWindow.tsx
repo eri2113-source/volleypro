@@ -184,7 +184,7 @@ export function ChatWindow({ otherUserId, onBack }: ChatWindowProps) {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-br from-background via-background to-primary/5">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary to-secondary p-4 shadow-lg flex-shrink-0">
         <div className="container mx-auto max-w-4xl flex items-center gap-3">

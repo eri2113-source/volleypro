@@ -357,7 +357,7 @@ export default function App() {
 
     switch (currentView) {
       case "feed":
-        return <Feed {...authProps} />;
+        return <Feed {...authProps} onSelectAthlete={setSelectedAthlete} />;
       case "athletes":
         return <Athletes onSelectAthlete={setSelectedAthlete} {...authProps} />;
       case "teams":
@@ -516,7 +516,7 @@ export default function App() {
             isAuthenticated={isAuthenticated}
             onProfileClick={() => setShowMyProfile(true)}
           />
-          <main className="flex-1 w-full bg-background overflow-y-auto overflow-x-hidden">
+          <main className="flex-1 w-full min-w-0 bg-background overflow-y-auto overflow-x-hidden">
             {/* Barra de navegação moderna com glassmorphism - SEMPRE TRAVADA NO TOPO */}
             <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-md">
               <div className="w-full px-1 sm:px-4 md:px-6">

@@ -40,9 +40,10 @@ import { Trash2, Shield } from "lucide-react";
 interface FeedProps {
   isAuthenticated?: boolean;
   onLoginPrompt?: () => void;
+  onSelectAthlete?: (athleteId: number) => void;
 }
 
-export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
+export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }: FeedProps) {
   const [newPost, setNewPost] = useState("");
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -1002,7 +1003,14 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3 flex-1">
-                <Avatar className={`h-11 w-11 ${isOfficialPost ? 'ring-2 ring-secondary/50 shadow-lg' : 'ring-1 ring-border'}`}>
+                <Avatar 
+                  className={`h-11 w-11 ${isOfficialPost ? 'ring-2 ring-secondary/50 shadow-lg' : 'ring-1 ring-border'} ${!isOfficialPost && post.authorId && onSelectAthlete ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
+                  onClick={() => {
+                    if (!isOfficialPost && post.authorId && onSelectAthlete) {
+                      onSelectAthlete(post.authorId);
+                    }
+                  }}
+                >
                   {post.authorPhotoUrl ? (
                     <AvatarImage src={post.authorPhotoUrl} alt={authorName} />
                   ) : (
@@ -1013,7 +1021,14 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
                 </Avatar>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`${isOfficialPost ? 'font-semibold text-gradient-secondary' : 'font-medium'}`}>{authorName}</span>
+                    <span 
+                      className={`${isOfficialPost ? 'font-semibold text-gradient-secondary' : 'font-medium'} ${!isOfficialPost && post.authorId && onSelectAthlete ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+                      onClick={() => {
+                        if (!isOfficialPost && post.authorId && onSelectAthlete) {
+                          onSelectAthlete(post.authorId);
+                        }
+                      }}
+                    >{authorName}</span>
                     {post.verified && (
                       <Badge variant="secondary" className="h-5 px-2 rounded-full bg-primary/10 text-primary">
                         ✓
@@ -1223,7 +1238,14 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
                     ) : (
                       (comments[post.id] || []).map((comment: any) => (
                         <div key={comment.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
-                          <Avatar className="h-8 w-8">
+                          <Avatar 
+                            className={`h-8 w-8 ${comment.userId && onSelectAthlete ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
+                            onClick={() => {
+                              if (comment.userId && onSelectAthlete) {
+                                onSelectAthlete(comment.userId);
+                              }
+                            }}
+                          >
                             {comment.authorPhotoUrl ? (
                               <AvatarImage src={comment.authorPhotoUrl} alt={comment.authorName} />
                             ) : null}
@@ -1233,7 +1255,14 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
                           </Avatar>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2">
-                              <span className="text-sm">{comment.authorName}</span>
+                              <span 
+                                className={`text-sm ${comment.userId && onSelectAthlete ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+                                onClick={() => {
+                                  if (comment.userId && onSelectAthlete) {
+                                    onSelectAthlete(comment.userId);
+                                  }
+                                }}
+                              >{comment.authorName}</span>
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-muted-foreground">
                                   {new Date(comment.createdAt).toLocaleString('pt-BR', {

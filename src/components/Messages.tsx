@@ -78,7 +78,7 @@ export function Messages() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="fixed inset-0 z-40 flex flex-col bg-gradient-to-br from-background via-background to-primary/5">
       {/* Header */}
       <div className="bg-gradient-to-r from-primary to-secondary p-4 sm:p-6 shadow-lg">
         <div className="container mx-auto max-w-4xl">
