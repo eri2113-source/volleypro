@@ -33,7 +33,8 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [maxTeams, setMaxTeams] = useState("16");
-  const [format, setFormat] = useState<'single_elimination' | 'round_robin'>("single_elimination");
+  const [format, setFormat] = useState<'single_elimination' | 'round_robin' | 'double_elimination' | 'swiss'>("single_elimination");
+  const [modalityType, setModalityType] = useState<'indoor' | 'beach'>("indoor");
 
   const handleCreate = async () => {
     if (!name || !location || !startDate || !endDate) {
@@ -50,6 +51,7 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
         endDate,
         maxTeams: parseInt(maxTeams),
         format,
+        modalityType,
       });
 
       toast.success("🏆 Torneio criado com sucesso!");
@@ -76,11 +78,34 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
         <DialogHeader>
           <DialogTitle>Criar Novo Torneio</DialogTitle>
           <DialogDescription id="create-tournament-description">
-            Organize um torneio e convide times para participar
+            {modalityType === 'beach' 
+              ? 'Organize um torneio de vôlei de praia com inscrições individuais'
+              : 'Organize um torneio de vôlei de quadra e convide times para participar'
+            }
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
+          {/* Tipo de Modalidade */}
+          <div className="space-y-2">
+            <Label htmlFor="modality-type">Modalidade</Label>
+            <Select value={modalityType} onValueChange={(v: any) => setModalityType(v)}>
+              <SelectTrigger id="modality-type">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="indoor">🏐 Vôlei de Quadra (Times)</SelectItem>
+                <SelectItem value="beach">🏖️ Vôlei de Praia (Duplas/Individual)</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {modalityType === 'beach' 
+                ? '🏖️ Inscrições individuais - qualquer usuário pode participar'
+                : '🏐 Inscrições por times - apenas times podem se inscrever'
+              }
+            </p>
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="tournament-name">Nome do Torneio</Label>
             <Input
@@ -124,7 +149,9 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="max-teams">Número Máximo de Times</Label>
+            <Label htmlFor="max-teams">
+              {modalityType === 'beach' ? 'Número Máximo de Duplas' : 'Número Máximo de Times'}
+            </Label>
             <Input
               id="max-teams"
               type="number"
@@ -136,20 +163,23 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="format">Formato do Torneio</Label>
+            <Label htmlFor="format">Formato do Torneio (Chaveamento)</Label>
             <Select value={format} onValueChange={(v: any) => setFormat(v)}>
               <SelectTrigger id="format">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="single_elimination">🏆 Eliminação Simples</SelectItem>
+                <SelectItem value="double_elimination">💪 Eliminação Dupla (Repescagem)</SelectItem>
                 <SelectItem value="round_robin">🔄 Todos contra Todos</SelectItem>
+                <SelectItem value="swiss">♟️ Sistema Suíço</SelectItem>
               </SelectContent>
             </Select>
             <p className="text-xs text-muted-foreground">
-              {format === 'single_elimination' 
-                ? '⚡ Bracket estilo playoff - quem perde está eliminado'
-                : '🔄 Cada time joga contra todos os outros'}
+              {format === 'single_elimination' && '⚡ Bracket estilo playoff - quem perde está eliminado'}
+              {format === 'double_elimination' && '💪 Segunda chance - chave de perdedores'}
+              {format === 'round_robin' && '🔄 Cada participante joga contra todos os outros'}
+              {format === 'swiss' && '♟️ Pareamentos baseados em performance - sem eliminação'}
             </p>
           </div>
         </div>
@@ -158,7 +188,10 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
           <Button variant="outline" onClick={onClose}>
             Cancelar
           </Button>
-          <Button onClick={handleCreate} disabled={loading}>
+          <Button 
+            onClick={handleCreate} 
+            disabled={loading || !name || !location || !startDate || !endDate}
+          >
             {loading ? "Criando..." : "Criar Torneio"}
           </Button>
         </DialogFooter>

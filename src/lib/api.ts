@@ -531,7 +531,8 @@ export const tournamentApi = {
     endDate: string;
     location: string;
     maxTeams?: number;
-    format?: 'single_elimination' | 'double_elimination' | 'round_robin';
+    format?: 'single_elimination' | 'double_elimination' | 'round_robin' | 'swiss';
+    modalityType?: 'indoor' | 'beach';
   }) {
     return apiCall('/tournaments', {
       method: 'POST',
@@ -556,6 +557,20 @@ export const tournamentApi = {
 
   async unregisterTeam(tournamentId: string) {
     return apiCall(`/tournaments/${tournamentId}/register`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Beach volleyball - Individual registration
+  async registerIndividual(tournamentId: string, partnerId?: string) {
+    return apiCall(`/tournaments/${tournamentId}/register-individual`, {
+      method: 'POST',
+      body: JSON.stringify({ partnerId }),
+    });
+  },
+
+  async unregisterIndividual(tournamentId: string) {
+    return apiCall(`/tournaments/${tournamentId}/register-individual`, {
       method: 'DELETE',
     });
   },

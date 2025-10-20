@@ -2779,6 +2779,303 @@ app.delete('/make-server-0ea22bba/lives/:liveId', authMiddleware, async (c) => {
   }
 });
 
+// ============= TOURNAMENTS ROUTES =============
+
+// Create tournament
+app.post('/make-server-0ea22bba/tournaments', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const { name, location, startDate, endDate, maxTeams, format, modalityType } = await c.req.json();
+    
+    if (!name || !location || !startDate || !endDate) {
+      return c.json({ error: 'Missing required fields' }, 400);
+    }
+    
+    // Get organizer info
+    const organizer = await kv.get(`user:${userId}`);
+    if (!organizer) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+    
+    const tournamentId = `tournament:${Date.now()}:${userId}`;
+    const tournament = {
+      id: tournamentId,
+      name,
+      location,
+      startDate,
+      endDate,
+      maxTeams: maxTeams || 16,
+      format: format || 'single_elimination',
+      modalityType: modalityType || 'indoor',
+      organizerId: userId,
+      organizerName: organizer.name,
+      status: 'upcoming',
+      registeredTeams: modalityType === 'indoor' ? [] : undefined,
+      registeredPlayers: modalityType === 'beach' ? [] : undefined,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    await kv.set(tournamentId, tournament);
+    console.log(`🏆 Torneio criado: ${name} (${modalityType})`);
+    
+    return c.json({ tournament });
+  } catch (error: any) {
+    console.error('❌ Error creating tournament:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get all tournaments
+app.get('/make-server-0ea22bba/tournaments', async (c) => {
+  try {
+    const status = c.req.query('status');
+    const allTournaments = await kv.getByPrefix('tournament:');
+    
+    let filteredTournaments = allTournaments;
+    if (status) {
+      filteredTournaments = allTournaments.filter((t: any) => t.status === status);
+    }
+    
+    // Sort by start date
+    const sortedTournaments = filteredTournaments.sort((a: any, b: any) => {
+      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
+    });
+    
+    return c.json({ tournaments: sortedTournaments });
+  } catch (error: any) {
+    console.error('❌ Error getting tournaments:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get tournament details
+app.get('/make-server-0ea22bba/tournaments/:tournamentId', async (c) => {
+  try {
+    const tournamentId = c.req.param('tournamentId');
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    
+    const tournament = await kv.get(fullTournamentId);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    return c.json({ tournament });
+  } catch (error: any) {
+    console.error('❌ Error getting tournament:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Register team (indoor tournaments)
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/register', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    
+    const tournament = await kv.get(fullTournamentId);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    if (tournament.modalityType !== 'indoor') {
+      return c.json({ error: 'This tournament requires individual registration' }, 400);
+    }
+    
+    // Check if tournament is full
+    if (tournament.registeredTeams.length >= tournament.maxTeams) {
+      return c.json({ error: 'Tournament is full' }, 400);
+    }
+    
+    // Check if team is already registered
+    if (tournament.registeredTeams.includes(userId)) {
+      return c.json({ error: 'Team already registered' }, 400);
+    }
+    
+    // Add team to tournament
+    tournament.registeredTeams.push(userId);
+    tournament.updatedAt = new Date().toISOString();
+    
+    await kv.set(fullTournamentId, tournament);
+    console.log(`✅ Time inscrito no torneio: ${tournament.name}`);
+    
+    return c.json({ success: true, tournament });
+  } catch (error: any) {
+    console.error('❌ Error registering team:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Unregister team (indoor tournaments)
+app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    
+    const tournament = await kv.get(fullTournamentId);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    // Remove team from tournament
+    tournament.registeredTeams = tournament.registeredTeams.filter((id: string) => id !== userId);
+    tournament.updatedAt = new Date().toISOString();
+    
+    await kv.set(fullTournamentId, tournament);
+    console.log(`✅ Time removido do torneio: ${tournament.name}`);
+    
+    return c.json({ success: true, tournament });
+  } catch (error: any) {
+    console.error('❌ Error unregistering team:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Register individual player (beach tournaments)
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-individual', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    const { partnerId } = await c.req.json();
+    
+    const tournament = await kv.get(fullTournamentId);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    if (tournament.modalityType !== 'beach') {
+      return c.json({ error: 'This tournament requires team registration' }, 400);
+    }
+    
+    // Initialize array if needed
+    if (!tournament.registeredPlayers) {
+      tournament.registeredPlayers = [];
+    }
+    
+    // Check if player is already registered
+    const alreadyRegistered = tournament.registeredPlayers.some((p: any) => p.id === userId);
+    if (alreadyRegistered) {
+      return c.json({ error: 'You are already registered' }, 400);
+    }
+    
+    // Check if tournament is full
+    if (tournament.registeredPlayers.length >= tournament.maxTeams * 2) {
+      return c.json({ error: 'Tournament is full' }, 400);
+    }
+    
+    // Get player info
+    const player = await kv.get(`user:${userId}`);
+    if (!player) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+    
+    // Add player to tournament
+    tournament.registeredPlayers.push({
+      id: userId,
+      name: player.name,
+      userType: player.userType,
+      partnerId: partnerId || null,
+      registeredAt: new Date().toISOString(),
+    });
+    tournament.updatedAt = new Date().toISOString();
+    
+    await kv.set(fullTournamentId, tournament);
+    console.log(`✅ Jogador inscrito no torneio de praia: ${tournament.name}`);
+    
+    return c.json({ success: true, tournament });
+  } catch (error: any) {
+    console.error('❌ Error registering player:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Unregister individual player (beach tournaments)
+app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register-individual', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    
+    const tournament = await kv.get(fullTournamentId);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    if (!tournament.registeredPlayers) {
+      tournament.registeredPlayers = [];
+    }
+    
+    // Remove player from tournament
+    tournament.registeredPlayers = tournament.registeredPlayers.filter((p: any) => p.id !== userId);
+    tournament.updatedAt = new Date().toISOString();
+    
+    await kv.set(fullTournamentId, tournament);
+    console.log(`✅ Jogador removido do torneio de praia: ${tournament.name}`);
+    
+    return c.json({ success: true, tournament });
+  } catch (error: any) {
+    console.error('❌ Error unregistering player:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Reset all tournaments (master only)
+app.post('/make-server-0ea22bba/admin/reset-tournaments', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    
+    // Check if user is master
+    const isMaster = await isMasterUser(userId);
+    if (!isMaster) {
+      return c.json({ error: 'Master access required' }, 403);
+    }
+    
+    // Delete all tournaments
+    const allTournaments = await kv.getByPrefix('tournament:');
+    for (const tournament of allTournaments) {
+      await kv.del(tournament.id);
+    }
+    
+    console.log(`🗑️ Todos os torneios foram deletados (${allTournaments.length} torneios)`);
+    
+    // Create default tournament
+    const organizer = await kv.get(`user:${userId}`);
+    const defaultTournamentId = `tournament:${Date.now()}:${userId}`;
+    const defaultTournament = {
+      id: defaultTournamentId,
+      name: "Campeonato Municipal 2025",
+      location: "Ginásio Municipal",
+      startDate: "2025-11-15",
+      endDate: "2025-11-30",
+      maxTeams: 16,
+      format: "single_elimination",
+      modalityType: "indoor",
+      organizerId: userId,
+      organizerName: organizer?.name || 'Admin',
+      status: 'upcoming',
+      registeredTeams: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    
+    await kv.set(defaultTournamentId, defaultTournament);
+    console.log(`✅ Torneio padrão criado: ${defaultTournament.name}`);
+    
+    return c.json({ 
+      success: true, 
+      message: 'All tournaments reset',
+      deletedCount: allTournaments.length,
+      defaultTournament 
+    });
+  } catch (error: any) {
+    console.error('❌ Error resetting tournaments:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // ============= ADS / ANÚNCIOS ROUTES =============
 
 // Create ad

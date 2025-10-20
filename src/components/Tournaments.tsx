@@ -206,17 +206,20 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
           <p className="text-muted-foreground text-sm">Competições e campeonatos ao vivo</p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            onClick={handleResetTournaments}
-            variant="outline"
-            size="sm"
-            className="text-xs"
-          >
-            🔄 Reset (Admin)
-          </Button>
+          {isMaster && (
+            <Button 
+              onClick={handleResetTournaments}
+              variant="outline"
+              size="sm"
+              className="text-xs"
+            >
+              🔄 Reset (Admin)
+            </Button>
+          )}
           <Button 
             onClick={() => {
-              if (currentUser?.userType !== 'team') {
+              // Usuários master têm permissão total, ou usuários tipo team
+              if (!isMaster && currentUser?.userType !== 'team') {
                 toast.error("Apenas times podem criar torneios", {
                   description: currentUser?.userType === 'athlete'
                     ? "Você pode participar através de convocação do seu time"
@@ -226,9 +229,9 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
               }
               setShowCreateModal(true);
             }}
-            disabled={!isAuthenticated || currentUser?.userType !== 'team'}
+            disabled={!isAuthenticated || (!isMaster && currentUser?.userType !== 'team')}
             className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
-            title={currentUser?.userType !== 'team' ? "Apenas times podem criar torneios" : ""}
+            title={!isMaster && currentUser?.userType !== 'team' ? "Apenas times podem criar torneios" : ""}
           >
             <Plus className="h-4 w-4 mr-2" />
             Criar Torneio

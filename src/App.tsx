@@ -27,7 +27,6 @@ import { LandingPage } from "./components/LandingPage";
 import { Logo } from "./components/Logo";
 import { CacheBuster } from "./components/CacheBuster";
 
-import { FirstAccessGuide } from "./components/FirstAccessGuide";
 import { PWAManager } from "./components/PWAManager";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { OfflineIndicator } from "./components/OfflineIndicator";
@@ -62,7 +61,6 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
   const [userType, setUserType] = useState<"athlete" | "team" | "fan">("fan");
-  const [showFirstAccessGuide, setShowFirstAccessGuide] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   
@@ -271,12 +269,6 @@ export default function App() {
         if (type) {
           setUserType(type);
           console.log("✅ Tipo de usuário:", type);
-        }
-        
-        // Verificar se deve mostrar o guia de primeiro acesso
-        const hasSeenGuide = localStorage.getItem("volleypro_first_access_guide");
-        if (!hasSeenGuide) {
-          setShowFirstAccessGuide(true);
         }
       } catch (error) {
         console.error("⚠️ Erro ao carregar perfil do usuário:", error);
@@ -673,13 +665,6 @@ export default function App() {
           setShowAuthModal(true);
         }}
       />
-
-      {showFirstAccessGuide && (
-        <FirstAccessGuide 
-          userType={userType}
-          onComplete={() => setShowFirstAccessGuide(false)}
-        />
-      )}
 
       <PWAManager />
       <PWAInstallPrompt />
