@@ -253,10 +253,10 @@ export function Referees() {
                   Criar Federação
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-2xl">
+              <DialogContent className="max-w-2xl" aria-describedby="create-federation-description">
                 <DialogHeader>
                   <DialogTitle>Criar Nova Federação</DialogTitle>
-                  <DialogDescription>
+                  <DialogDescription id="create-federation-description">
                     Preencha os dados para criar sua federação de arbitragem
                   </DialogDescription>
                 </DialogHeader>
@@ -676,10 +676,10 @@ export function Referees() {
 
       {/* Modal de Inscrição */}
       <Dialog open={showApplyModal} onOpenChange={setShowApplyModal}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" aria-describedby="apply-referee-description">
           <DialogHeader>
             <DialogTitle>Inscrever-se como Árbitro</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="apply-referee-description">
               {selectedFederation
                 ? `Inscrição para: ${selectedFederation.name}`
                 : "Selecione uma federação primeiro"}

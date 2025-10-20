@@ -269,7 +269,7 @@ export function TournamentRosterModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" aria-describedby="roster-description">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
@@ -277,7 +277,7 @@ export function TournamentRosterModal({
             </div>
             <div>
               <DialogTitle>Convocação - {tournamentName}</DialogTitle>
-              <DialogDescription>
+              <DialogDescription id="roster-description">
                 {teamName} • Monte sua equipe para o torneio
               </DialogDescription>
             </div>

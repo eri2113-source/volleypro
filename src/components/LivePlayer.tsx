@@ -8,7 +8,7 @@ import { ScrollArea } from "./ui/scroll-area";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { WebcamStream } from "./WebcamStream";
 import { LiveVideoPlayer } from "./LiveVideoPlayer";
-import { LiveDebugPanel } from "./LiveDebugPanel";
+
 import { 
   X, 
   Radio, 
@@ -367,10 +367,6 @@ export function LivePlayer({ liveId, open, onClose, onLiveEnded }: LivePlayerPro
         )}
       </DialogContent>
 
-      {/* Debug Panel - só quando a live está aberta */}
-      {open && live && (
-        <LiveDebugPanel live={live} isCreator={isCreator} />
-      )}
     </Dialog>
   );
 }

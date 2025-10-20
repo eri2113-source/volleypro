@@ -23,110 +23,8 @@ interface VideoItem {
   category: string;
 }
 
-const mockVideos: VideoItem[] = [
-  {
-    id: 1,
-    thumbnail: "https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=800",
-    title: "Melhores Saques do Campeonato 2024",
-    description: "Compilação dos saques mais potentes e efetivos da temporada",
-    duration: "8:45",
-    author: {
-      name: "VolleyPro Oficial",
-      avatar: "https://i.pravatar.cc/150?img=50",
-      type: "team"
-    },
-    views: 12543,
-    likes: 892,
-    comments: 143,
-    uploadedAt: "2 horas atrás",
-    category: "Highlights"
-  },
-  {
-    id: 2,
-    thumbnail: "https://images.unsplash.com/photo-1593766827228-8737b4534aa6?w=800",
-    title: "Tutorial: Como Melhorar o Bloqueio",
-    description: "Técnicas avançadas para aperfeiçoar seu bloqueio no vôlei",
-    duration: "12:30",
-    author: {
-      name: "João Silva",
-      avatar: "https://i.pravatar.cc/150?img=12",
-      type: "athlete"
-    },
-    views: 8234,
-    likes: 654,
-    comments: 89,
-    uploadedAt: "1 dia atrás",
-    category: "Tutorial"
-  },
-  {
-    id: 3,
-    thumbnail: "https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=800",
-    title: "Final Emocionante - Time A vs Time B",
-    description: "Reviva todos os momentos da grande final do campeonato estadual",
-    duration: "45:20",
-    author: {
-      name: "Time Vôlei SP",
-      avatar: "https://i.pravatar.cc/150?img=20",
-      type: "team"
-    },
-    views: 25678,
-    likes: 2134,
-    comments: 567,
-    uploadedAt: "3 dias atrás",
-    category: "Partidas"
-  },
-  {
-    id: 4,
-    thumbnail: "https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?w=800",
-    title: "Treino de Defesa - Exercícios Práticos",
-    description: "Rotina completa de treino focada em defesa e recepção",
-    duration: "15:00",
-    author: {
-      name: "Maria Santos",
-      avatar: "https://i.pravatar.cc/150?img=25",
-      type: "athlete"
-    },
-    views: 5432,
-    likes: 423,
-    comments: 67,
-    uploadedAt: "5 dias atrás",
-    category: "Treino"
-  },
-  {
-    id: 5,
-    thumbnail: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800",
-    title: "Análise Tática: Sistemas de Jogo",
-    description: "Entenda os principais sistemas táticos utilizados no vôlei profissional",
-    duration: "20:15",
-    author: {
-      name: "Carlos Técnico",
-      avatar: "https://i.pravatar.cc/150?img=35",
-      type: "team"
-    },
-    views: 3456,
-    likes: 289,
-    comments: 45,
-    uploadedAt: "1 semana atrás",
-    category: "Análise"
-  },
-  {
-    id: 6,
-    thumbnail: "https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=800&q=60",
-    title: "Aquecimento Pré-Jogo Completo",
-    description: "Sequência ideal de aquecimento antes das partidas",
-    duration: "10:00",
-    author: {
-      name: "Pedro Costa",
-      avatar: "https://i.pravatar.cc/150?img=15",
-      type: "athlete"
-    },
-    views: 4567,
-    likes: 345,
-    comments: 34,
-    uploadedAt: "1 semana atrás",
-    category: "Treino"
-  }
-];
+// Array vazio - vídeos virão do backend/upload real dos usuários
+const mockVideos: VideoItem[] = [];
 
 const categories = ["Todos", "Highlights", "Tutorial", "Partidas", "Treino", "Análise"];
 
@@ -212,8 +110,32 @@ export function Videos() {
       </div>
 
       {/* Videos Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredVideos.map(video => (
+      {filteredVideos.length === 0 ? (
+        <Card className="p-12">
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                <Video className="h-8 w-8 text-muted-foreground" />
+              </div>
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">Nenhum vídeo ainda</h3>
+              <p className="text-muted-foreground">
+                {selectedCategory === "Todos" 
+                  ? "Seja o primeiro a compartilhar um vídeo!" 
+                  : `Nenhum vídeo na categoria "${selectedCategory}" ainda.`
+                }
+              </p>
+            </div>
+            <Button className="gap-2">
+              <Upload className="h-4 w-4" />
+              Fazer Upload de Vídeo
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredVideos.map(video => (
           <Card key={video.id} className="overflow-hidden group hover:shadow-xl transition-all cursor-pointer">
             <div className="relative">
               {/* Thumbnail */}
@@ -298,7 +220,8 @@ export function Videos() {
             </div>
           </Card>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Trending Section */}
       <div className="mt-12">

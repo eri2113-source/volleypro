@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner@2.0.3";
 import { userApi } from "../lib/api";
 import { formatHeight, formatWeight } from "../utils/formatters";
+import { ChatWindow } from "./ChatWindow";
 
 interface AthleteProfileProps {
   athleteId: number;
@@ -47,6 +48,7 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
   const [loading, setLoading] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
+  const [showChatWindow, setShowChatWindow] = useState(false);
 
   // Carregar dados do atleta
   useEffect(() => {
@@ -152,6 +154,25 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
     }
   }
 
+  function handleOpenChat() {
+    const token = localStorage.getItem('volleypro_token');
+    if (!token) {
+      toast.error('Você precisa estar logado para enviar mensagens');
+      return;
+    }
+    setShowChatWindow(true);
+  }
+
+  // Se estiver no chat, mostrar apenas o chat
+  if (showChatWindow && athlete) {
+    return (
+      <ChatWindow
+        otherUserId={athlete.id.toString()}
+        onBack={() => setShowChatWindow(false)}
+      />
+    );
+  }
+
   if (loadingProfile) {
     return (
       <div className="container mx-auto py-12 text-center">
@@ -222,7 +243,12 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
                     <Heart className={`h-4 w-4 mr-1 sm:mr-2 ${isFollowing ? 'fill-current' : ''}`} />
                     <span className="text-xs sm:text-sm">{loading ? 'Aguarde...' : isFollowing ? 'Seguindo' : 'Seguir'}</span>
                   </Button>
-                  <Button size="sm" className="bg-secondary hover:bg-secondary/90">
+                  <Button 
+                    size="sm" 
+                    className="bg-secondary hover:bg-secondary/90"
+                    onClick={handleOpenChat}
+                  >
+                    <MessageCircle className="h-4 w-4 mr-1 sm:mr-2" />
                     <span className="text-xs sm:text-sm">Mensagem</span>
                   </Button>
                 </div>

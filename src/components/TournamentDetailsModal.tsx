@@ -256,10 +256,10 @@ export function TournamentDetailsModal({
   if (loading && !tournament) {
     return (
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl" aria-describedby="loading-tournament-description">
           <DialogHeader className="sr-only">
             <DialogTitle>Carregando Torneio</DialogTitle>
-            <DialogDescription>Aguarde enquanto carregamos os detalhes do torneio</DialogDescription>
+            <DialogDescription id="loading-tournament-description">Aguarde enquanto carregamos os detalhes do torneio</DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-center p-12">
             <div className="text-center space-y-3">
@@ -305,7 +305,7 @@ export function TournamentDetailsModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto" aria-describedby="tournament-details-description">
         <DialogHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">
@@ -314,7 +314,7 @@ export function TournamentDetailsModal({
               </div>
               <div>
                 <DialogTitle>{tournament.name}</DialogTitle>
-                <DialogDescription>
+                <DialogDescription id="tournament-details-description">
                   Organizado por {tournament.organizerName}
                 </DialogDescription>
               </div>

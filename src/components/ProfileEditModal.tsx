@@ -549,7 +549,7 @@ function ProfileEditModalContent({
   // Desktop: usar Dialog
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden" aria-describedby="profile-edit-description">
         <div className="shrink-0 p-6 pb-4 border-b bg-background/95 backdrop-blur-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -563,7 +563,7 @@ function ProfileEditModalContent({
                 </Badge>
               )}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="profile-edit-description">
               Atualize suas informações pessoais
             </DialogDescription>
           </DialogHeader>

@@ -89,13 +89,13 @@ export function CreateLiveModal({ open, onClose, onSuccess }: CreateLiveModalPro
   if (showCameraTest) {
     return (
       <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[600px]" aria-describedby="camera-test-description">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Camera className="h-5 w-5 text-primary" />
               Verificar Câmera e Microfone
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="camera-test-description">
               Vamos testar se sua câmera e microfone estão funcionando antes de criar a live
             </DialogDescription>
           </DialogHeader>

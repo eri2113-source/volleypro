@@ -27,53 +27,8 @@ interface Poll {
   userVote?: number;
 }
 
-const mockPolls: Poll[] = [
-  {
-    id: 1,
-    question: "Qual foi o melhor jogador da última partida?",
-    options: [
-      { id: 1, text: "João Silva - Ponteiro", votes: 45 },
-      { id: 2, text: "Maria Santos - Levantadora", votes: 32 },
-      { id: 3, text: "Pedro Costa - Líbero", votes: 18 },
-      { id: 4, text: "Ana Lima - Oposta", votes: 25 }
-    ],
-    totalVotes: 120,
-    createdBy: "Time Vôlei SP",
-    createdAt: "2 horas atrás",
-    expiresAt: "em 22 horas",
-    hasVoted: false
-  },
-  {
-    id: 2,
-    question: "Qual técnica você mais gosta de treinar?",
-    options: [
-      { id: 1, text: "Saque", votes: 67 },
-      { id: 2, text: "Ataque", votes: 89 },
-      { id: 3, text: "Bloqueio", votes: 34 },
-      { id: 4, text: "Defesa", votes: 45 }
-    ],
-    totalVotes: 235,
-    createdBy: "Carlos Técnico",
-    createdAt: "1 dia atrás",
-    expiresAt: "em 5 dias",
-    hasVoted: true,
-    userVote: 2
-  },
-  {
-    id: 3,
-    question: "Melhor horário para treinos?",
-    options: [
-      { id: 1, text: "Manhã (6h-9h)", votes: 42 },
-      { id: 2, text: "Tarde (14h-17h)", votes: 58 },
-      { id: 3, text: "Noite (18h-21h)", votes: 91 }
-    ],
-    totalVotes: 191,
-    createdBy: "Vôlei Pro Community",
-    createdAt: "3 dias atrás",
-    expiresAt: "em 4 dias",
-    hasVoted: false
-  }
-];
+// Array vazio - enquetes virão do backend/criação real dos usuários
+const mockPolls: Poll[] = [];
 
 export function Polls() {
   const [polls, setPolls] = useState<Poll[]>(mockPolls);
@@ -229,8 +184,29 @@ export function Polls() {
       </div>
 
       {/* Polls List */}
-      <div className="space-y-4">
-        {polls.map(poll => (
+      {polls.length === 0 ? (
+        <Card className="p-12">
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                <BarChart3 className="h-8 w-8 text-muted-foreground" />
+              </div>
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">Nenhuma enquete ainda</h3>
+              <p className="text-muted-foreground">
+                Seja o primeiro a criar uma enquete e coletar a opinião da comunidade!
+              </p>
+            </div>
+            <Button onClick={() => setShowCreateDialog(true)} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Criar Primeira Enquete
+            </Button>
+          </div>
+        </Card>
+      ) : (
+        <div className="space-y-4">
+          {polls.map(poll => (
           <Card key={poll.id} className="overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-primary/5 to-secondary/5">
               <div className="flex items-start justify-between">
@@ -305,21 +281,7 @@ export function Polls() {
             </CardContent>
           </Card>
         ))}
-      </div>
-
-      {/* Empty State */}
-      {polls.length === 0 && (
-        <Card className="p-12 text-center">
-          <BarChart3 className="h-16 w-16 mx-auto text-muted-foreground/50 mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Nenhuma enquete ativa</h3>
-          <p className="text-muted-foreground mb-4">
-            Seja o primeiro a criar uma enquete!
-          </p>
-          <Button onClick={() => setShowCreateDialog(true)}>
-            <Plus className="h-4 w-4 mr-2" />
-            Criar Primeira Enquete
-          </Button>
-        </Card>
+        </div>
       )}
     </div>
   );

@@ -219,7 +219,7 @@ export function TournamentAthleteView({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" aria-describedby="athlete-tournament-description">
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
@@ -227,7 +227,7 @@ export function TournamentAthleteView({
             </div>
             <div className="flex-1">
               <DialogTitle>{tournament.name}</DialogTitle>
-              <DialogDescription className="flex items-center gap-3 mt-1">
+              <DialogDescription id="athlete-tournament-description" className="flex items-center gap-3 mt-1">
                 <span className="flex items-center gap-1">
                   <Calendar className="h-3 w-3" />
                   {new Date(tournament.startDate).toLocaleDateString('pt-BR')} - {new Date(tournament.endDate).toLocaleDateString('pt-BR')}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Radio, Eye, Calendar, Play, Video, Loader2, Trash2, Share2, Wrench } from "lucide-react";
+import { Radio, Eye, Calendar, Play, Video, Loader2, Trash2, Share2 } from "lucide-react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -16,7 +16,6 @@ import { LivePlayer } from "./LivePlayer";
 import { LoginPrompt } from "./LoginPrompt";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { LiveCardDebug } from "./LiveCardDebug";
-import { LivesDiagnostic } from "./LivesDiagnostic";
 import { liveApi, authApi, masterAdminApi } from "../lib/api";
 import { toast } from "sonner@2.0.3";
 
@@ -32,7 +31,6 @@ export function Lives({ isAuthenticated = false, onLoginPrompt }: LivesProps) {
   const [selectedLiveId, setSelectedLiveId] = useState<string | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [isMaster, setIsMaster] = useState(false);
-  const [showDiagnostic, setShowDiagnostic] = useState(false);
 
   useEffect(() => {
     loadLives();
@@ -269,21 +267,7 @@ export function Lives({ isAuthenticated = false, onLoginPrompt }: LivesProps) {
     );
   }
 
-  // Se diagnóstico está ativo, mostrar só ele
-  if (showDiagnostic) {
-    return (
-      <div className="space-y-4">
-        <Button 
-          variant="outline" 
-          onClick={() => setShowDiagnostic(false)}
-          className="ml-6 mt-4"
-        >
-          ← Voltar para Lives
-        </Button>
-        <LivesDiagnostic />
-      </div>
-    );
-  }
+
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -301,25 +285,14 @@ export function Lives({ isAuthenticated = false, onLoginPrompt }: LivesProps) {
           </div>
           <p className="text-muted-foreground">Transmissões profissionais de jogos, treinos e eventos de vôlei</p>
         </div>
-        <div className="flex gap-2">
-          <Button 
-            variant="outline"
-            size="sm"
-            onClick={() => setShowDiagnostic(true)}
-            className="gap-2 hidden md:flex"
-          >
-            <Wrench className="h-4 w-4" />
-            Diagnóstico
-          </Button>
-          <Button 
-            onClick={() => setShowCreateModal(true)}
-            className="bg-gradient-to-r from-red-500 to-red-600 hover:opacity-90 shadow-lg shadow-red-500/30"
-          >
-            <Video className="h-4 w-4 mr-2" />
-            <span className="hidden sm:inline">Iniciar Transmissão</span>
-            <span className="sm:hidden">Criar Live</span>
-          </Button>
-        </div>
+        <Button 
+          onClick={() => setShowCreateModal(true)}
+          className="bg-gradient-to-r from-red-500 to-red-600 hover:opacity-90 shadow-lg shadow-red-500/30"
+        >
+          <Video className="h-4 w-4 mr-2" />
+          <span className="hidden sm:inline">Iniciar Transmissão</span>
+          <span className="sm:hidden">Criar Live</span>
+        </Button>
       </div>
 
       {/* Tabs */}

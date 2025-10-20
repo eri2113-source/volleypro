@@ -421,13 +421,13 @@ export function ContentInspirationModal({
         {/* Modal de Detalhes do Template Selecionado */}
         {selectedTemplate && (
           <Dialog open={!!selectedTemplate} onOpenChange={() => setSelectedTemplate(null)}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl" aria-describedby="template-detail-description">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <span className="text-2xl">{selectedTemplate.icon}</span>
                   {selectedTemplate.title}
                 </DialogTitle>
-                <DialogDescription>{selectedTemplate.description}</DialogDescription>
+                <DialogDescription id="template-detail-description">{selectedTemplate.description}</DialogDescription>
               </DialogHeader>
 
               <div className="space-y-4">

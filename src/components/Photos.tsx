@@ -3,7 +3,7 @@ import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Camera, Heart, MessageSquare, Share2, Download, Eye, Upload, Grid3x3, List } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 
 interface Photo {
@@ -22,98 +22,8 @@ interface Photo {
   tags: string[];
 }
 
-const mockPhotos: Photo[] = [
-  {
-    id: 1,
-    url: "https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=800",
-    caption: "Treino intenso de hoje! 💪🏐 #voleipro #treino",
-    author: {
-      name: "João Silva",
-      avatar: "https://i.pravatar.cc/150?img=12",
-      type: "athlete"
-    },
-    likes: 234,
-    comments: 45,
-    views: 1205,
-    createdAt: "2 horas atrás",
-    tags: ["treino", "voleipro"]
-  },
-  {
-    id: 2,
-    url: "https://images.unsplash.com/photo-1593766827228-8737b4534aa6?w=800",
-    caption: "Momento épico da final! 🏆",
-    author: {
-      name: "Time Vôlei SP",
-      avatar: "https://i.pravatar.cc/150?img=20",
-      type: "team"
-    },
-    likes: 567,
-    comments: 89,
-    views: 3420,
-    createdAt: "5 horas atrás",
-    tags: ["final", "campeonato"]
-  },
-  {
-    id: 3,
-    url: "https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=800",
-    caption: "Bloqueio perfeito! 🙌",
-    author: {
-      name: "Maria Santos",
-      avatar: "https://i.pravatar.cc/150?img=25",
-      type: "athlete"
-    },
-    likes: 189,
-    comments: 23,
-    views: 890,
-    createdAt: "1 dia atrás",
-    tags: ["bloqueio", "jogada"]
-  },
-  {
-    id: 4,
-    url: "https://images.unsplash.com/photo-1609710228159-0fa9bd7c0827?w=800",
-    caption: "Time unido, time forte! 💙🧡",
-    author: {
-      name: "Vôlei RJ",
-      avatar: "https://i.pravatar.cc/150?img=30",
-      type: "team"
-    },
-    likes: 423,
-    comments: 67,
-    views: 2100,
-    createdAt: "2 dias atrás",
-    tags: ["time", "união"]
-  },
-  {
-    id: 5,
-    url: "https://images.unsplash.com/photo-1517649763962-0c623066013b?w=800",
-    caption: "Aquecimento antes do jogo 🔥",
-    author: {
-      name: "Pedro Costa",
-      avatar: "https://i.pravatar.cc/150?img=15",
-      type: "athlete"
-    },
-    likes: 156,
-    comments: 12,
-    views: 720,
-    createdAt: "3 dias atrás",
-    tags: ["aquecimento", "preparação"]
-  },
-  {
-    id: 6,
-    url: "https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=800&q=50",
-    caption: "Saque potente! ⚡",
-    author: {
-      name: "Ana Lima",
-      avatar: "https://i.pravatar.cc/150?img=35",
-      type: "athlete"
-    },
-    likes: 298,
-    comments: 34,
-    views: 1450,
-    createdAt: "4 dias atrás",
-    tags: ["saque", "potência"]
-  }
-];
+// Array vazio - fotos virão do backend/upload real dos usuários
+const mockPhotos: Photo[] = [];
 
 export function Photos() {
   const [photos] = useState<Photo[]>(mockPhotos);
@@ -238,7 +148,30 @@ export function Photos() {
       </div>
 
       {/* Photos Grid/List */}
-      {viewMode === "grid" ? (
+      {filteredPhotos.length === 0 ? (
+        <Card className="p-12">
+          <div className="text-center space-y-4">
+            <div className="flex justify-center">
+              <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
+                <Camera className="h-8 w-8 text-muted-foreground" />
+              </div>
+            </div>
+            <div>
+              <h3 className="font-semibold text-lg">Nenhuma foto ainda</h3>
+              <p className="text-muted-foreground">
+                {filter === "all" 
+                  ? "Seja o primeiro a compartilhar uma foto!" 
+                  : `Nenhuma foto de ${filter === "athletes" ? "atletas" : "times"} ainda.`
+                }
+              </p>
+            </div>
+            <Button className="gap-2">
+              <Upload className="h-4 w-4" />
+              Fazer Upload de Foto
+            </Button>
+          </div>
+        </Card>
+      ) : viewMode === "grid" ? (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {filteredPhotos.map(photo => (
             <Card

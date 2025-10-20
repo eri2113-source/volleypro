@@ -124,20 +124,14 @@ export function Feed({ isAuthenticated = false, onLoginPrompt }: FeedProps) {
       const { posts: apiPosts } = await postApi.getPosts();
       console.log("📝 Posts carregados:", apiPosts?.length || 0);
       
-      // Importar posts de notícias
-      const { getRandomNews, formatNewsAsPost } = await import("../lib/volleyNews");
-      const newsItems = getRandomNews(8); // Pegar 8 notícias aleatórias
-      const newsPosts = newsItems.map(formatNewsAsPost);
-      
-      // Combinar posts de usuários com posts de notícias
+      // Usar apenas posts reais de usuários
       const userPosts = Array.isArray(apiPosts) ? apiPosts : [];
-      const allPosts = [...newsPosts, ...userPosts];
       
       // Ordenar por data (mais recente primeiro)
-      allPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      userPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       
-      setPosts(allPosts);
-      console.log("📰 Posts totais (usuários + notícias):", allPosts.length);
+      setPosts(userPosts);
+      console.log("📰 Posts totais:", userPosts.length);
       
       // ✅ CARREGAR REAÇÕES DO LOCALSTORAGE (persistentes)
       try {

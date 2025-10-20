@@ -3279,6 +3279,163 @@ app.get('/make-server-0ea22bba/tournament/standings', async (c) => {
   }
 });
 
+// ============= MESSAGES ROUTES =============
+
+// Get conversations for current user
+app.get('/make-server-0ea22bba/messages/conversations', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    console.log('💬 Getting conversations for user:', userId);
+    
+    // Get all conversation keys for this user
+    const allConversations = await kv.getByPrefix(`conversation:${userId}:`);
+    const conversations = [];
+    
+    for (const conv of allConversations) {
+      // Get the other user's profile
+      const otherUserId = conv.otherUserId;
+      const otherUser = await kv.get(`user:${otherUserId}`);
+      
+      if (otherUser) {
+        conversations.push({
+          userId: otherUserId,
+          name: otherUser.name || otherUser.nickname,
+          photoUrl: otherUser.photoUrl,
+          verified: otherUser.verified,
+          lastMessage: conv.lastMessage,
+          lastMessageAt: conv.lastMessageAt,
+          unreadCount: conv.unreadCount || 0,
+        });
+      }
+    }
+    
+    // Sort by last message time
+    conversations.sort((a: any, b: any) => 
+      new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()
+    );
+    
+    console.log(`✅ Found ${conversations.length} conversations`);
+    return c.json({ conversations });
+  } catch (error: any) {
+    console.error('❌ Error getting conversations:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get messages between two users
+app.get('/make-server-0ea22bba/messages/:otherUserId', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const otherUserId = c.req.param('otherUserId');
+    
+    console.log('💬 Getting messages between:', userId, 'and', otherUserId);
+    
+    // Create conversation ID (always use same order for consistency)
+    const conversationId = [userId, otherUserId].sort().join(':');
+    
+    // Get all messages for this conversation
+    const messages = await kv.getByPrefix(`message:${conversationId}:`);
+    
+    // Sort by timestamp
+    messages.sort((a: any, b: any) => 
+      new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    );
+    
+    console.log(`✅ Found ${messages.length} messages`);
+    return c.json({ messages });
+  } catch (error: any) {
+    console.error('❌ Error getting messages:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Send message
+app.post('/make-server-0ea22bba/messages/:otherUserId', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const otherUserId = c.req.param('otherUserId');
+    const { content } = await c.req.json();
+    
+    if (!content?.trim()) {
+      return c.json({ error: 'Message content is required' }, 400);
+    }
+    
+    console.log('💬 Sending message from:', userId, 'to:', otherUserId);
+    
+    // Get sender profile
+    const senderProfile = await kv.get(`user:${userId}`);
+    if (!senderProfile) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+    
+    // Create conversation ID (always use same order)
+    const conversationId = [userId, otherUserId].sort().join(':');
+    const timestamp = new Date().toISOString();
+    const messageId = crypto.randomUUID();
+    
+    // Create message
+    const message = {
+      id: messageId,
+      conversationId,
+      senderId: userId,
+      senderName: senderProfile.name || senderProfile.nickname,
+      senderPhotoUrl: senderProfile.photoUrl,
+      content: content.trim(),
+      timestamp,
+      read: false,
+    };
+    
+    // Save message
+    await kv.set(`message:${conversationId}:${timestamp}:${messageId}`, message);
+    
+    // Update conversation metadata for sender
+    await kv.set(`conversation:${userId}:${otherUserId}`, {
+      otherUserId,
+      lastMessage: content.trim(),
+      lastMessageAt: timestamp,
+      unreadCount: 0, // Sender has no unread
+    });
+    
+    // Update conversation metadata for receiver
+    const receiverConv = await kv.get(`conversation:${otherUserId}:${userId}`) || {};
+    await kv.set(`conversation:${otherUserId}:${userId}`, {
+      otherUserId: userId,
+      lastMessage: content.trim(),
+      lastMessageAt: timestamp,
+      unreadCount: (receiverConv.unreadCount || 0) + 1,
+    });
+    
+    console.log('✅ Message sent successfully');
+    return c.json({ message });
+  } catch (error: any) {
+    console.error('❌ Error sending message:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Mark messages as read
+app.post('/make-server-0ea22bba/messages/:otherUserId/read', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const otherUserId = c.req.param('otherUserId');
+    
+    console.log('👁️ Marking messages as read from:', otherUserId, 'to:', userId);
+    
+    // Update conversation to mark as read
+    const conv = await kv.get(`conversation:${userId}:${otherUserId}`) || {};
+    await kv.set(`conversation:${userId}:${otherUserId}`, {
+      ...conv,
+      unreadCount: 0,
+    });
+    
+    console.log('✅ Messages marked as read');
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('❌ Error marking messages as read:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // ============= LIVEKIT ROUTES =============
 app.route('/', livekitRoutes);
 

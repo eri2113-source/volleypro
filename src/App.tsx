@@ -15,6 +15,7 @@ import { Verified } from "./components/Verified";
 import { Monetization } from "./components/Monetization";
 import { Ads } from "./components/Ads";
 import { Referees } from "./components/Referees";
+import { Messages } from "./components/Messages";
 import { AthleteProfile } from "./components/AthleteProfile";
 import { TeamProfile } from "./components/TeamProfile";
 import { MyProfile } from "./components/MyProfile";
@@ -369,6 +370,8 @@ export default function App() {
         return <Lives {...authProps} />;
       case "invitations":
         return <Invitations {...authProps} />;
+      case "messages":
+        return <Messages />;
       case "ads":
         return <Ads />;
       case "polls":

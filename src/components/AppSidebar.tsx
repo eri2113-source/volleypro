@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Home, Users, Shield, Trophy, Store, Radio, BarChart3, Camera, Video, CheckCircle2, MessageSquare, Mail, Megaphone } from "lucide-react";
+import { Home, Users, Shield, Trophy, Store, Radio, BarChart3, Camera, Video, CheckCircle2, MessageSquare, Mail, Megaphone, MessageCircle } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -26,6 +26,7 @@ interface AppSidebarProps {
 // Aqui ficam apenas os recursos adicionais
 
 const additionalItems = [
+  { id: "messages", label: "Mensagens", icon: MessageCircle },
   { id: "ads", label: "Anúncios", icon: Megaphone },
   { id: "polls", label: "Enquetes", icon: BarChart3 },
   { id: "photos", label: "Fotos", icon: Camera },
