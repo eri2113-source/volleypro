@@ -249,6 +249,16 @@
     background-clip: text;
   }
   
+  /* Esconder scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
   /* Animações modernas */
   @keyframes fadeIn {
     from {

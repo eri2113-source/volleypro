@@ -522,13 +522,13 @@ export default function App() {
           <main className="flex-1 bg-background overflow-y-auto overflow-x-hidden">
             {/* Barra de navegação moderna com glassmorphism - SEMPRE TRAVADA NO TOPO */}
             <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-md">
-              <div className="w-full px-1 sm:px-4 md:px-6">
-                <div className="flex h-14 sm:h-16 items-center gap-1 sm:gap-2 md:gap-4">
+              <div className="w-full px-1 sm:px-3 md:px-6">
+                <div className="flex h-14 sm:h-16 items-center gap-0.5 sm:gap-1 md:gap-2">
                   {/* Logo - Menor em mobile */}
                   <Logo variant="compact" className="shrink-0 scale-[0.6] sm:scale-100 -ml-2 sm:ml-0" />
                   
                   {/* Navegação horizontal - menus principais */}
-                  <nav className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-1 min-w-0">
+                  <nav className="flex items-center gap-0.5 sm:gap-1 md:gap-2 overflow-x-auto scrollbar-hide">
                     {/* Itens principais (sempre visíveis) */}
                     {primaryMenuItems.map((item) => {
                       const Icon = item.icon;
@@ -614,7 +614,7 @@ export default function App() {
                   </nav>
                   
                   {/* Botões de perfil e sair - SEMPRE VISÍVEIS */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 shrink-0 ml-auto">
+                  <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
                     <Button 
                       variant="ghost" 
                       size="sm" 
