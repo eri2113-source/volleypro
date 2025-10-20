@@ -522,13 +522,13 @@ export default function App() {
           <main className="flex-1 bg-background overflow-y-auto overflow-x-hidden">
             {/* Barra de navegação moderna com glassmorphism - SEMPRE TRAVADA NO TOPO */}
             <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-md">
-              <div className="w-full px-1 sm:px-3 md:px-6">
-                <div className="flex h-14 sm:h-16 items-center gap-0.5 sm:gap-1 md:gap-2">
-                  {/* Logo - Menor em mobile */}
-                  <Logo variant="compact" className="shrink-0 scale-[0.6] sm:scale-100 -ml-2 sm:ml-0" />
+              <div className="w-full px-2 sm:px-4 md:px-6">
+                <div className="flex h-14 sm:h-16 items-center gap-1 sm:gap-2 md:gap-3 overflow-x-auto scrollbar-hide">
+                  {/* Logo - Fixo */}
+                  <Logo variant="compact" className="shrink-0 scale-75 sm:scale-100" />
                   
                   {/* Navegação horizontal - menus principais */}
-                  <nav className="flex items-center gap-0.5 sm:gap-1 md:gap-2 overflow-x-auto scrollbar-hide">
+                  <nav className="flex items-center gap-1 sm:gap-2 md:gap-3 shrink-0">
                     {/* Itens principais (sempre visíveis) */}
                     {primaryMenuItems.map((item) => {
                       const Icon = item.icon;
@@ -613,8 +613,8 @@ export default function App() {
                     </Popover>
                   </nav>
                   
-                  {/* Botões de perfil e sair - SEMPRE VISÍVEIS */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                  {/* Botões de perfil e sair - SEMPRE VISÍVEIS E FIXOS */}
+                  <div className="flex items-center gap-1 shrink-0 ml-1 sm:ml-2">
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -624,19 +624,19 @@ export default function App() {
                         setSelectedTeam(null);
                         setSelectedTournament(null);
                       }}
-                      className="hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-all p-1.5 sm:p-2 rounded-lg sm:rounded-xl"
+                      className="hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-all p-2 rounded-lg sm:rounded-xl shrink-0"
                       title="Meu Perfil"
                     >
-                      <User className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                      <User className="h-5 w-5 shrink-0" />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={handleSignOut} 
-                      className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all p-1.5 sm:p-2 rounded-lg sm:rounded-xl"
+                      className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all p-2 rounded-lg sm:rounded-xl shrink-0"
                       title="Sair"
                     >
-                      <LogOut className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
+                      <LogOut className="h-5 w-5 shrink-0" />
                     </Button>
                   </div>
                 </div>
