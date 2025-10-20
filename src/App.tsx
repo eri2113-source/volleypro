@@ -523,12 +523,12 @@ export default function App() {
             {/* Barra de navegação moderna com glassmorphism - SEMPRE TRAVADA NO TOPO */}
             <div className="sticky top-0 z-50 bg-background/95 backdrop-blur-xl border-b border-border/50 shadow-md">
               <div className="w-full px-1 sm:px-4 md:px-6">
-                <div className="flex h-14 sm:h-16 items-center justify-between gap-1 sm:gap-2 md:gap-4 max-w-full">
+                <div className="flex h-14 sm:h-16 items-center gap-1 sm:gap-2 md:gap-4">
                   {/* Logo - Menor em mobile */}
                   <Logo variant="compact" className="shrink-0 scale-[0.6] sm:scale-100 -ml-2 sm:ml-0" />
                   
                   {/* Navegação horizontal - menus principais */}
-                  <nav className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-1">
+                  <nav className="flex items-center gap-0.5 sm:gap-1 md:gap-2 flex-1 min-w-0">
                     {/* Itens principais (sempre visíveis) */}
                     {primaryMenuItems.map((item) => {
                       const Icon = item.icon;
@@ -614,7 +614,7 @@ export default function App() {
                   </nav>
                   
                   {/* Botões de perfil e sair - SEMPRE VISÍVEIS */}
-                  <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
+                  <div className="flex items-center gap-0.5 sm:gap-1 shrink-0 ml-auto">
                     <Button 
                       variant="ghost" 
                       size="sm" 
@@ -624,19 +624,19 @@ export default function App() {
                         setSelectedTeam(null);
                         setSelectedTournament(null);
                       }}
-                      className="hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-all p-2 rounded-lg sm:rounded-xl"
+                      className="hover:bg-primary/10 text-muted-foreground hover:text-foreground transition-all p-1.5 sm:p-2 rounded-lg sm:rounded-xl"
                       title="Meu Perfil"
                     >
-                      <User className="h-5 w-5 shrink-0" />
+                      <User className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                     </Button>
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       onClick={handleSignOut} 
-                      className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all p-2 rounded-lg sm:rounded-xl"
+                      className="hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-all p-1.5 sm:p-2 rounded-lg sm:rounded-xl"
                       title="Sair"
                     >
-                      <LogOut className="h-5 w-5 shrink-0" />
+                      <LogOut className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
                     </Button>
                   </div>
                 </div>
