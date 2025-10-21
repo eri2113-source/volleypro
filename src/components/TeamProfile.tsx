@@ -1603,7 +1603,7 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
             </TabsContent>
           </Tabs>
 
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => {
               setShowAddPlayerModal(false);
               setAddPlayerMode('cpf');
@@ -1620,17 +1620,29 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
             }}>
               Cancelar
             </Button>
-            <Button 
-              onClick={handleAddPlayer}
-              disabled={
-                (addPlayerMode === 'cpf' && !athleteFound) ||
-                (addPlayerMode === 'manual' && (!newPlayer.name || !newPlayer.position))
-              }
-              className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white"
-            >
-              <UserPlus className="h-4 w-4 mr-2" />
-              Adicionar ao Elenco
-            </Button>
+            <div className="flex flex-col items-end gap-1 flex-1">
+              <Button 
+                onClick={handleAddPlayer}
+                disabled={
+                  (addPlayerMode === 'cpf' && !athleteFound) ||
+                  (addPlayerMode === 'manual' && (!newPlayer.name || !newPlayer.position))
+                }
+                className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white disabled:opacity-50 disabled:cursor-not-allowed w-full"
+              >
+                <UserPlus className="h-4 w-4 mr-2" />
+                Adicionar ao Elenco
+              </Button>
+              {(addPlayerMode === 'cpf' && !athleteFound) && (
+                <p className="text-xs text-muted-foreground text-right">
+                  ⬆️ Busque um atleta por CPF primeiro
+                </p>
+              )}
+              {(addPlayerMode === 'manual' && (!newPlayer.name || !newPlayer.position)) && (
+                <p className="text-xs text-muted-foreground text-right">
+                  ⬆️ Preencha nome e posição para continuar
+                </p>
+              )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
