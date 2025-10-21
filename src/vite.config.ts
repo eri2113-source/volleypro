@@ -7,36 +7,45 @@ function injectGTM() {
   return {
     name: 'inject-gtm',
     transformIndexHtml(html: string) {
+      console.log('🔥 Plugin GTM: Injetando código...');
+      
       // GTM Script para o <head>
-      const gtmScript = `
-    <!-- Google Tag Manager -->
-    <script>
-      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-      })(window,document,'script','dataLayer','GTM-MV9D2M4P');
-    </script>
-    <!-- End Google Tag Manager -->
-    
-    <!-- Inicializar dataLayer ANTES do bloqueio -->
-    <script>
-      window.dataLayer = window.dataLayer || [];
-    </script>`;
+      const gtmScript = `<!-- Google Tag Manager -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MV9D2M4P');</script>
+    <!-- End Google Tag Manager -->`;
 
       // GTM noscript para o <body>
-      const gtmNoscript = `
-    <!-- Google Tag Manager (noscript) -->
+      const gtmNoscript = `<!-- Google Tag Manager (noscript) -->
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MV9D2M4P"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
-    `;
+    <!-- End Google Tag Manager (noscript) -->`;
 
       // Injetar no <head> antes do </head>
-      html = html.replace('</head>', `${gtmScript}\n  </head>`);
+      if (html.includes('</head>')) {
+        html = html.replace('</head>', `${gtmScript}\n  </head>`);
+        console.log('✅ GTM Script injetado no <head>');
+      } else {
+        console.error('❌ Tag </head> não encontrada!');
+      }
       
       // Injetar no <body> logo após <body>
-      html = html.replace('<body>', `<body>\n    ${gtmNoscript}`);
+      if (html.includes('<body>')) {
+        html = html.replace('<body>', `<body>\n    ${gtmNoscript}`);
+        console.log('✅ GTM Noscript injetado no <body>');
+      } else {
+        console.error('❌ Tag <body> não encontrada!');
+      }
+      
+      // Verificar se GTM foi realmente injetado
+      if (html.includes('GTM-MV9D2M4P')) {
+        console.log('🎉 GTM-MV9D2M4P confirmado no HTML final!');
+      } else {
+        console.error('❌ ERRO: GTM-MV9D2M4P NÃO está no HTML!');
+      }
       
       return html;
     }
