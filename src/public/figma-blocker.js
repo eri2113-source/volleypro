@@ -1,8 +1,12 @@
 // 🔒 BLOQUEIO FIGMA MAKE - EXECUTADO ANTES DO REACT!
 // Este script executa IMEDIATAMENTE ao carregar a página
+// 📊 IMPORTANTE: Preserva window.dataLayer para Google Tag Manager
 
 (function() {
   'use strict';
+  
+  // 📊 PRESERVAR dataLayer do GTM antes de qualquer bloqueio
+  const preservedDataLayer = window.dataLayer || [];
   
   const ALLOWED_EMAILS = [
     'eri.2113@gmail.com',
@@ -24,6 +28,8 @@
   
   if (!isFigmaMake) {
     console.log('✅ Produção detectada - acesso liberado');
+    // 📊 Garantir que dataLayer existe em produção
+    window.dataLayer = window.dataLayer || [];
     return; // Não está no Figma Make, liberar
   }
   
@@ -49,11 +55,16 @@
   
   if (hasAccess) {
     console.log('✅ ACESSO AUTORIZADO para:', userEmail);
+    // 📊 Garantir que dataLayer existe para usuários autorizados
+    window.dataLayer = window.dataLayer || [];
     return; // Autorizado, liberar
   }
   
   // 🚫 SEM PERMISSÃO - BLOQUEAR E REDIRECIONAR IMEDIATAMENTE!
   console.log('🚫 ACESSO NEGADO - REDIRECIONANDO...');
+  
+  // 📊 IMPORTANTE: Preservar dataLayer mesmo durante bloqueio
+  window.dataLayer = preservedDataLayer;
   
   // Bloquear interface IMEDIATAMENTE
   document.body.innerHTML = `
