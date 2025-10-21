@@ -153,9 +153,20 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
       } catch (error) {
         console.error('❌ Erro ao carregar reações do cache:', error);
       }
-    } catch (error) {
-      console.error("❌ Erro ao carregar posts:", error);
-      // Não mostrar erro se for primeira carga
+    } catch (error: any) {
+      // Detectar se está no Figma Make ou offline
+      const isFigmaMake = window.location.hostname.includes('figma') || 
+                          window.location.hostname.includes('localhost');
+      const isNetworkError = error.message?.includes('conexão') || 
+                             error.message?.includes('Mock data');
+      
+      // Não logar erros no Figma Make (modo de visualização)
+      if (!isFigmaMake && !isNetworkError) {
+        console.error("❌ Erro ao carregar posts:", error);
+      } else {
+        console.log("🎨 Modo visualização - usando dados de exemplo");
+      }
+      
       setPosts([]);
     } finally {
       setIsLoadingPosts(false);
@@ -176,15 +187,22 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
         }
       }
     } catch (error: any) {
-      // Não mostrar erro se for problema de rede
+      // Detectar se está no Figma Make
+      const isFigmaMake = window.location.hostname.includes('figma') || 
+                          window.location.hostname.includes('localhost');
+      
+      // Não mostrar erro se for problema de rede ou Figma Make
       const isNetworkError = 
         error.message?.includes('conexão') || 
         error.message?.includes('Tempo limite') ||
         error.message?.includes('Failed to fetch') ||
+        error.message?.includes('Mock data') ||
         error.name === 'TypeError';
       
-      if (!isNetworkError) {
+      if (!isNetworkError && !isFigmaMake) {
         console.error("❌ Erro ao carregar usuário:", error);
+      } else if (isFigmaMake) {
+        console.log("🎨 Modo visualização - perfil de exemplo");
       }
       
       // Tentar usar cache
@@ -1004,12 +1022,7 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3 flex-1">
                 <Avatar 
-                  className={`h-11 w-11 ${isOfficialPost ? 'ring-2 ring-secondary/50 shadow-lg' : 'ring-1 ring-border'} ${!isOfficialPost && post.authorId && onSelectAthlete ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
-                  onClick={() => {
-                    if (!isOfficialPost && post.authorId && onSelectAthlete) {
-                      onSelectAthlete(post.authorId);
-                    }
-                  }}
+                  className={`h-11 w-11 ${isOfficialPost ? 'ring-2 ring-secondary/50 shadow-lg' : 'ring-1 ring-border'}`}
                 >
                   {post.authorPhotoUrl ? (
                     <AvatarImage src={post.authorPhotoUrl} alt={authorName} />
@@ -1022,12 +1035,7 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span 
-                      className={`${isOfficialPost ? 'font-semibold text-gradient-secondary' : 'font-medium'} ${!isOfficialPost && post.authorId && onSelectAthlete ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
-                      onClick={() => {
-                        if (!isOfficialPost && post.authorId && onSelectAthlete) {
-                          onSelectAthlete(post.authorId);
-                        }
-                      }}
+                      className={`${isOfficialPost ? 'font-semibold text-gradient-secondary' : 'font-medium'}`}
                     >{authorName}</span>
                     {post.verified && (
                       <Badge variant="secondary" className="h-5 px-2 rounded-full bg-primary/10 text-primary">
@@ -1239,12 +1247,7 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
                       (comments[post.id] || []).map((comment: any) => (
                         <div key={comment.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                           <Avatar 
-                            className={`h-8 w-8 ${comment.userId && onSelectAthlete ? 'cursor-pointer hover:ring-2 hover:ring-primary transition-all' : ''}`}
-                            onClick={() => {
-                              if (comment.userId && onSelectAthlete) {
-                                onSelectAthlete(comment.userId);
-                              }
-                            }}
+                            className="h-8 w-8"
                           >
                             {comment.authorPhotoUrl ? (
                               <AvatarImage src={comment.authorPhotoUrl} alt={comment.authorName} />
@@ -1256,12 +1259,7 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center justify-between gap-2">
                               <span 
-                                className={`text-sm ${comment.userId && onSelectAthlete ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
-                                onClick={() => {
-                                  if (comment.userId && onSelectAthlete) {
-                                    onSelectAthlete(comment.userId);
-                                  }
-                                }}
+                                className="text-sm"
                               >{comment.authorName}</span>
                               <div className="flex items-center gap-2">
                                 <span className="text-xs text-muted-foreground">

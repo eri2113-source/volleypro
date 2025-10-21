@@ -21,6 +21,7 @@ import { authApi } from "../lib/api";
 import { Shield, AlertCircle } from "lucide-react";
 import { toast } from "sonner@2.0.3";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
+import { trackSignUp, trackLogin } from "../utils/googleTagManager";
 
 interface AuthModalProps {
   open: boolean;
@@ -135,6 +136,9 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
         onClose();
       }, 300);
 
+      // Track sign up (conversão importante!)
+      trackSignUp('email');
+
     } catch (err: any) {
       console.error("❌ Erro no cadastro:", err);
 
@@ -206,6 +210,9 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
       setTimeout(() => {
         onClose();
       }, 300);
+
+      // Track login (conversão!)
+      trackLogin('email');
 
     } catch (err: any) {
       console.error("❌ Erro no login:", err);

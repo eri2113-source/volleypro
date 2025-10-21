@@ -18,7 +18,11 @@ interface Conversation {
   unreadCount: number;
 }
 
-export function Messages() {
+interface MessagesProps {
+  onSelectAthlete?: (athleteId: number) => void;
+}
+
+export function Messages({ onSelectAthlete }: MessagesProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -73,6 +77,7 @@ export function Messages() {
           setSelectedUserId(null);
           loadConversations(); // Recarregar conversas ao voltar
         }}
+        onSelectAthlete={onSelectAthlete}
       />
     );
   }
@@ -152,7 +157,9 @@ export function Messages() {
               >
                 <CardContent className="p-4">
                   <div className="flex gap-3 items-start">
-                    <Avatar className="h-12 w-12 flex-shrink-0">
+                    <Avatar 
+                      className="h-12 w-12 flex-shrink-0 ring-1 ring-border"
+                    >
                       <AvatarImage src={conv.photoUrl} alt={conv.name} />
                       <AvatarFallback>
                         {conv.name.split(' ').map(n => n[0]).join('')}
@@ -162,7 +169,9 @@ export function Messages() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <div className="flex items-center gap-2 min-w-0">
-                          <h3 className="truncate">{conv.name}</h3>
+                          <h3 
+                            className="truncate"
+                          >{conv.name}</h3>
                           {conv.verified && (
                             <Badge variant="secondary" className="flex-shrink-0 h-5 px-1.5">
                               ✓

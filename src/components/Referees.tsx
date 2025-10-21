@@ -208,11 +208,19 @@ export function Referees() {
     }
   }
 
-  const filteredFederations = federations.filter(fed =>
-    fed.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    fed.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    fed.state.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredFederations = federations.filter(fed => {
+    // 🎯 NOVO: Exclui a federação do próprio usuário logado (se for presidente)
+    if (currentUser?.userType === "federation" && myFederation && fed.id === myFederation.id) {
+      console.log('🚫 Excluindo minha própria federação da lista:', fed.name);
+      return false;
+    }
+    
+    return (
+      fed.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      fed.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      fed.state.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
 
   if (loading) {
     return (

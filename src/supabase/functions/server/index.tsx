@@ -1,19 +1,133 @@
 import { Hono } from 'npm:hono';
 import { cors } from 'npm:hono/cors';
 import { logger } from 'npm:hono/logger';
-import { createClient } from 'npm:@supabase/supabase-js';
-import * as kv from './kv_store.tsx';
-import livekitRoutes from './livekit.tsx';
+
+// Multiple layers of Figma Make detection
+const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
+const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+
+// Check 1: Invalid URL format
+const hasValidUrl = supabaseUrl.includes('supabase.co') && supabaseUrl.startsWith('http');
+
+// Check 2: Invalid key length (real keys are 200+ chars)
+const hasValidKey = supabaseKey.length > 50;
+
+// Check 3: Check for common Figma Make indicators
+const isFigmaMakeByEnv = supabaseUrl.includes('localhost') || 
+                         supabaseUrl.includes('127.0.0.1') ||
+                         supabaseUrl === '' ||
+                         supabaseKey === '';
+
+// FINAL DECISION: Use mocks if ANY check fails
+const isFigmaMake = !hasValidUrl || !hasValidKey || isFigmaMakeByEnv;
+
+// Log environment detection
+console.log('🔍 Environment Detection:');
+console.log(`   SUPABASE_URL: ${supabaseUrl ? supabaseUrl.substring(0, 40) + '...' : '(empty)'}`);
+console.log(`   Valid URL format: ${hasValidUrl}`);
+console.log(`   SERVICE_ROLE_KEY length: ${supabaseKey.length}`);
+console.log(`   Valid key length: ${hasValidKey}`);
+console.log(`   Figma Make indicators: ${isFigmaMakeByEnv}`);
+console.log(`   ⚡ FINAL DECISION - Is Figma Make: ${isFigmaMake}`);
+
+// Create mock implementations for Figma Make
+const createMockSupabase = () => ({
+  auth: {
+    admin: {
+      getUserById: async () => ({ data: { user: null }, error: null }),
+      createUser: async () => ({ data: { user: null }, error: null }),
+    },
+    getUser: async () => ({ data: { user: null }, error: null }),
+  },
+  storage: {
+    listBuckets: async () => ({ data: [], error: null }),
+    createBucket: async () => ({ data: null, error: null }),
+    from: () => ({
+      upload: async () => ({ data: null, error: null }),
+      createSignedUrl: async () => ({ data: { signedUrl: '' }, error: null }),
+      remove: async () => ({ data: null, error: null }),
+    }),
+  },
+});
+
+const createMockKV = () => ({
+  get: async () => null,
+  set: async () => {},
+  del: async () => {},
+  mget: async () => [],
+  mset: async () => {},
+  mdel: async () => {},
+  getByPrefix: async () => [],
+});
+
+const createMockLiveKit = () => ((app: any) => {
+  app.post('/make-server-0ea22bba/livekit/token', async (c: any) => {
+    return c.json({ error: 'LiveKit not available in Figma Make' }, 503);
+  });
+});
+
+// Initialize with mocks
+let supabase: any = createMockSupabase();
+let kv: any = createMockKV();
+let livekitRoutes: any = createMockLiveKit();
+
+// Only try to load real modules if NOT in Figma Make
+if (!isFigmaMake) {
+  (async () => {
+    try {
+      console.log('🔄 Loading Supabase (production mode)...');
+      const { createClient } = await import('npm:@supabase/supabase-js');
+      supabase = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      );
+      console.log('✅ Supabase initialized');
+    } catch (error: any) {
+      console.error('❌ Failed to initialize Supabase:', error.message);
+      supabase = createMockSupabase();
+    }
+    
+    try {
+      console.log('🔄 Loading KV store...');
+      const kvModule = await import('./kv_store.tsx');
+      kv = kvModule;
+      console.log('✅ KV store initialized');
+    } catch (error: any) {
+      console.error('❌ Failed to initialize KV:', error.message);
+      kv = createMockKV();
+    }
+    
+    try {
+      console.log('🔄 Loading LiveKit...');
+      const module = await import('./livekit.tsx');
+      livekitRoutes = module.default;
+      console.log('✅ LiveKit initialized');
+    } catch (error: any) {
+      console.error('❌ Failed to initialize LiveKit:', error.message);
+      livekitRoutes = createMockLiveKit();
+    }
+  })();
+} else {
+  console.log('⚠️ Running in Figma Make mode - using mocks for all services');
+  console.log('   (This is expected behavior for testing in Figma Make)');
+}
+
+async function initializeSupabase() {
+  return supabase;
+}
+
+async function initializeKV() {
+  return kv;
+}
+
+async function initializeLiveKit() {
+  return livekitRoutes;
+}
 
 const app = new Hono();
 
 app.use('*', cors());
 app.use('*', logger(console.log));
-
-const supabase = createClient(
-  Deno.env.get('SUPABASE_URL') ?? '',
-  Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-);
 
 // ============= MASTER USER CONFIGURATION =============
 const MASTER_EMAIL = 'eri.2113@gmail.com';
@@ -21,11 +135,14 @@ const MASTER_EMAIL = 'eri.2113@gmail.com';
 // Check if user is master
 async function isMasterUser(userId: string): Promise<boolean> {
   try {
-    const user = await kv.get(`user:${userId}`);
+    const kvStore = await initializeKV();
+    const supabaseClient = await initializeSupabase();
+    
+    const user = await kvStore.get(`user:${userId}`);
     if (!user) return false;
     
     // Check if email matches master email
-    const { data: authUser } = await supabase.auth.admin.getUserById(userId);
+    const { data: authUser } = await supabaseClient.auth.admin.getUserById(userId);
     return authUser?.user?.email === MASTER_EMAIL;
   } catch (error) {
     console.error('Error checking master user:', error);
@@ -36,16 +153,22 @@ async function isMasterUser(userId: string): Promise<boolean> {
 // Initialize storage bucket for avatars on startup
 async function initStorage() {
   try {
+    const supabaseClient = await initializeSupabase();
+    
+    if (!supabaseClient || !supabaseClient.storage) {
+      console.log('⚠️ Skipping avatar storage initialization - Supabase not available');
+      return;
+    }
+    
     const bucketName = 'make-0ea22bba-avatars';
-    const { data: buckets } = await supabase.storage.listBuckets();
+    const { data: buckets } = await supabaseClient.storage.listBuckets();
     const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
     
     if (!bucketExists) {
       console.log('📦 Creating avatars bucket...');
-      const { data, error } = await supabase.storage.createBucket(bucketName, {
+      const { data, error } = await supabaseClient.storage.createBucket(bucketName, {
         public: true,
-        fileSizeLimit: 5242880, // 5MB
-        allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+        fileSizeLimit: 5242880, // 5MB\n        allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
       });
       
       // Ignorar erro se bucket já existe (race condition)
@@ -67,8 +190,14 @@ async function initStorage() {
   }
 }
 
-// Initialize on startup
-initStorage();
+// Initialize on startup (after modules are loaded)
+setTimeout(() => {
+  if (supabase) {
+    initStorage();
+  } else {
+    console.log('⚠️ Skipping storage initialization - Supabase not available');
+  }
+}, 100);
 
 // Auth middleware (required auth)
 async function authMiddleware(c: any, next: any) {
@@ -84,7 +213,18 @@ async function authMiddleware(c: any, next: any) {
   }
   
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    const supabaseClient = await initializeSupabase();
+    
+    // Check if supabase is properly initialized
+    if (!supabaseClient || !supabaseClient.auth || !supabaseClient.auth.getUser) {
+      console.error('❌ Supabase client not properly initialized (using mock?)');
+      return c.json({ 
+        error: 'Service temporarily unavailable - Auth not configured',
+        code: 'SERVICE_INIT_ERROR'
+      }, 503);
+    }
+    
+    const { data: { user }, error } = await supabaseClient.auth.getUser(accessToken);
     
     if (error) {
       // Apenas logar se não for erro de sessão (comum e esperado)
@@ -138,7 +278,8 @@ async function optionalAuthMiddleware(c: any, next: any) {
   
   // Se tem token, tentar validar
   try {
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    const supabaseClient = await initializeSupabase();
+    const { data: { user }, error } = await supabaseClient.auth.getUser(accessToken);
     
     if (!error && user) {
       console.log('✅ Authenticated user:', user.email);
@@ -162,9 +303,11 @@ async function optionalAuthMiddleware(c: any, next: any) {
 
 app.post('/make-server-0ea22bba/auth/signup', async (c) => {
   try {
+    const supabaseClient = await initializeSupabase();
+    const kvStore = await initializeKV();
     const { email, password, name, userType, position, city, nickname } = await c.req.json();
     
-    const { data, error } = await supabase.auth.admin.createUser({
+    const { data, error } = await supabaseClient.auth.admin.createUser({
       email,
       password,
       email_confirm: true, // Auto-confirm since email server hasn't been configured
@@ -207,7 +350,7 @@ app.post('/make-server-0ea22bba/auth/signup', async (c) => {
       createdAt: new Date().toISOString(),
     };
 
-    await kv.set(`user:${data.user.id}`, profile);
+    await kvStore.set(`user:${data.user.id}`, profile);
 
     return c.json({ user: data.user, profile });
   } catch (error: any) {
@@ -221,8 +364,9 @@ app.post('/make-server-0ea22bba/auth/signup', async (c) => {
 // Get current user's profile
 app.get('/make-server-0ea22bba/users/me', authMiddleware, async (c) => {
   try {
+    const kvStore = await initializeKV();
     const userId = c.get('userId');
-    const profile = await kv.get(`user:${userId}`);
+    const profile = await kvStore.get(`user:${userId}`);
     
     if (!profile) {
       return c.json({ error: 'User not found' }, 404);
@@ -668,6 +812,11 @@ app.delete('/make-server-0ea22bba/posts/:postId/comments/:commentId', authMiddle
 const BUCKET_NAME = 'make-0ea22bba-posts';
 
 async function initializeStorage() {
+  if (!supabase) {
+    console.log('⚠️ Skipping storage initialization - Supabase not available');
+    return;
+  }
+  
   try {
     const { data: buckets } = await supabase.storage.listBuckets();
     const bucketExists = buckets?.some(bucket => bucket.name === BUCKET_NAME);
@@ -698,8 +847,10 @@ async function initializeStorage() {
   }
 }
 
-// Initialize storage on server start
-initializeStorage();
+// Initialize storage on server start (after modules are loaded)
+setTimeout(() => {
+  initializeStorage();
+}, 100);
 
 // ============= MEDIA UPLOAD ROUTE =============
 
@@ -3739,7 +3890,235 @@ app.post('/make-server-0ea22bba/messages/:otherUserId/read', authMiddleware, asy
   }
 });
 
+// ============= TEAM ROSTER MANAGEMENT =============
+
+// Get team roster/players
+app.get('/make-server-0ea22bba/teams/:teamId/players', async (c) => {
+  try {
+    const teamId = c.req.param('teamId');
+    
+    console.log('🔍 Loading players for team:', teamId);
+    
+    // Get all players for this team
+    const playersKey = `team:${teamId}:players`;
+    const players = await kv.get(playersKey) || [];
+    
+    console.log('✅ Players loaded:', players.length);
+    
+    return c.json({ 
+      players,
+      total: players.length
+    });
+  } catch (error: any) {
+    console.error('❌ Error loading team players:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Add player to team roster
+app.post('/make-server-0ea22bba/teams/:teamId/players', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const teamId = c.req.param('teamId');
+    const body = await c.req.json();
+    
+    console.log('➕ Adding player to team:', teamId, body);
+    
+    // Check if user is the team owner
+    const team = await kv.get(`user:${teamId}`);
+    if (!team || team.id !== teamId) {
+      return c.json({ error: 'Team not found' }, 404);
+    }
+    
+    // Only team owner can add players
+    if (userId !== teamId) {
+      return c.json({ error: 'Only team owner can add players' }, 403);
+    }
+    
+    // Get current roster
+    const playersKey = `team:${teamId}:players`;
+    const players = await kv.get(playersKey) || [];
+    
+    // Create new player
+    const newPlayer = {
+      id: body.id || `player_${Date.now()}`,
+      name: body.name,
+      position: body.position,
+      number: body.number,
+      age: body.age,
+      height: body.height,
+      photoUrl: body.photoUrl,
+      cpf: body.cpf,
+      isCaptain: body.isCaptain || false,
+      isStarter: body.isStarter || false,
+      gamesPlayed: body.gamesPlayed || 0,
+      points: body.points || 0,
+      addedAt: new Date().toISOString(),
+    };
+    
+    // Check if player already exists (by CPF or ID)
+    const existingPlayer = players.find((p: any) => 
+      (p.cpf && body.cpf && p.cpf === body.cpf) || p.id === body.id
+    );
+    
+    if (existingPlayer) {
+      return c.json({ error: 'Player already in roster' }, 409);
+    }
+    
+    // Add to roster
+    players.push(newPlayer);
+    await kv.set(playersKey, players);
+    
+    console.log('✅ Player added to roster:', newPlayer.id);
+    
+    return c.json({ 
+      player: newPlayer,
+      success: true
+    });
+  } catch (error: any) {
+    console.error('❌ Error adding player:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Update player in roster
+app.put('/make-server-0ea22bba/teams/:teamId/players/:playerId', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const teamId = c.req.param('teamId');
+    const playerId = c.req.param('playerId');
+    const updates = await c.req.json();
+    
+    console.log('✏️ Updating player:', playerId, 'in team:', teamId);
+    
+    // Only team owner can update players
+    if (userId !== teamId) {
+      return c.json({ error: 'Only team owner can update players' }, 403);
+    }
+    
+    // Get current roster
+    const playersKey = `team:${teamId}:players`;
+    const players = await kv.get(playersKey) || [];
+    
+    // Find and update player
+    const playerIndex = players.findIndex((p: any) => p.id === playerId);
+    if (playerIndex === -1) {
+      return c.json({ error: 'Player not found' }, 404);
+    }
+    
+    players[playerIndex] = {
+      ...players[playerIndex],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+    
+    await kv.set(playersKey, players);
+    
+    console.log('✅ Player updated:', playerId);
+    
+    return c.json({ 
+      player: players[playerIndex],
+      success: true
+    });
+  } catch (error: any) {
+    console.error('❌ Error updating player:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Remove player from roster
+app.delete('/make-server-0ea22bba/teams/:teamId/players/:playerId', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const teamId = c.req.param('teamId');
+    const playerId = c.req.param('playerId');
+    
+    console.log('🗑️ Removing player:', playerId, 'from team:', teamId);
+    
+    // Only team owner can remove players
+    if (userId !== teamId) {
+      return c.json({ error: 'Only team owner can remove players' }, 403);
+    }
+    
+    // Get current roster
+    const playersKey = `team:${teamId}:players`;
+    const players = await kv.get(playersKey) || [];
+    
+    // Remove player
+    const updatedPlayers = players.filter((p: any) => p.id !== playerId);
+    
+    if (updatedPlayers.length === players.length) {
+      return c.json({ error: 'Player not found' }, 404);
+    }
+    
+    await kv.set(playersKey, updatedPlayers);
+    
+    console.log('✅ Player removed:', playerId);
+    
+    return c.json({ 
+      success: true,
+      message: 'Player removed from roster'
+    });
+  } catch (error: any) {
+    console.error('❌ Error removing player:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Search athlete by CPF
+app.get('/make-server-0ea22bba/athletes/search', async (c) => {
+  try {
+    const cpf = c.req.query('cpf');
+    
+    if (!cpf) {
+      return c.json({ error: 'CPF is required' }, 400);
+    }
+    
+    console.log('🔍 Searching athlete by CPF:', cpf);
+    
+    // Search in all users
+    const allUsers = await kv.getByPrefix('user:');
+    const athlete = allUsers.find((user: any) => 
+      user.userType === 'athlete' && user.cpf === cpf
+    );
+    
+    if (!athlete) {
+      return c.json({ error: 'Athlete not found' }, 404);
+    }
+    
+    console.log('✅ Athlete found:', athlete.name);
+    
+    return c.json({ 
+      athlete: {
+        id: athlete.id,
+        name: athlete.name,
+        position: athlete.position,
+        age: athlete.age,
+        height: athlete.height,
+        photoUrl: athlete.photoUrl,
+        cpf: athlete.cpf,
+        currentTeam: athlete.currentTeam
+      }
+    });
+  } catch (error: any) {
+    console.error('❌ Error searching athlete:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // ============= LIVEKIT ROUTES =============
-app.route('/', livekitRoutes);
+// Register LiveKit routes after initialization
+setTimeout(() => {
+  if (livekitRoutes && typeof livekitRoutes === 'function') {
+    try {
+      livekitRoutes(app);
+      console.log('✅ LiveKit routes registered');
+    } catch (error: any) {
+      console.error('❌ Error registering LiveKit routes:', error.message);
+    }
+  } else {
+    console.log('⚠️ LiveKit routes not available');
+  }
+}, 100);
 
 Deno.serve(app.fetch);

@@ -28,6 +28,7 @@ export function Athletes({ onSelectAthlete }: AthletesProps) {
   const [athletes, setAthletes] = useState<any[]>([]);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadAthletes();
@@ -38,8 +39,14 @@ export function Athletes({ onSelectAthlete }: AthletesProps) {
     try {
       const session = await authApi.getSession();
       setIsAuthenticated(!!session);
+      // Pega o ID do usuário logado para filtrar da lista
+      if (session?.user?.id) {
+        setCurrentUserId(session.user.id);
+        console.log('👤 Usuário logado ID:', session.user.id);
+      }
     } catch (error) {
       setIsAuthenticated(false);
+      setCurrentUserId(null);
     }
   }
 
@@ -94,6 +101,13 @@ export function Athletes({ onSelectAthlete }: AthletesProps) {
 
   const filteredAthletes = athletes.filter((athlete) => {
     if (!athlete || !athlete.name) return false;
+    
+    // 🎯 NOVO: Exclui o próprio usuário logado da lista
+    if (currentUserId && athlete.id.toString() === currentUserId) {
+      console.log('🚫 Excluindo meu próprio perfil da lista:', athlete.name);
+      return false;
+    }
+    
     const matchesSearch = athlete.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
   });

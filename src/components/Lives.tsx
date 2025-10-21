@@ -22,9 +22,10 @@ import { toast } from "sonner@2.0.3";
 interface LivesProps {
   isAuthenticated?: boolean;
   onLoginPrompt?: () => void;
+  onSelectAthlete?: (athleteId: number) => void;
 }
 
-export function Lives({ isAuthenticated = false, onLoginPrompt }: LivesProps) {
+export function Lives({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }: LivesProps) {
   const [lives, setLives] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);

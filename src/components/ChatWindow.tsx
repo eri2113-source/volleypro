@@ -20,9 +20,10 @@ interface Message {
 interface ChatWindowProps {
   otherUserId: string;
   onBack: () => void;
+  onSelectAthlete?: (athleteId: number) => void;
 }
 
-export function ChatWindow({ otherUserId, onBack }: ChatWindowProps) {
+export function ChatWindow({ otherUserId, onBack, onSelectAthlete }: ChatWindowProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -199,7 +200,9 @@ export function ChatWindow({ otherUserId, onBack }: ChatWindowProps) {
 
           {otherUser && (
             <>
-              <Avatar className="h-10 w-10">
+              <Avatar 
+                className="h-10 w-10 ring-2 ring-white/20"
+              >
                 <AvatarImage src={otherUser.photoUrl} alt={otherUser.name} />
                 <AvatarFallback>
                   {otherUser.name.split(' ').map((n: string) => n[0]).join('')}
@@ -208,7 +211,9 @@ export function ChatWindow({ otherUserId, onBack }: ChatWindowProps) {
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-white truncate">{otherUser.name}</h2>
+                  <h2 
+                    className="text-white truncate"
+                  >{otherUser.name}</h2>
                   {otherUser.verified && (
                     <CheckCircle2 className="h-4 w-4 text-white flex-shrink-0" />
                   )}

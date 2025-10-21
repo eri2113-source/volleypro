@@ -31,12 +31,26 @@ import {
   Info
 } from "lucide-react";
 import { toast } from "sonner@2.0.3";
+import { trackViewPlans, trackBeginCheckout } from "../utils/googleTagManager";
 
 export function Monetization() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [selectedTab, setSelectedTab] = useState('plans');
 
+  // Rastrear visualização de planos quando componente monta
+  useState(() => {
+    trackViewPlans();
+  });
+
   const handleSelectPlan = (planId: string) => {
+    // Encontrar o plano selecionado
+    const plan = SUBSCRIPTION_PLANS.find(p => p.id === planId);
+    if (plan && plan.price > 0) {
+      const price = billingCycle === 'yearly' ? getYearlyPrice(plan) : plan.price;
+      // Rastrear início do checkout (conversão importante!)
+      trackBeginCheckout(plan.name, price);
+    }
+    
     toast.info("Em breve! 🚀", {
       description: "Sistema de pagamentos será implementado em breve. Entre em contato para mais informações."
     });

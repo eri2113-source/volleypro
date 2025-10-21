@@ -68,11 +68,22 @@ export function AppSidebar({ currentView, onNavigate, isAuthenticated = false, o
       console.log("📊 Perfil carregado na sidebar:", profile);
       setUserProfile(profile);
     } catch (error: any) {
-      console.error("❌ Erro ao carregar perfil na sidebar:", error);
+      // Detectar se está no Figma Make
+      const isFigmaMake = window.location.hostname.includes('figma') || 
+                          window.location.hostname.includes('localhost');
       
       // Se for erro de rede, usar dados do cache se disponível
-      if (error.message?.includes('Failed to fetch') || error.name === 'TypeError') {
-        console.log("⚠️ Erro de rede - usando dados em cache se disponível");
+      const isNetworkError = error.message?.includes('Failed to fetch') || 
+                             error.message?.includes('conexão') ||
+                             error.message?.includes('Mock data') ||
+                             error.name === 'TypeError';
+      
+      if (isNetworkError) {
+        if (!isFigmaMake) {
+          console.log("⚠️ Erro de rede - usando dados em cache se disponível");
+        } else {
+          console.log("🎨 Modo visualização - usando perfil de exemplo");
+        }
         
         // Tentar usar dados do localStorage como fallback
         try {
@@ -82,8 +93,10 @@ export function AppSidebar({ currentView, onNavigate, isAuthenticated = false, o
             console.log("✅ Usando perfil em cache");
           }
         } catch (cacheError) {
-          console.error("❌ Erro ao ler cache:", cacheError);
+          // Ignorar erro de cache silenciosamente
         }
+      } else if (!isFigmaMake) {
+        console.error("❌ Erro ao carregar perfil na sidebar:", error);
       }
     } finally {
       setLoadingProfile(false);

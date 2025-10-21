@@ -174,12 +174,13 @@ export function LivePlayer({ liveId, open, onClose, onLiveEnded }: LivePlayerPro
           ${isFullscreen ? 'max-w-full h-screen m-0 rounded-none' : 'max-w-6xl'}
           p-0 gap-0 overflow-hidden
         `}
+        aria-describedby="live-player-description"
       >
         {/* Títulos para acessibilidade - visualmente escondidos */}
         <DialogTitle className="sr-only">
           {live?.title || "Live Player"}
         </DialogTitle>
-        <DialogDescription className="sr-only">
+        <DialogDescription id="live-player-description" className="sr-only">
           {live?.status === 'live' 
             ? `Assistindo transmissão ao vivo: ${live?.title}`
             : `Visualizando: ${live?.title}`

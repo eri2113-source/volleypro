@@ -1,15 +1,27 @@
 import { useState, useEffect } from "react";
 import { 
-  ArrowLeft, CheckCircle2, Trophy, Users, Heart, MapPin, Plus, Calendar, Star,
-  Shield, TrendingUp, Target, Award, BarChart3, AlertCircle, X, UserMinus,
-  Clock, Flag, Medal, Trash2, Edit, Save, MessageCircle
+  ArrowLeft, MapPin, Users, Heart, Trophy, Calendar, 
+  Edit, UserPlus, X, Save, Loader2, Shield, Camera, Mail, Phone,
+  Globe, Instagram, Facebook, Twitter, Share2, BarChart3, Clock,
+  Award, Star, TrendingUp, Target, Medal, Flag, Clipboard, Search
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Progress } from "./ui/progress";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,25 +32,56 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "./ui/dialog";
-import { Input } from "./ui/input";
-import { Textarea } from "./ui/textarea";
-import { Label } from "./ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { userApi, teamRosterApi } from "../lib/api";
 import { toast } from "sonner@2.0.3";
 import { formatHeight } from "../utils/formatters";
-import { authApi } from "../lib/api";
 
 interface TeamProfileProps {
   teamId: number;
   onBack: () => void;
+}
+
+interface TeamData {
+  id: number;
+  name: string;
+  city?: string;
+  state?: string;
+  founded?: number;
+  verified?: boolean;
+  followers?: number;
+  following?: number;
+  championships?: number;
+  secondPlace?: number;
+  thirdPlace?: number;
+  players?: Player[];
+  photoUrl?: string;
+  coverPhoto?: string;
+  bio?: string;
+  userType: string;
+  achievements?: string;
+  email?: string;
+  phone?: string;
+  website?: string;
+  instagram?: string;
+  facebook?: string;
+  twitter?: string;
+  president?: string;
+  coach?: string;
+  assistantCoach?: string;
+  physicalTrainer?: string;
+  category?: string;
+  division?: string;
+  league?: string;
+  arena?: string;
+  colors?: string;
+  mascot?: string;
+  rivalTeams?: string;
+  mainSponsor?: string;
+  sponsors?: string[];
+  totalMatches?: number;
+  wins?: number;
+  losses?: number;
+  points?: number;
 }
 
 interface Player {
@@ -49,1055 +92,1656 @@ interface Player {
   age?: number;
   height?: number;
   photoUrl?: string;
-  verified?: boolean;
-  // Avaliações
-  ratings?: {
-    attack: number;
-    defense: number;
-    serve: number;
-    block: number;
-    overall: number;
-  };
-  lastEvaluated?: string;
-  needsEvaluation?: boolean;
-  joinedAt?: string;
+  cpf?: string;
+  isCaptain?: boolean;
+  isStarter?: boolean;
+  gamesPlayed?: number;
+  points?: number;
 }
 
 interface FormerPlayer {
   id: string;
   name: string;
   position: string;
-  years: string;
   photoUrl?: string;
-}
-
-interface Tournament {
-  id: string;
-  name: string;
-  year: number;
-  position: string;
-  trophy: string;
-}
-
-interface TeamData {
-  id: number;
-  name: string;
-  city?: string;
-  founded?: number;
-  verified?: boolean;
-  followers?: number;
-  championships?: number;
-  players?: Player[];
-  formerPlayers?: FormerPlayer[];
-  tournaments?: Tournament[];
-  photoUrl?: string;
-  bio?: string;
-  isOwner?: boolean;
+  yearsActive: string;
+  currentTeam?: string;
 }
 
 export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
   const [team, setTeam] = useState<TeamData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
-  const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
-  const [showRosterModal, setShowRosterModal] = useState(false);
-  const [showEvaluationModal, setShowEvaluationModal] = useState(false);
-  const [showDeletePlayerConfirm, setShowDeletePlayerConfirm] = useState(false);
-  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
-  // Estados para edição da escalação
-  const [rosterEdit, setRosterEdit] = useState<{
-    position: string;
-    playerId: string;
-  }[]>([]);
-
-  // Estados para avaliação de atleta
-  const [evaluation, setEvaluation] = useState({
-    attack: 50,
-    defense: 50,
-    serve: 50,
-    block: 50,
-    notes: ""
+  // Estados de edição
+  const [editMode, setEditMode] = useState(false);
+  const [editedTeam, setEditedTeam] = useState<Partial<TeamData>>({});
+  const [savingProfile, setSavingProfile] = useState(false);
+  
+  // Estados para gerenciamento de elenco
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [formerPlayers, setFormerPlayers] = useState<FormerPlayer[]>([]);
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [showDeletePlayerConfirm, setShowDeletePlayerConfirm] = useState(false);
+  const [showAddPlayerModal, setShowAddPlayerModal] = useState(false);
+  const [showEditPlayerModal, setShowEditPlayerModal] = useState(false);
+  const [addPlayerMode, setAddPlayerMode] = useState<'cpf' | 'manual'>('cpf');
+  const [searchCPF, setSearchCPF] = useState("");
+  const [searchingCPF, setSearchingCPF] = useState(false);
+  const [athleteFound, setAthleteFound] = useState<any>(null);
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  
+  const [newPlayer, setNewPlayer] = useState({
+    name: '',
+    position: '',
+    number: 0,
+    age: undefined as number | undefined,
+    height: undefined as number | undefined,
+    photoUrl: ''
   });
 
+  const positions = [
+    'Levantador',
+    'Ponteiro',
+    'Oposto',
+    'Central',
+    'Líbero'
+  ];
+
   useEffect(() => {
-    loadTeamData();
+    loadTeamProfile();
+    loadTeamPlayers();
+    loadFormerPlayers();
     checkIfFollowing();
-    checkCurrentUser();
+    
+    const userData = localStorage.getItem('volleypro_user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      setCurrentUserId(user.id);
+      const ownerStatus = user.id === teamId.toString();
+      console.log('👤 Verificando propriedade do time:', {
+        userId: user.id,
+        teamId: teamId.toString(),
+        isOwner: ownerStatus
+      });
+      setIsOwner(ownerStatus);
+    }
   }, [teamId]);
 
-  async function checkCurrentUser() {
-    try {
-      const userId = authApi.getCurrentUserId();
-      setCurrentUserId(userId);
-    } catch (error) {
-      console.error('Erro ao verificar usuário atual:', error);
-    }
-  }
-
-  async function loadTeamData() {
+  async function loadTeamProfile() {
     setLoading(true);
     try {
-      console.log('🔍 Buscando perfil do time ID:', teamId);
+      console.log('🔍 Carregando perfil do time:', teamId);
       
-      // Buscar perfil REAL do time via API
-      const { userApi } = await import("../lib/api");
       const userData = await userApi.getUser(teamId.toString());
       
       console.log('✅ Dados do time carregados:', userData);
       
-      // Verificar se é dono do time
-      const userId = authApi.getCurrentUserId();
-      const isOwner = userId === userData.id.toString();
-      
-      // Mapear dados da API para o formato esperado
+      if (!userData) {
+        throw new Error('Perfil não encontrado');
+      }
+
       const teamProfile: TeamData = {
-        id: userData.id,
-        name: userData.name || userData.team_name || 'Time',
-        city: userData.city || userData.location,
-        founded: userData.founded || userData.founded_year,
+        id: userData.id || teamId,
+        name: userData.name || userData.full_name || 'Time',
+        city: userData.city,
+        state: userData.state,
+        founded: userData.founded,
         verified: userData.verified || false,
         followers: userData.followers || 0,
+        following: userData.following || 0,
         championships: userData.championships || 0,
-        players: parsePlayers(userData.players || userData.teamMembers || userData.team_members),
-        formerPlayers: parseFormerPlayers(userData.former_players),
-        tournaments: parseTournaments(userData.tournaments),
-        photoUrl: userData.photo_url || userData.photoUrl,
+        secondPlace: userData.secondPlace || 0,
+        thirdPlace: userData.thirdPlace || 0,
+        photoUrl: userData.photoUrl || userData.photo_url,
+        coverPhoto: userData.coverPhoto,
         bio: userData.bio || userData.description,
-        isOwner
+        userType: userData.userType || userData.user_type || 'team',
+        achievements: userData.achievements,
+        email: userData.email,
+        phone: userData.phone,
+        website: userData.website,
+        instagram: userData.instagram,
+        facebook: userData.facebook,
+        twitter: userData.twitter,
+        president: userData.president,
+        coach: userData.coach,
+        assistantCoach: userData.assistantCoach,
+        physicalTrainer: userData.physicalTrainer,
+        category: userData.category,
+        division: userData.division,
+        league: userData.league,
+        arena: userData.arena,
+        colors: userData.colors,
+        mascot: userData.mascot,
+        rivalTeams: userData.rivalTeams,
+        mainSponsor: userData.mainSponsor,
+        sponsors: userData.sponsors,
+        totalMatches: userData.totalMatches || 0,
+        wins: userData.wins || 0,
+        losses: userData.losses || 0,
+        points: userData.points || 0,
       };
       
+      console.log('✅ Perfil do time mapeado:', teamProfile);
+      
       setTeam(teamProfile);
+      setEditedTeam(teamProfile);
     } catch (error) {
-      console.error('❌ Erro ao carregar time:', error);
-      toast.error('Erro ao carregar dados do time');
+      console.error('❌ Erro ao carregar perfil do time:', error);
+      toast.error('Erro ao carregar perfil do time');
       setTeam(null);
     } finally {
       setLoading(false);
     }
   }
 
-  function parsePlayers(playersData: any): Player[] {
-    if (!playersData) return [];
-    if (!Array.isArray(playersData)) return [];
-    
-    return playersData.map((p: any) => ({
-      id: p.id || p.user_id || String(Math.random()),
-      name: p.name || 'Jogador',
-      position: p.position || 'Não definida',
-      number: p.number || p.jersey_number || 0,
-      age: p.age,
-      height: p.height,
-      photoUrl: p.photo_url || p.photoUrl,
-      verified: p.verified || false,
-      ratings: p.ratings || {
-        attack: 50,
-        defense: 50,
-        serve: 50,
-        block: 50,
-        overall: 50
-      },
-      lastEvaluated: p.last_evaluated || p.lastEvaluated,
-      needsEvaluation: checkNeedsEvaluation(p.last_evaluated || p.lastEvaluated),
-      joinedAt: p.joined_at || p.joinedAt
-    }));
+  async function loadTeamPlayers() {
+    try {
+      console.log('🔍 Carregando jogadores do time:', teamId);
+      
+      const { players: loadedPlayers } = await teamRosterApi.getTeamRoster(teamId.toString());
+      
+      console.log('✅ Jogadores carregados:', loadedPlayers?.length || 0);
+      
+      setPlayers(loadedPlayers || []);
+    } catch (error) {
+      console.error('❌ Erro ao carregar jogadores:', error);
+      setPlayers([]);
+    }
   }
 
-  function parseFormerPlayers(formerData: any): FormerPlayer[] {
-    if (!formerData) return [];
-    if (!Array.isArray(formerData)) return [];
-    
-    return formerData.map((p: any) => ({
-      id: p.id || String(Math.random()),
-      name: p.name || 'Ex-Jogador',
-      position: p.position || 'Não definida',
-      years: p.years || 'Período não informado',
-      photoUrl: p.photo_url || p.photoUrl
-    }));
-  }
-
-  function parseTournaments(tournamentsData: any): Tournament[] {
-    if (!tournamentsData) return [];
-    if (!Array.isArray(tournamentsData)) return [];
-    
-    return tournamentsData.map((t: any) => ({
-      id: t.id || String(Math.random()),
-      name: t.name || 'Torneio',
-      year: t.year || new Date().getFullYear(),
-      position: t.position || 'Participante',
-      trophy: getTrophyIcon(t.position)
-    }));
-  }
-
-  function getTrophyIcon(position: string): string {
-    if (position === 'Campeão' || position === '1º lugar') return '🥇';
-    if (position === 'Vice-campeão' || position === '2º lugar') return '🥈';
-    if (position === '3º lugar') return '🥉';
-    return '🏆';
-  }
-
-  function checkNeedsEvaluation(lastEvaluated?: string): boolean {
-    if (!lastEvaluated) return true;
-    
-    const lastDate = new Date(lastEvaluated);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-    
-    // Precisa de avaliação se passou mais de 30 dias
-    return diffDays > 30;
+  async function loadFormerPlayers() {
+    try {
+      // Buscar ex-jogadores do banco de dados
+      // TODO: Implementar endpoint GET /teams/{teamId}/former-players
+      setFormerPlayers([]);
+    } catch (error) {
+      console.error('Erro ao carregar ex-jogadores:', error);
+      setFormerPlayers([]);
+    }
   }
 
   async function checkIfFollowing() {
     try {
       const followingList = JSON.parse(localStorage.getItem('volleypro_following_teams') || '[]');
-      setIsFollowing(followingList.includes(teamId));
+      setIsFollowing(followingList.includes(teamId.toString()));
     } catch (error) {
       console.error('Erro ao verificar seguindo:', error);
     }
   }
 
-  async function handleFollowToggle() {
-    if (isFollowing) {
-      setShowUnfollowConfirm(true);
+  async function handleFollow() {
+    try {
+      const followingList = JSON.parse(localStorage.getItem('volleypro_following_teams') || '[]');
+      
+      if (isFollowing) {
+        const newList = followingList.filter((id: string) => id !== teamId.toString());
+        localStorage.setItem('volleypro_following_teams', JSON.stringify(newList));
+        setIsFollowing(false);
+        setTeam(prev => prev ? { ...prev, followers: (prev.followers || 1) - 1 } : null);
+        toast.success('Você deixou de seguir este time');
+      } else {
+        followingList.push(teamId.toString());
+        localStorage.setItem('volleypro_following_teams', JSON.stringify(followingList));
+        setIsFollowing(true);
+        setTeam(prev => prev ? { ...prev, followers: (prev.followers || 0) + 1 } : null);
+        toast.success('Agora você está seguindo este time!');
+      }
+    } catch (error) {
+      console.error('Erro ao seguir/deixar de seguir:', error);
+      toast.error('Erro ao processar ação');
+    }
+  }
+
+  async function handleSaveProfile() {
+    if (!editedTeam) return;
+    
+    setSavingProfile(true);
+    try {
+      // Em produção, chamar API para salvar
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setTeam({ ...team!, ...editedTeam });
+      setEditMode(false);
+      toast.success('Perfil atualizado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao salvar perfil:', error);
+      toast.error('Erro ao salvar perfil');
+    } finally {
+      setSavingProfile(false);
+    }
+  }
+
+  async function handleSearchCPF() {
+    if (!searchCPF.trim()) {
+      toast.error("Digite um CPF válido");
       return;
     }
 
-    await performFollow();
-  }
-
-  async function performFollow() {
+    setSearchingCPF(true);
     try {
-      const followingList = JSON.parse(localStorage.getItem('volleypro_following_teams') || '[]');
-      followingList.push(teamId);
-      localStorage.setItem('volleypro_following_teams', JSON.stringify(followingList));
-      setIsFollowing(true);
-      toast.success(`Agora você está seguindo ${team?.name}! 🎉`);
-    } catch (error) {
-      console.error('Erro ao seguir:', error);
-      toast.error('Erro ao seguir time');
-    }
-  }
-
-  async function performUnfollow() {
-    try {
-      const followingList = JSON.parse(localStorage.getItem('volleypro_following_teams') || '[]');
-      const newList = followingList.filter((id: number) => id !== teamId);
-      localStorage.setItem('volleypro_following_teams', JSON.stringify(newList));
-      setIsFollowing(false);
-      toast.success(`Você deixou de seguir ${team?.name}`);
-    } catch (error) {
-      console.error('Erro ao deixar de seguir:', error);
-      toast.error('Erro ao atualizar status');
+      console.log('🔍 Buscando atleta por CPF:', searchCPF);
+      
+      const { athlete } = await teamRosterApi.searchByCPF(searchCPF);
+      
+      console.log('✅ Atleta encontrado:', athlete);
+      
+      setAthleteFound(athlete);
+      toast.success(`Atleta ${athlete.name} encontrado!`);
+      
+    } catch (error: any) {
+      console.error('❌ Erro ao buscar atleta por CPF:', error);
+      toast.error("Atleta não encontrado no sistema. Adicione manualmente.");
+      setAthleteFound(null);
     } finally {
-      setShowUnfollowConfirm(false);
+      setSearchingCPF(false);
     }
   }
 
-  function handleOpenEvaluation(player: Player) {
-    setSelectedPlayer(player);
-    setEvaluation({
-      attack: player.ratings?.attack || 50,
-      defense: player.ratings?.defense || 50,
-      serve: player.ratings?.serve || 50,
-      block: player.ratings?.block || 50,
-      notes: ""
-    });
-    setShowEvaluationModal(true);
+  async function handleAddPlayer() {
+    if (addPlayerMode === 'cpf' && athleteFound) {
+      await handleAddAthleteFromCPF();
+    } else {
+      await handleAddManualPlayer();
+    }
   }
 
-  async function handleSaveEvaluation() {
-    if (!selectedPlayer) return;
+  async function handleAddAthleteFromCPF() {
+    if (!athleteFound) return;
 
     try {
-      // Aqui você salvaria no backend
-      const overall = Math.round((evaluation.attack + evaluation.defense + evaluation.serve + evaluation.block) / 4);
+      const newPlayerData = {
+        id: athleteFound.id || `player_${Date.now()}`,
+        name: athleteFound.name,
+        position: athleteFound.position,
+        number: newPlayer.number || (players.length + 1),
+        age: athleteFound.age,
+        height: athleteFound.height,
+        photoUrl: athleteFound.photoUrl,
+        cpf: athleteFound.cpf
+      };
+
+      console.log('➕ Adicionando atleta ao elenco:', newPlayerData);
+
+      const { player } = await teamRosterApi.addPlayer(teamId.toString(), newPlayerData);
+
+      console.log('✅ Atleta adicionado ao banco:', player);
+
+      // Recarregar lista de jogadores
+      await loadTeamPlayers();
       
-      toast.success(`Avaliação de ${selectedPlayer.name} salva!`, {
-        description: `Nota geral: ${overall}/100`
+      toast.success(`${athleteFound.name} adicionado ao elenco!`);
+      
+      setShowAddPlayerModal(false);
+      setSearchCPF("");
+      setAthleteFound(null);
+      setAddPlayerMode('cpf');
+      setNewPlayer({
+        name: '',
+        position: '',
+        number: 0,
+        age: undefined,
+        height: undefined,
+        photoUrl: ''
       });
-      
-      setShowEvaluationModal(false);
-      loadTeamData(); // Recarregar dados
-    } catch (error) {
-      console.error('Erro ao salvar avaliação:', error);
-      toast.error('Erro ao salvar avaliação');
+    } catch (error: any) {
+      console.error('❌ Erro ao adicionar atleta:', error);
+      toast.error(error.message || 'Erro ao adicionar atleta');
     }
   }
 
-  function handleDeletePlayer(player: Player) {
-    setSelectedPlayer(player);
-    setShowDeletePlayerConfirm(true);
+  async function handleAddManualPlayer() {
+    if (!newPlayer.name.trim() || !newPlayer.position) {
+      toast.error('Preencha nome e posição');
+      return;
+    }
+
+    try {
+      const playerData = {
+        id: `player_${Date.now()}`,
+        name: newPlayer.name,
+        position: newPlayer.position,
+        number: newPlayer.number || (players.length + 1),
+        age: newPlayer.age,
+        height: newPlayer.height,
+        photoUrl: newPlayer.photoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(newPlayer.name)}&background=random`
+      };
+
+      console.log('➕ Adicionando jogador manualmente:', playerData);
+
+      const { player } = await teamRosterApi.addPlayer(teamId.toString(), playerData);
+
+      console.log('✅ Jogador adicionado ao banco:', player);
+
+      // Recarregar lista de jogadores
+      await loadTeamPlayers();
+      
+      toast.success(`${newPlayer.name} adicionado ao elenco!`);
+      
+      setShowAddPlayerModal(false);
+      setAddPlayerMode('cpf');
+      setNewPlayer({
+        name: '',
+        position: '',
+        number: 0,
+        age: undefined,
+        height: undefined,
+        photoUrl: ''
+      });
+    } catch (error: any) {
+      console.error('❌ Erro ao adicionar jogador:', error);
+      toast.error(error.message || 'Erro ao adicionar jogador');
+    }
   }
 
-  async function performDeletePlayer() {
+  async function handleDeletePlayer() {
     if (!selectedPlayer) return;
 
     try {
-      // Aqui você removeria do backend
-      toast.success(`${selectedPlayer.name} foi removido do elenco`);
+      console.log('🗑️ Removendo jogador:', selectedPlayer.id);
+
+      await teamRosterApi.removePlayer(teamId.toString(), selectedPlayer.id);
+
+      console.log('✅ Jogador removido do banco');
+
+      // Recarregar lista de jogadores
+      await loadTeamPlayers();
+      
+      toast.success(`${selectedPlayer.name} removido do elenco`);
       setShowDeletePlayerConfirm(false);
-      loadTeamData();
-    } catch (error) {
-      console.error('Erro ao remover jogador:', error);
-      toast.error('Erro ao remover jogador');
+      setSelectedPlayer(null);
+    } catch (error: any) {
+      console.error('❌ Erro ao remover jogador:', error);
+      toast.error(error.message || 'Erro ao remover jogador');
+    }
+  }
+
+  async function handleSavePlayerEdit() {
+    if (!editingPlayer) return;
+
+    try {
+      console.log('✏️ Atualizando jogador:', editingPlayer.id);
+
+      const { player } = await teamRosterApi.updatePlayer(
+        teamId.toString(), 
+        editingPlayer.id, 
+        editingPlayer
+      );
+
+      console.log('✅ Jogador atualizado no banco:', player);
+
+      // Recarregar lista de jogadores
+      await loadTeamPlayers();
+      
+      toast.success(`${editingPlayer.name} atualizado!`);
+      setShowEditPlayerModal(false);
+      setEditingPlayer(null);
+    } catch (error: any) {
+      console.error('❌ Erro ao atualizar jogador:', error);
+      toast.error(error.message || 'Erro ao atualizar jogador');
     }
   }
 
   if (loading) {
     return (
-      <div className="container mx-auto py-12 text-center">
-        <div className="animate-pulse space-y-4">
-          <div className="h-40 w-40 bg-muted rounded-full mx-auto"></div>
-          <div className="h-8 bg-muted rounded w-48 mx-auto"></div>
-          <div className="h-4 bg-muted rounded w-32 mx-auto"></div>
-        </div>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!team) {
     return (
-      <div className="container mx-auto py-6 text-center">
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <p className="text-muted-foreground">Time não encontrado</p>
-        <Button onClick={onBack} className="mt-4">Voltar</Button>
+        <Button onClick={onBack}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar
+        </Button>
       </div>
     );
   }
 
-  const playersNeedingEvaluation = team.players?.filter(p => p.needsEvaluation) || [];
+  const winRate = team.totalMatches ? ((team.wins || 0) / team.totalMatches * 100).toFixed(1) : '0.0';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
-      {/* Header com gradiente */}
-      <div className="bg-gradient-to-br from-primary via-primary to-secondary pb-32 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDE0YzMuMzEgMCA2IDIuNjkgNiA2cy0yLjY5IDYtNiA2LTYtMi42OS02LTYgMi42OS02IDYtNnpNNiAzNGMzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA2LTZ6TTM2IDM0YzMuMzEgMCA2IDIuNjkgNiA2cy0yLjY5IDYtNiA2LTYtMi42OS02LTYgMi42OS02IDYtNnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30"></div>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-blue-50">
+      {/* Header com Cover Photo */}
+      <div className="relative h-48 md:h-64 bg-gradient-to-r from-orange-500 via-blue-500 to-purple-500">
+        {team.coverPhoto && (
+          <img 
+            src={team.coverPhoto} 
+            alt="Capa" 
+            className="w-full h-full object-cover"
+          />
+        )}
         
-        <div className="container mx-auto py-6 relative z-10">
-          <Button variant="ghost" onClick={onBack} className="mb-6 text-white hover:bg-white/20 hover:text-white">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
+        {/* Botão Voltar */}
+        <Button
+          onClick={onBack}
+          variant="secondary"
+          size="sm"
+          className="absolute top-4 left-4 backdrop-blur-sm bg-white/90 hover:bg-white"
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar
+        </Button>
+
+        {/* Botão Editar Cover (se for dono) */}
+        {isOwner && (
+          <Button
+            onClick={() => setEditMode(true)}
+            variant="secondary"
+            size="sm"
+            className="absolute top-4 right-4 backdrop-blur-sm bg-white/90 hover:bg-white"
+          >
+            <Camera className="h-4 w-4 mr-2" />
+            Editar Capa
           </Button>
+        )}
+      </div>
 
-          <div className="flex flex-col md:flex-row items-start gap-8">
-            {/* Avatar e Info Básica */}
-            <Avatar className="h-40 w-40 border-4 border-white shadow-2xl ring-4 ring-white/20">
-              {team.photoUrl ? (
-                <AvatarImage src={team.photoUrl} alt={team.name} className="object-cover" />
-              ) : null}
-              <AvatarFallback className="text-4xl bg-gradient-to-br from-white to-gray-100 text-primary">
-                {team.name[0]}
-              </AvatarFallback>
+      {/* Profile Info Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-20 relative z-10">
+        {/* Avatar e Info Principal */}
+        <div className="flex flex-col md:flex-row gap-6 items-start md:items-end mb-8">
+          {/* Avatar Grande */}
+          <div className="relative">
+            <Avatar className="h-32 w-32 md:h-40 md:w-40 border-4 border-white shadow-2xl">
+              <AvatarImage src={team.photoUrl} alt={team.name} />
+              <AvatarFallback className="text-4xl">{team.name[0]}</AvatarFallback>
             </Avatar>
+            {team.verified && (
+              <div className="absolute -bottom-2 -right-2 bg-blue-500 rounded-full p-2 border-4 border-white">
+                <Shield className="h-6 w-6 text-white" />
+              </div>
+            )}
+          </div>
 
-            <div className="flex-1">
-              <div className="flex items-start justify-between mb-4">
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-white">{team.name}</h1>
-                    {team.verified && (
-                      <CheckCircle2 className="h-6 w-6 text-white" />
-                    )}
-                    {team.isOwner && (
-                      <Badge className="bg-amber-500 text-white">
-                        <Shield className="h-3 w-3 mr-1" />
-                        Administrador
-                      </Badge>
-                    )}
-                  </div>
-                  {team.city && (
-                    <div className="flex items-center gap-2 text-white/90 mb-2">
-                      <MapPin className="h-4 w-4" />
-                      <span>{team.city}</span>
-                    </div>
+          {/* Nome, Localização e Badges */}
+          <div className="flex-1 bg-white/80 backdrop-blur-md rounded-2xl p-6 shadow-lg border border-white/50">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-3 flex-wrap mb-2">
+                  <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent">
+                    {team.name}
+                  </h1>
+                  {isOwner && (
+                    <Badge className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0">
+                      <Shield className="h-3 w-3 mr-1" />
+                      Administrador
+                    </Badge>
                   )}
+                  {team.verified && (
+                    <Badge className="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
+                      Verificado
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Localização */}
+                {(team.city || team.state) && (
+                  <div className="flex items-center gap-2 text-muted-foreground mb-2">
+                    <MapPin className="h-4 w-4" />
+                    <span>{team.city}{team.city && team.state && ', '}{team.state}</span>
+                  </div>
+                )}
+
+                {/* Info Adicional */}
+                <div className="flex items-center gap-4 flex-wrap text-sm text-muted-foreground">
                   {team.founded && (
-                    <div className="flex items-center gap-2 text-white/90">
+                    <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
                       <span>Fundado em {team.founded}</span>
                     </div>
                   )}
-                </div>
-
-                {/* Botões de ação */}
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={handleFollowToggle}
-                    className={
-                      isFollowing 
-                        ? "bg-muted text-foreground hover:bg-muted/80"
-                        : "bg-white text-primary hover:bg-white/90"
-                    }
-                  >
-                    <Heart className={`h-4 w-4 mr-2 ${isFollowing ? 'fill-current' : ''}`} />
-                    {isFollowing ? 'Seguindo' : 'Seguir'}
-                  </Button>
+                  {team.category && (
+                    <Badge variant="outline">{team.category}</Badge>
+                  )}
+                  {team.division && (
+                    <Badge variant="outline">{team.division}</Badge>
+                  )}
                 </div>
               </div>
 
-              {/* Estatísticas */}
-              <div className="grid grid-cols-3 gap-4">
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-muted-foreground text-sm">Seguidores</p>
-                    <p className="text-2xl">{(team.followers || 0).toLocaleString('pt-BR')}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-muted-foreground text-sm">Jogadores</p>
-                    <p className="text-2xl">{team.players?.length || 0}</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4 text-center">
-                    <p className="text-muted-foreground text-sm">Títulos</p>
-                    <p className="text-2xl">{team.championships || 0}</p>
-                  </CardContent>
-                </Card>
-              </div>
+              {/* Botões de Ação */}
+              {!isOwner && (
+                <Button
+                  onClick={handleFollow}
+                  variant={isFollowing ? "outline" : "default"}
+                  className={isFollowing ? "" : "bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white border-0"}
+                >
+                  <Heart className={`h-4 w-4 mr-2 ${isFollowing ? 'fill-current' : ''}`} />
+                  {isFollowing ? 'Seguindo' : 'Seguir'}
+                </Button>
+              )}
+
+              {isOwner && (
+                <Button
+                  onClick={() => setEditMode(!editMode)}
+                  className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white border-0"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  {editMode ? 'Cancelar' : 'Editar Perfil'}
+                </Button>
+              )}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Alerta de avaliações pendentes */}
-      {team.isOwner && playersNeedingEvaluation.length > 0 && (
-        <div className="container mx-auto -mt-28 mb-6 relative z-20">
-          <Card className="border-orange-500 bg-orange-50">
-            <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-orange-500 mt-0.5" />
-                <div className="flex-1">
-                  <h4 className="font-medium text-orange-900 mb-1">
-                    {playersNeedingEvaluation.length} jogador(es) precisam de avaliação
-                  </h4>
-                  <p className="text-sm text-orange-700">
-                    Avalie o desempenho dos atletas para manter o acompanhamento atualizado
-                  </p>
-                </div>
+        {/* Cards de Estatísticas */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {/* Seguidores */}
+          <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <Users className="h-8 w-8 mx-auto mb-2 text-orange-500" />
+                <p className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
+                  {team.followers || 0}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">Seguidores</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Jogadores */}
+          <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <Users className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+                  {players.length}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">Jogadores</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Títulos */}
+          <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg hover:shadow-xl transition-all hover:-translate-y-1">
+            <CardContent className="pt-6">
+              <div className="text-center">
+                <Trophy className="h-8 w-8 mx-auto mb-2 text-yellow-500" />
+                <p className="text-3xl font-bold bg-gradient-to-r from-yellow-600 to-yellow-500 bg-clip-text text-transparent">
+                  {team.championships || 0}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">Títulos</p>
               </div>
             </CardContent>
           </Card>
         </div>
-      )}
 
-      {/* Conteúdo com Tabs */}
-      <div className="container mx-auto -mt-24 relative z-10">
+        {/* Tabs de Navegação */}
         <Tabs defaultValue="roster" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="roster">
-              <Users className="h-4 w-4 mr-2" />
-              Elenco
-            </TabsTrigger>
-            <TabsTrigger value="lineup">
-              <Target className="h-4 w-4 mr-2" />
-              Escalação
-            </TabsTrigger>
-            <TabsTrigger value="tournaments">
-              <Trophy className="h-4 w-4 mr-2" />
-              Torneios
-            </TabsTrigger>
-            <TabsTrigger value="former">
-              <Clock className="h-4 w-4 mr-2" />
-              Ex-Jogadores
-            </TabsTrigger>
-            {team.isOwner && (
-              <TabsTrigger value="evaluations">
-                <BarChart3 className="h-4 w-4 mr-2" />
-                Avaliações
+          <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-2">
+            <TabsList className="w-full grid grid-cols-3 md:grid-cols-6 gap-2 bg-transparent">
+              <TabsTrigger value="roster" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">
+                <Users className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Elenco</span>
               </TabsTrigger>
+              <TabsTrigger value="lineup" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">
+                <Clipboard className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Escalação</span>
+              </TabsTrigger>
+              <TabsTrigger value="tournaments" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">
+                <Trophy className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Torneios</span>
+              </TabsTrigger>
+              <TabsTrigger value="former" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">
+                <Clock className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Ex-Jogadores</span>
+              </TabsTrigger>
+              <TabsTrigger value="stats" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Estatísticas</span>
+              </TabsTrigger>
+              <TabsTrigger value="info" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">
+                <Flag className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Informações</span>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* ABA: ELENCO */}
+          <TabsContent value="roster" className="space-y-6">
+            {/* Card de Call-to-Action para adicionar primeiro jogador */}
+            {isOwner && players.length === 0 && (
+              <Card className="bg-gradient-to-r from-orange-100 via-blue-100 to-purple-100 border-2 border-orange-300 shadow-xl">
+                <CardContent className="pt-6">
+                  <div className="text-center space-y-4">
+                    <div className="flex justify-center">
+                      <div className="p-4 bg-white rounded-full shadow-lg">
+                        <UserPlus className="h-12 w-12 text-orange-500" />
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                        Monte seu Elenco!
+                      </h3>
+                      <p className="text-muted-foreground">
+                        Comece adicionando atletas ao seu time. Você pode buscar por CPF para vincular atletas cadastrados ou adicionar manualmente.
+                      </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                      <Button 
+                        onClick={() => {
+                          setShowAddPlayerModal(true);
+                          setAddPlayerMode('cpf');
+                        }}
+                        size="lg"
+                        variant="outline"
+                        className="border-2 border-orange-500 text-orange-700 hover:bg-orange-50"
+                      >
+                        <Search className="h-5 w-5 mr-2" />
+                        Buscar por CPF
+                      </Button>
+                      <Button 
+                        onClick={() => {
+                          setShowAddPlayerModal(true);
+                          setAddPlayerMode('manual');
+                        }}
+                        size="lg"
+                        className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all"
+                      >
+                        <UserPlus className="h-5 w-5 mr-2" />
+                        Adicionar Manualmente
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             )}
-            <TabsTrigger value="info">
-              <Flag className="h-4 w-4 mr-2" />
-              Informações
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Aba Elenco - Vitrine de Jogadores */}
-          <TabsContent value="roster" className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3>Elenco Atual ({team.players?.length || 0} jogadores)</h3>
-              {team.isOwner && (
-                <Button>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Adicionar Jogador
-                </Button>
-              )}
-            </div>
-
-            {team.players && team.players.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {team.players.map((player) => (
-                  <Card key={player.id} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3 mb-3">
-                        <Avatar className="h-16 w-16">
-                          {player.photoUrl ? (
-                            <AvatarImage src={player.photoUrl} alt={player.name} />
-                          ) : null}
+            
+            <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg">
+              <CardHeader>
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-5 w-5 text-primary" />
+                    <h3 className="text-xl font-semibold">Elenco Atual ({players.length} jogadores)</h3>
+                  </div>
+                  {isOwner && (
+                    <Button 
+                      onClick={() => setShowAddPlayerModal(true)}
+                      size="lg"
+                      className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all w-full md:w-auto"
+                    >
+                      <UserPlus className="h-5 w-5 mr-2" />
+                      Adicionar Atleta ao Elenco
+                    </Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {players.length === 0 ? (
+                  <div className="text-center py-12 space-y-6">
+                    <Users className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
+                    <div>
+                      <p className="text-muted-foreground text-lg mb-2">Nenhum jogador no elenco</p>
+                      {isOwner && (
+                        <p className="text-sm text-muted-foreground mb-6">
+                          Comece a montar seu time adicionando atletas
+                        </p>
+                      )}
+                    </div>
+                    {isOwner && (
+                      <Button 
+                        onClick={() => setShowAddPlayerModal(true)}
+                        size="lg"
+                        className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all"
+                      >
+                        <UserPlus className="h-5 w-5 mr-2" />
+                        Adicionar Primeiro Atleta
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {players.map((player) => (
+                      <div 
+                        key={player.id} 
+                        className="flex items-center gap-4 p-4 rounded-xl border bg-gradient-to-r from-white/50 to-white/30 hover:from-white/80 hover:to-white/60 transition-all group"
+                      >
+                        <Avatar className="h-16 w-16 border-2 border-white shadow-md">
+                          <AvatarImage src={player.photoUrl} alt={player.name} />
                           <AvatarFallback>{player.name[0]}</AvatarFallback>
                         </Avatar>
+                        
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-medium">{player.name}</span>
-                            {player.verified && (
-                              <CheckCircle2 className="h-4 w-4 text-blue-500" />
-                            )}
-                            {player.needsEvaluation && (
-                              <Badge variant="destructive" className="text-xs">
-                                Avaliar
+                            <h4 className="font-semibold text-lg">{player.name}</h4>
+                            {player.isCaptain && (
+                              <Badge className="bg-yellow-500 text-white">
+                                <Star className="h-3 w-3 mr-1" />
+                                Capitão
                               </Badge>
                             )}
                           </div>
-                          <p className="text-sm text-muted-foreground">{player.position}</p>
-                          <div className="flex items-center gap-2 mt-1">
-                            <Badge variant="secondary" className="text-xs">
+                          <div className="flex gap-2 flex-wrap">
+                            <Badge variant="outline" className="border-orange-500 text-orange-700">
                               #{player.number}
                             </Badge>
-                            {player.age && (
-                              <span className="text-xs text-muted-foreground">{player.age} anos</span>
+                            <Badge variant="outline" className="border-blue-500 text-blue-700">
+                              {player.position}
+                            </Badge>
+                            {player.isStarter && (
+                              <Badge variant="outline" className="border-green-500 text-green-700">
+                                Titular
+                              </Badge>
                             )}
                           </div>
                         </div>
-                      </div>
 
-                      {/* Nota Geral */}
-                      {player.ratings && (
-                        <div className="mb-3">
-                          <div className="flex items-center justify-between text-sm mb-1">
-                            <span className="text-muted-foreground">Desempenho</span>
-                            <span className="font-medium">{player.ratings.overall}/100</span>
+                        <div className="hidden md:block text-right text-sm space-y-1">
+                          {player.height && (
+                            <p className="font-medium text-muted-foreground">
+                              {formatHeight(player.height)}
+                            </p>
+                          )}
+                          {player.age && (
+                            <p className="text-muted-foreground">{player.age} anos</p>
+                          )}
+                          {player.gamesPlayed !== undefined && (
+                            <p className="text-xs text-muted-foreground">
+                              {player.gamesPlayed} jogos
+                            </p>
+                          )}
+                        </div>
+
+                        {isOwner && (
+                          <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setEditingPlayer(player);
+                                setShowEditPlayerModal(true);
+                              }}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedPlayer(player);
+                                setShowDeletePlayerConfirm(true);
+                              }}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
                           </div>
-                          <Progress value={player.ratings.overall} className="h-2" />
-                        </div>
-                      )}
-
-                      {/* Botões de ação (apenas para donos) */}
-                      {team.isOwner && (
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="flex-1"
-                            onClick={() => handleOpenEvaluation(player)}
-                          >
-                            <Star className="h-4 w-4 mr-1" />
-                            Avaliar
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="ghost" 
-                            onClick={() => handleDeletePlayer(player)}
-                          >
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <Users className="h-12 w-12 text-muted-foreground mb-3" />
-                  <h3 className="mb-2">Nenhum jogador cadastrado</h3>
-                  <p className="text-muted-foreground">
-                    Adicione jogadores ao elenco do time
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* Aba Escalação */}
-          <TabsContent value="lineup" className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3>Escalação Titular</h3>
-              {team.isOwner && (
-                <Button onClick={() => setShowRosterModal(true)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Editar Escalação
-                </Button>
-              )}
-            </div>
-
-            {/* Quadra de vôlei visual */}
-            <Card>
-              <CardContent className="p-6">
-                <div className="relative aspect-[2/3] bg-gradient-to-b from-orange-100 to-orange-50 rounded-lg border-4 border-orange-300">
-                  {/* Linha de meio */}
-                  <div className="absolute top-1/2 left-0 right-0 h-1 bg-orange-400 -translate-y-1/2"></div>
-                  
-                  {/* Rede */}
-                  <div className="absolute top-1/2 left-0 right-0 h-2 bg-orange-500 -translate-y-1/2 opacity-50"></div>
-                  
-                  {/* Posições da quadra */}
-                  <div className="absolute inset-0 p-8">
-                    {/* Posições de fundo (1, 6, 5) */}
-                    <div className="grid grid-cols-3 gap-4 mb-8">
-                      <PlayerPosition position="1" label="Líbero" />
-                      <PlayerPosition position="6" label="Central" />
-                      <PlayerPosition position="5" label="Oposto" />
-                    </div>
-                    
-                    {/* Posições de frente (2, 3, 4) */}
-                    <div className="grid grid-cols-3 gap-4 absolute bottom-8 left-8 right-8">
-                      <PlayerPosition position="2" label="Levantador" />
-                      <PlayerPosition position="3" label="Central" />
-                      <PlayerPosition position="4" label="Ponteiro" />
-                    </div>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
 
-            <p className="text-sm text-muted-foreground text-center">
-              Sistema 5-1 | Rodízio completo
-            </p>
-          </TabsContent>
+            {/* Estatísticas do Elenco */}
+            {players.length > 0 && (
+              <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg">
+                <CardHeader>
+                  <h3 className="text-xl font-semibold">Estatísticas do Elenco</h3>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
+                      <p className="text-3xl font-bold text-orange-600">{players.length}</p>
+                      <p className="text-sm text-muted-foreground mt-1">Total de Atletas</p>
+                    </div>
+                    <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                      <p className="text-3xl font-bold text-blue-600">
+                        {players.filter(p => p.age).length > 0
+                          ? Math.round(players.filter(p => p.age).reduce((sum, p) => sum + (p.age || 0), 0) / players.filter(p => p.age).length)
+                          : '-'}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">Idade Média</p>
+                    </div>
+                    <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                      <p className="text-3xl font-bold text-green-600">
+                        {players.filter(p => p.height).length > 0
+                          ? formatHeight(Math.round(players.filter(p => p.height).reduce((sum, p) => sum + (p.height || 0), 0) / players.filter(p => p.height).length))
+                          : '-'}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">Altura Média</p>
+                    </div>
+                    <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                      <p className="text-3xl font-bold text-purple-600">
+                        {new Set(players.map(p => p.position)).size}
+                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">Posições</p>
+                    </div>
+                  </div>
 
-          {/* Aba Torneios */}
-          <TabsContent value="tournaments" className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3>Torneios e Conquistas</h3>
-            </div>
-
-            {team.tournaments && team.tournaments.length > 0 ? (
-              <div className="space-y-3">
-                {team.tournaments.map((tournament) => (
-                  <Card key={tournament.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-4">
-                        <div className="text-4xl">{tournament.trophy}</div>
-                        <div className="flex-1">
-                          <h4 className="font-medium">{tournament.name}</h4>
-                          <div className="flex items-center gap-3 mt-1">
-                            <Badge variant="secondary">{tournament.year}</Badge>
-                            <span className="text-sm text-muted-foreground">{tournament.position}</span>
+                  {/* Distribuição por Posição */}
+                  <div className="mt-6 space-y-3">
+                    <h4 className="font-medium text-sm text-muted-foreground">Distribuição por Posição</h4>
+                    {positions.map(position => {
+                      const count = players.filter(p => p.position === position).length;
+                      const percentage = players.length > 0 ? (count / players.length * 100) : 0;
+                      
+                      return count > 0 ? (
+                        <div key={position} className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span>{position}</span>
+                            <span className="text-muted-foreground">{count} jogador{count !== 1 ? 'es' : ''}</span>
+                          </div>
+                          <div className="h-2 bg-muted rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-gradient-to-r from-orange-500 to-blue-500 transition-all"
+                              style={{ width: `${percentage}%` }}
+                            />
                           </div>
                         </div>
-                        <Medal className="h-8 w-8 text-amber-500" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <Trophy className="h-12 w-12 text-muted-foreground mb-3" />
-                  <h3 className="mb-2">Nenhum torneio registrado</h3>
-                  <p className="text-muted-foreground">
-                    Os torneios e conquistas do time aparecerão aqui
-                  </p>
+                      ) : null;
+                    })}
+                  </div>
                 </CardContent>
               </Card>
             )}
           </TabsContent>
 
-          {/* Aba Ex-Jogadores - Mural */}
-          <TabsContent value="former" className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3>Mural de Ex-Jogadores</h3>
-            </div>
-
-            {team.formerPlayers && team.formerPlayers.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {team.formerPlayers.map((player) => (
-                  <Card key={player.id} className="hover:shadow-lg transition-shadow bg-muted/30">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-12 w-12 grayscale">
-                          {player.photoUrl ? (
-                            <AvatarImage src={player.photoUrl} alt={player.name} />
-                          ) : null}
-                          <AvatarFallback>{player.name[0]}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{player.name}</p>
-                          <p className="text-sm text-muted-foreground">{player.position}</p>
-                          <p className="text-xs text-muted-foreground mt-1">
-                            <Clock className="h-3 w-3 inline mr-1" />
-                            {player.years}
-                          </p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                  <Clock className="h-12 w-12 text-muted-foreground mb-3" />
-                  <h3 className="mb-2">Nenhum ex-jogador cadastrado</h3>
-                  <p className="text-muted-foreground">
-                    O mural de ex-jogadores do time aparecerá aqui
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </TabsContent>
-
-          {/* Aba Avaliações (apenas para donos) */}
-          {team.isOwner && (
-            <TabsContent value="evaluations" className="space-y-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3>Sistema de Avaliação de Atletas</h3>
-              </div>
-
-              {team.players && team.players.length > 0 ? (
-                <div className="space-y-4">
-                  {team.players.map((player) => (
-                    <Card key={player.id}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start gap-4">
-                          <Avatar className="h-16 w-16">
-                            {player.photoUrl ? (
+          {/* ABA: ESCALAÇÃO */}
+          <TabsContent value="lineup" className="space-y-6">
+            <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Clipboard className="h-5 w-5 text-primary" />
+                  <h3 className="text-xl font-semibold">Escalação Titular</h3>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {players.filter(p => p.isStarter).length === 0 ? (
+                  <div className="text-center py-12 space-y-6">
+                    <Clipboard className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
+                    <div>
+                      <p className="text-muted-foreground text-lg mb-2">
+                        {players.length === 0 ? 'Nenhum jogador no elenco' : 'Nenhuma escalação definida'}
+                      </p>
+                      {isOwner && (
+                        <p className="text-sm text-muted-foreground mb-6">
+                          {players.length === 0 
+                            ? 'Adicione jogadores ao elenco para criar sua escalação'
+                            : 'Edite os jogadores para marcar os titulares'
+                          }
+                        </p>
+                      )}
+                    </div>
+                    {isOwner && players.length === 0 && (
+                      <Button 
+                        onClick={() => setShowAddPlayerModal(true)}
+                        size="lg"
+                        className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white border-0 shadow-lg hover:shadow-xl transition-all"
+                      >
+                        <UserPlus className="h-5 w-5 mr-2" />
+                        Adicionar Atletas
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {/* Quadra de vôlei visual */}
+                    <div className="bg-gradient-to-br from-orange-100 to-blue-100 rounded-xl p-8 border-2 border-dashed border-orange-300">
+                      <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
+                        {players.filter(p => p.isStarter).slice(0, 6).map((player, index) => (
+                          <div key={player.id} className="flex flex-col items-center">
+                            <Avatar className="h-16 w-16 border-2 border-white shadow-lg mb-2">
                               <AvatarImage src={player.photoUrl} alt={player.name} />
-                            ) : null}
-                            <AvatarFallback>{player.name[0]}</AvatarFallback>
-                          </Avatar>
-                          
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-3">
-                              <div>
-                                <h4 className="font-medium">{player.name}</h4>
-                                <p className="text-sm text-muted-foreground">{player.position}</p>
-                              </div>
-                              
-                              <div className="flex items-center gap-2">
-                                {player.needsEvaluation && (
-                                  <Badge variant="destructive">
-                                    <AlertCircle className="h-3 w-3 mr-1" />
-                                    Precisa avaliar
-                                  </Badge>
-                                )}
-                                <Button 
-                                  size="sm"
-                                  onClick={() => handleOpenEvaluation(player)}
-                                >
-                                  <Star className="h-4 w-4 mr-1" />
-                                  Avaliar
-                                </Button>
+                              <AvatarFallback>{player.name[0]}</AvatarFallback>
+                            </Avatar>
+                            <Badge className="mb-1">#{player.number}</Badge>
+                            <p className="text-xs font-medium text-center">{player.name}</p>
+                            <p className="text-xs text-muted-foreground">{player.position}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Reservas */}
+                    {players.filter(p => !p.isStarter).length > 0 && (
+                      <div>
+                        <h4 className="font-medium mb-3 flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Banco de Reservas
+                        </h4>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          {players.filter(p => !p.isStarter).map(player => (
+                            <div key={player.id} className="flex items-center gap-2 p-3 bg-white/50 rounded-lg border">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={player.photoUrl} alt={player.name} />
+                                <AvatarFallback>{player.name[0]}</AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">{player.name}</p>
+                                <p className="text-xs text-muted-foreground">#{player.number}</p>
                               </div>
                             </div>
-
-                            {/* Gráficos de desempenho */}
-                            {player.ratings && (
-                              <div className="space-y-2">
-                                <div>
-                                  <div className="flex items-center justify-between text-sm mb-1">
-                                    <span>Ataque</span>
-                                    <span className="font-medium">{player.ratings.attack}/100</span>
-                                  </div>
-                                  <Progress value={player.ratings.attack} className="h-2" />
-                                </div>
-                                
-                                <div>
-                                  <div className="flex items-center justify-between text-sm mb-1">
-                                    <span>Defesa</span>
-                                    <span className="font-medium">{player.ratings.defense}/100</span>
-                                  </div>
-                                  <Progress value={player.ratings.defense} className="h-2" />
-                                </div>
-                                
-                                <div>
-                                  <div className="flex items-center justify-between text-sm mb-1">
-                                    <span>Saque</span>
-                                    <span className="font-medium">{player.ratings.serve}/100</span>
-                                  </div>
-                                  <Progress value={player.ratings.serve} className="h-2" />
-                                </div>
-                                
-                                <div>
-                                  <div className="flex items-center justify-between text-sm mb-1">
-                                    <span>Bloqueio</span>
-                                    <span className="font-medium">{player.ratings.block}/100</span>
-                                  </div>
-                                  <Progress value={player.ratings.block} className="h-2" />
-                                </div>
-
-                                {/* Nota geral */}
-                                <div className="pt-2 border-t">
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-medium">Nota Geral</span>
-                                    <span className="text-2xl font-bold text-primary">
-                                      {player.ratings.overall}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Última avaliação */}
-                                {player.lastEvaluated && (
-                                  <p className="text-xs text-muted-foreground mt-2">
-                                    Última avaliação: {new Date(player.lastEvaluated).toLocaleDateString('pt-BR')}
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                          </div>
+                          ))}
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              ) : (
-                <Card className="border-dashed">
-                  <CardContent className="flex flex-col items-center justify-center py-12 text-center">
-                    <BarChart3 className="h-12 w-12 text-muted-foreground mb-3" />
-                    <h3 className="mb-2">Nenhum jogador para avaliar</h3>
-                    <p className="text-muted-foreground">
-                      Adicione jogadores ao elenco para começar a avaliar
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-          )}
-
-          {/* Aba Informações */}
-          <TabsContent value="info" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <h3>Informações do Time</h3>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {team.city && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Cidade:</span>
-                    <span>{team.city}</span>
-                  </div>
-                )}
-                {team.founded && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Fundação:</span>
-                    <span>{team.founded}</span>
-                  </div>
-                )}
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Títulos:</span>
-                  <span>{team.championships || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Jogadores:</span>
-                  <span>{team.players?.length || 0}</span>
-                </div>
-                {team.bio && (
-                  <div className="pt-3 border-t">
-                    <span className="text-muted-foreground block mb-2">Sobre:</span>
-                    <p className="text-sm">{team.bio}</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* ABA: TORNEIOS */}
+          <TabsContent value="tournaments" className="space-y-6">
+            <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-primary" />
+                  <h3 className="text-xl font-semibold">Torneios e Conquistas</h3>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {/* Resumo de Conquistas */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="text-center p-4 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl border border-yellow-200">
+                    <Medal className="h-8 w-8 mx-auto mb-2 text-yellow-600" />
+                    <p className="text-2xl font-bold text-yellow-600">{team.championships || 0}</p>
+                    <p className="text-xs text-muted-foreground">1º Lugar</p>
+                  </div>
+                  <div className="text-center p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200">
+                    <Medal className="h-8 w-8 mx-auto mb-2 text-gray-600" />
+                    <p className="text-2xl font-bold text-gray-600">{team.secondPlace || 0}</p>
+                    <p className="text-xs text-muted-foreground">2º Lugar</p>
+                  </div>
+                  <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
+                    <Medal className="h-8 w-8 mx-auto mb-2 text-orange-600" />
+                    <p className="text-2xl font-bold text-orange-600">{team.thirdPlace || 0}</p>
+                    <p className="text-xs text-muted-foreground">3º Lugar</p>
+                  </div>
+                </div>
+
+                {/* Lista de Torneios */}
+                <div className="text-center py-8">
+                  <Trophy className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
+                  <p className="text-muted-foreground">Nenhum torneio registrado</p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    As conquistas aparecerão aqui quando o time participar de torneios
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ABA: EX-JOGADORES */}
+          <TabsContent value="former" className="space-y-6">
+            <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-primary" />
+                  <h3 className="text-xl font-semibold">Ex-Jogadores ({formerPlayers.length})</h3>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {formerPlayers.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Clock className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
+                    <p className="text-muted-foreground text-lg">Nenhum ex-jogador registrado</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {formerPlayers.map(player => (
+                      <div key={player.id} className="flex items-center gap-4 p-4 rounded-xl border bg-gradient-to-r from-white/50 to-white/30">
+                        <Avatar className="h-14 w-14">
+                          <AvatarImage src={player.photoUrl} alt={player.name} />
+                          <AvatarFallback>{player.name[0]}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{player.name}</h4>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant="outline">{player.position}</Badge>
+                            <Badge variant="outline">{player.yearsActive}</Badge>
+                          </div>
+                        </div>
+                        {player.currentTeam && (
+                          <div className="text-right text-sm">
+                            <p className="text-muted-foreground">Atualmente:</p>
+                            <p className="font-medium">{player.currentTeam}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* ABA: ESTATÍSTICAS */}
+          <TabsContent value="stats" className="space-y-6">
+            <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="h-5 w-5 text-primary" />
+                  <h3 className="text-xl font-semibold">Estatísticas Gerais</h3>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* Total de Partidas */}
+                  <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                    <Target className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                    <p className="text-3xl font-bold text-blue-600">{team.totalMatches || 0}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Partidas</p>
+                  </div>
+
+                  {/* Vitórias */}
+                  <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                    <TrendingUp className="h-8 w-8 mx-auto mb-2 text-green-600" />
+                    <p className="text-3xl font-bold text-green-600">{team.wins || 0}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Vitórias</p>
+                  </div>
+
+                  {/* Derrotas */}
+                  <div className="text-center p-6 bg-gradient-to-br from-red-50 to-red-100 rounded-xl border border-red-200">
+                    <X className="h-8 w-8 mx-auto mb-2 text-red-600" />
+                    <p className="text-3xl font-bold text-red-600">{team.losses || 0}</p>
+                    <p className="text-sm text-muted-foreground mt-1">Derrotas</p>
+                  </div>
+
+                  {/* Aproveitamento */}
+                  <div className="text-center p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                    <Award className="h-8 w-8 mx-auto mb-2 text-purple-600" />
+                    <p className="text-3xl font-bold text-purple-600">{winRate}%</p>
+                    <p className="text-sm text-muted-foreground mt-1">Aproveitamento</p>
+                  </div>
+                </div>
+
+                {/* Gráfico Visual de Desempenho */}
+                {team.totalMatches && team.totalMatches > 0 && (
+                  <div className="mt-6">
+                    <h4 className="font-medium mb-3 text-sm text-muted-foreground">Desempenho Geral</h4>
+                    <div className="flex h-8 rounded-full overflow-hidden">
+                      {team.wins && team.wins > 0 && (
+                        <div 
+                          className="bg-gradient-to-r from-green-500 to-green-600 flex items-center justify-center text-white text-xs font-medium"
+                          style={{ width: `${(team.wins / team.totalMatches) * 100}%` }}
+                        >
+                          {team.wins > 2 && `${team.wins}V`}
+                        </div>
+                      )}
+                      {team.losses && team.losses > 0 && (
+                        <div 
+                          className="bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center text-white text-xs font-medium"
+                          style={{ width: `${(team.losses / team.totalMatches) * 100}%` }}
+                        >
+                          {team.losses > 2 && `${team.losses}D`}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex justify-between mt-2 text-xs text-muted-foreground">
+                      <span>Vitórias: {team.wins || 0}</span>
+                      <span>Derrotas: {team.losses || 0}</span>
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Pontuação e Ranking */}
+            {team.points !== undefined && (
+              <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg">
+                <CardHeader>
+                  <h3 className="text-xl font-semibold">Pontuação e Ranking</h3>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-center p-8 bg-gradient-to-br from-orange-50 to-blue-50 rounded-xl">
+                    <Star className="h-12 w-12 mx-auto mb-3 text-orange-500" />
+                    <p className="text-5xl font-bold bg-gradient-to-r from-orange-600 to-blue-600 bg-clip-text text-transparent mb-2">
+                      {team.points}
+                    </p>
+                    <p className="text-muted-foreground">Pontos no Ranking</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* ABA: INFORMAÇÕES */}
+          <TabsContent value="info" className="space-y-6">
+            {/* Sobre o Time */}
+            {team.bio && (
+              <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg">
+                <CardHeader>
+                  <h3 className="text-xl font-semibold">Sobre o Time</h3>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground whitespace-pre-wrap">{team.bio}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Comissão Técnica */}
+            {(team.coach || team.assistantCoach || team.physicalTrainer || team.president) && (
+              <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg">
+                <CardHeader>
+                  <h3 className="text-xl font-semibold">Comissão Técnica e Diretoria</h3>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {team.president && (
+                      <div className="p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200">
+                        <p className="text-sm text-muted-foreground mb-1">Presidente</p>
+                        <p className="font-semibold text-purple-700">{team.president}</p>
+                      </div>
+                    )}
+                    {team.coach && (
+                      <div className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+                        <p className="text-sm text-muted-foreground mb-1">Técnico Principal</p>
+                        <p className="font-semibold text-blue-700">{team.coach}</p>
+                      </div>
+                    )}
+                    {team.assistantCoach && (
+                      <div className="p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+                        <p className="text-sm text-muted-foreground mb-1">Auxiliar Técnico</p>
+                        <p className="font-semibold text-green-700">{team.assistantCoach}</p>
+                      </div>
+                    )}
+                    {team.physicalTrainer && (
+                      <div className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
+                        <p className="text-sm text-muted-foreground mb-1">Preparador Físico</p>
+                        <p className="font-semibold text-orange-700">{team.physicalTrainer}</p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Informações da Arena */}
+            {(team.arena || team.league || team.colors || team.mascot) && (
+              <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg">
+                <CardHeader>
+                  <h3 className="text-xl font-semibold">Informações Adicionais</h3>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {team.arena && (
+                      <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                        <MapPin className="h-5 w-5 text-primary mt-0.5" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Arena/Ginásio</p>
+                          <p className="font-medium">{team.arena}</p>
+                        </div>
+                      </div>
+                    )}
+                    {team.league && (
+                      <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                        <Trophy className="h-5 w-5 text-primary mt-0.5" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Liga/Campeonato</p>
+                          <p className="font-medium">{team.league}</p>
+                        </div>
+                      </div>
+                    )}
+                    {team.colors && (
+                      <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                        <Award className="h-5 w-5 text-primary mt-0.5" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Cores Oficiais</p>
+                          <p className="font-medium">{team.colors}</p>
+                        </div>
+                      </div>
+                    )}
+                    {team.mascot && (
+                      <div className="flex items-start gap-3 p-3 bg-muted/30 rounded-lg">
+                        <Star className="h-5 w-5 text-primary mt-0.5" />
+                        <div>
+                          <p className="text-sm text-muted-foreground">Mascote</p>
+                          <p className="font-medium">{team.mascot}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Patrocinadores */}
+            {(team.mainSponsor || (team.sponsors && team.sponsors.length > 0)) && (
+              <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg">
+                <CardHeader>
+                  <h3 className="text-xl font-semibold">Patrocinadores</h3>
+                </CardHeader>
+                <CardContent>
+                  {team.mainSponsor && (
+                    <div className="mb-4 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl border-2 border-yellow-200">
+                      <p className="text-sm text-muted-foreground mb-1">Patrocinador Master</p>
+                      <p className="text-xl font-bold text-orange-600">{team.mainSponsor}</p>
+                    </div>
+                  )}
+                  {team.sponsors && team.sponsors.length > 0 && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-3">Outros Patrocinadores</p>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        {team.sponsors.map((sponsor, index) => (
+                          <div key={index} className="p-3 bg-muted/30 rounded-lg text-center font-medium">
+                            {sponsor}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Contato */}
+            {(team.email || team.phone || team.website) && (
+              <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg">
+                <CardHeader>
+                  <h3 className="text-xl font-semibold">Contato</h3>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {team.email && (
+                      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                        <Mail className="h-5 w-5 text-primary" />
+                        <a href={`mailto:${team.email}`} className="text-primary hover:underline">
+                          {team.email}
+                        </a>
+                      </div>
+                    )}
+                    {team.phone && (
+                      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                        <Phone className="h-5 w-5 text-primary" />
+                        <a href={`tel:${team.phone}`} className="text-primary hover:underline">
+                          {team.phone}
+                        </a>
+                      </div>
+                    )}
+                    {team.website && (
+                      <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg hover:bg-muted/50 transition-colors">
+                        <Globe className="h-5 w-5 text-primary" />
+                        <a href={team.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                          {team.website}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Redes Sociais */}
+            {(team.instagram || team.facebook || team.twitter) && (
+              <Card className="bg-white/80 backdrop-blur-md border-white/50 shadow-lg">
+                <CardHeader>
+                  <h3 className="text-xl font-semibold">Redes Sociais</h3>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-3 flex-wrap">
+                    {team.instagram && (
+                      <a
+                        href={`https://instagram.com/${team.instagram.replace('@', '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-lg hover:from-pink-600 hover:to-purple-600 transition-all"
+                      >
+                        <Instagram className="h-5 w-5" />
+                        <span className="font-medium">{team.instagram}</span>
+                      </a>
+                    )}
+                    {team.facebook && (
+                      <a
+                        href={team.facebook.startsWith('http') ? team.facebook : `https://${team.facebook}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all"
+                      >
+                        <Facebook className="h-5 w-5" />
+                        <span className="font-medium">Facebook</span>
+                      </a>
+                    )}
+                    {team.twitter && (
+                      <a
+                        href={`https://twitter.com/${team.twitter.replace('@', '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2 px-4 py-3 bg-sky-500 text-white rounded-lg hover:bg-sky-600 transition-all"
+                      >
+                        <Twitter className="h-5 w-5" />
+                        <span className="font-medium">{team.twitter}</span>
+                      </a>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
         </Tabs>
       </div>
 
-      {/* Modal de Escalação */}
-      <Dialog open={showRosterModal} onOpenChange={setShowRosterModal}>
-        <DialogContent className="max-w-2xl" aria-describedby="roster-edit-description">
+      {/* Modal Adicionar Jogador */}
+      <Dialog open={showAddPlayerModal} onOpenChange={setShowAddPlayerModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="add-player-team-description">
           <DialogHeader>
-            <DialogTitle>Editar Escalação</DialogTitle>
-            <DialogDescription id="roster-edit-description">
-              Defina os jogadores titulares para cada posição
+            <DialogTitle>Adicionar Atleta ao Elenco</DialogTitle>
+            <DialogDescription id="add-player-team-description">
+              Busque por CPF para vincular atleta cadastrado ou adicione manualmente
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="space-y-4">
-            {['Líbero', 'Central 1', 'Oposto', 'Levantador', 'Central 2', 'Ponteiro'].map((position, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <Label className="w-32">{position}</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o jogador" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {team.players?.map((player) => (
-                      <SelectItem key={player.id} value={player.id}>
-                        #{player.number} {player.name} - {player.position}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+
+          <Tabs value={addPlayerMode} onValueChange={(v) => setAddPlayerMode(v as 'cpf' | 'manual')}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="cpf">
+                <Search className="h-4 w-4 mr-2" />
+                Buscar por CPF
+              </TabsTrigger>
+              <TabsTrigger value="manual">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Adicionar Manualmente
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="cpf" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label>CPF do Atleta</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="000.000.000-00"
+                    value={searchCPF}
+                    onChange={(e) => setSearchCPF(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearchCPF()}
+                  />
+                  <Button onClick={handleSearchCPF} disabled={searchingCPF}>
+                    {searchingCPF ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Buscar"
+                    )}
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  O atleta deve estar cadastrado no sistema VolleyPro
+                </p>
               </div>
-            ))}
-          </div>
+
+              {athleteFound && (
+                <Card className="bg-primary/5 border-primary/20">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={athleteFound.photoUrl} alt={athleteFound.name} />
+                        <AvatarFallback>{athleteFound.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h4 className="font-medium">{athleteFound.name}</h4>
+                        <p className="text-sm text-muted-foreground">{athleteFound.position}</p>
+                        <div className="flex gap-4 mt-2 text-sm">
+                          {athleteFound.age && <span>{athleteFound.age} anos</span>}
+                          {athleteFound.height && <span>{formatHeight(athleteFound.height)}</span>}
+                        </div>
+                      </div>
+                      <Badge className="bg-primary">Encontrado!</Badge>
+                    </div>
+
+                    <div className="mt-4 space-y-2">
+                      <Label>Número da Camisa</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="99"
+                        value={newPlayer.number || ''}
+                        onChange={(e) => setNewPlayer({ ...newPlayer, number: parseInt(e.target.value) || 0 })}
+                        placeholder="Ex: 10"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="manual" className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 space-y-2">
+                  <Label>Nome Completo *</Label>
+                  <Input
+                    value={newPlayer.name}
+                    onChange={(e) => setNewPlayer({ ...newPlayer, name: e.target.value })}
+                    placeholder="Nome do atleta"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Posição *</Label>
+                  <Select 
+                    value={newPlayer.position} 
+                    onValueChange={(value) => setNewPlayer({ ...newPlayer, position: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {positions.map(pos => (
+                        <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Número da Camisa *</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="99"
+                    value={newPlayer.number || ''}
+                    onChange={(e) => setNewPlayer({ ...newPlayer, number: parseInt(e.target.value) || 0 })}
+                    placeholder="Ex: 10"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Idade (opcional)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    value={newPlayer.age || ''}
+                    onChange={(e) => setNewPlayer({ ...newPlayer, age: parseInt(e.target.value) || undefined })}
+                    placeholder="Ex: 25"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Altura em cm (opcional)</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="250"
+                    value={newPlayer.height || ''}
+                    onChange={(e) => setNewPlayer({ ...newPlayer, height: parseInt(e.target.value) || undefined })}
+                    placeholder="Ex: 192"
+                  />
+                </div>
+
+                <div className="col-span-2 space-y-2">
+                  <Label>URL da Foto (opcional)</Label>
+                  <Input
+                    value={newPlayer.photoUrl}
+                    onChange={(e) => setNewPlayer({ ...newPlayer, photoUrl: e.target.value })}
+                    placeholder="https://exemplo.com/foto.jpg"
+                  />
+                </div>
+              </div>
+
+              {/* Preview do Jogador */}
+              {(newPlayer.name || newPlayer.position) && (
+                <Card className="bg-muted/50">
+                  <CardContent className="pt-4">
+                    <p className="text-sm text-muted-foreground mb-3">Preview:</p>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={newPlayer.photoUrl} />
+                        <AvatarFallback>{newPlayer.name?.[0] || '?'}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{newPlayer.name || 'Nome do atleta'}</p>
+                        <div className="flex gap-2">
+                          {newPlayer.number > 0 && (
+                            <Badge variant="outline">#{newPlayer.number}</Badge>
+                          )}
+                          {newPlayer.position && (
+                            <Badge variant="outline">{newPlayer.position}</Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+          </Tabs>
 
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRosterModal(false)}>
-              Cancelar
-            </Button>
-            <Button onClick={() => {
-              toast.success('Escalação atualizada!');
-              setShowRosterModal(false);
+            <Button variant="outline" onClick={() => {
+              setShowAddPlayerModal(false);
+              setAddPlayerMode('cpf');
+              setSearchCPF("");
+              setAthleteFound(null);
+              setNewPlayer({
+                name: '',
+                position: '',
+                number: 0,
+                age: undefined,
+                height: undefined,
+                photoUrl: ''
+              });
             }}>
-              <Save className="h-4 w-4 mr-2" />
-              Salvar Escalação
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Modal de Avaliação de Atleta */}
-      <Dialog open={showEvaluationModal} onOpenChange={setShowEvaluationModal}>
-        <DialogContent aria-describedby="evaluation-description">
-          <DialogHeader>
-            <DialogTitle>Avaliar {selectedPlayer?.name}</DialogTitle>
-            <DialogDescription id="evaluation-description">
-              Avalie o desempenho do atleta em diferentes aspectos
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            {/* Ataque */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label>Ataque</Label>
-                <span className="text-sm font-medium">{evaluation.attack}/100</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={evaluation.attack}
-                onChange={(e) => setEvaluation({...evaluation, attack: parseInt(e.target.value)})}
-                className="w-full"
-              />
-            </div>
-
-            {/* Defesa */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label>Defesa</Label>
-                <span className="text-sm font-medium">{evaluation.defense}/100</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={evaluation.defense}
-                onChange={(e) => setEvaluation({...evaluation, defense: parseInt(e.target.value)})}
-                className="w-full"
-              />
-            </div>
-
-            {/* Saque */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label>Saque</Label>
-                <span className="text-sm font-medium">{evaluation.serve}/100</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={evaluation.serve}
-                onChange={(e) => setEvaluation({...evaluation, serve: parseInt(e.target.value)})}
-                className="w-full"
-              />
-            </div>
-
-            {/* Bloqueio */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Label>Bloqueio</Label>
-                <span className="text-sm font-medium">{evaluation.block}/100</span>
-              </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={evaluation.block}
-                onChange={(e) => setEvaluation({...evaluation, block: parseInt(e.target.value)})}
-                className="w-full"
-              />
-            </div>
-
-            {/* Nota Geral (calculada) */}
-            <div className="p-4 bg-muted rounded-lg">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">Nota Geral</span>
-                <span className="text-2xl font-bold text-primary">
-                  {Math.round((evaluation.attack + evaluation.defense + evaluation.serve + evaluation.block) / 4)}
-                </span>
-              </div>
-            </div>
-
-            {/* Observações */}
-            <div>
-              <Label>Observações (opcional)</Label>
-              <Textarea
-                placeholder="Adicione observações sobre o desempenho do atleta..."
-                value={evaluation.notes}
-                onChange={(e) => setEvaluation({...evaluation, notes: e.target.value})}
-                rows={3}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEvaluationModal(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSaveEvaluation}>
-              <Save className="h-4 w-4 mr-2" />
-              Salvar Avaliação
+            <Button 
+              onClick={handleAddPlayer}
+              disabled={
+                (addPlayerMode === 'cpf' && !athleteFound) ||
+                (addPlayerMode === 'manual' && (!newPlayer.name || !newPlayer.position))
+              }
+              className="bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white"
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Adicionar ao Elenco
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Confirmação para remover jogador */}
+      {/* Modal Editar Jogador */}
+      {editingPlayer && (
+        <Dialog open={showEditPlayerModal} onOpenChange={setShowEditPlayerModal}>
+          <DialogContent aria-describedby="edit-player-description">
+            <DialogHeader>
+              <DialogTitle>Editar Jogador</DialogTitle>
+              <DialogDescription id="edit-player-description">
+                Atualize as informações do jogador {editingPlayer.name}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Nome</Label>
+                <Input
+                  value={editingPlayer.name}
+                  onChange={(e) => setEditingPlayer({ ...editingPlayer, name: e.target.value })}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Posição</Label>
+                  <Select 
+                    value={editingPlayer.position} 
+                    onValueChange={(value) => setEditingPlayer({ ...editingPlayer, position: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {positions.map(pos => (
+                        <SelectItem key={pos} value={pos}>{pos}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Número</Label>
+                  <Input
+                    type="number"
+                    value={editingPlayer.number}
+                    onChange={(e) => setEditingPlayer({ ...editingPlayer, number: parseInt(e.target.value) })}
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isCaptain"
+                    checked={editingPlayer.isCaptain || false}
+                    onChange={(e) => setEditingPlayer({ ...editingPlayer, isCaptain: e.target.checked })}
+                    className="rounded"
+                  />
+                  <Label htmlFor="isCaptain" className="cursor-pointer">Capitão</Label>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isStarter"
+                    checked={editingPlayer.isStarter || false}
+                    onChange={(e) => setEditingPlayer({ ...editingPlayer, isStarter: e.target.checked })}
+                    className="rounded"
+                  />
+                  <Label htmlFor="isStarter" className="cursor-pointer">Titular</Label>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => {
+                setShowEditPlayerModal(false);
+                setEditingPlayer(null);
+              }}>
+                Cancelar
+              </Button>
+              <Button onClick={handleSavePlayerEdit}>
+                <Save className="h-4 w-4 mr-2" />
+                Salvar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Confirmação de Exclusão */}
       <AlertDialog open={showDeletePlayerConfirm} onOpenChange={setShowDeletePlayerConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Remover {selectedPlayer?.name}?</AlertDialogTitle>
+            <AlertDialogTitle>Remover Jogador</AlertDialogTitle>
             <AlertDialogDescription>
-              Tem certeza que deseja remover este jogador do elenco? Esta ação não pode ser desfeita.
-              O jogador será movido para o mural de ex-jogadores.
+              Tem certeza que deseja remover {selectedPlayer?.name} do elenco?
+              Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={performDeletePlayer} className="bg-destructive">
-              Sim, remover
+            <AlertDialogAction onClick={handleDeletePlayer} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Remover
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Confirmação para deixar de seguir */}
-      <AlertDialog open={showUnfollowConfirm} onOpenChange={setShowUnfollowConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Deixar de seguir {team.name}?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Tem certeza que deseja deixar de seguir este time? Você não verá mais as atualizações no seu feed.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={performUnfollow}>
-              Sim, deixar de seguir
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-}
-
-// Componente auxiliar para posições na quadra
-function PlayerPosition({ position, label }: { position: string; label: string }) {
-  return (
-    <div className="bg-white rounded-lg p-3 text-center border-2 border-orange-400 shadow-md">
-      <div className="text-2xl font-bold text-orange-600 mb-1">{position}</div>
-      <div className="text-xs text-gray-600">{label}</div>
-      <div className="text-xs text-gray-400 mt-1">Selecione</div>
     </div>
   );
 }

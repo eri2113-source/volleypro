@@ -19,6 +19,7 @@ export function Teams({ onSelectTeam }: TeamsProps) {
   const [teams, setTeams] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadTeams();
@@ -29,8 +30,14 @@ export function Teams({ onSelectTeam }: TeamsProps) {
     try {
       const session = await authApi.getSession();
       setIsAuthenticated(!!session);
+      // Pega o ID do usuário logado para filtrar da lista
+      if (session?.user?.id) {
+        setCurrentUserId(session.user.id);
+        console.log('👤 Usuário logado ID:', session.user.id);
+      }
     } catch (error) {
       setIsAuthenticated(false);
+      setCurrentUserId(null);
     }
   }
 
@@ -68,6 +75,13 @@ export function Teams({ onSelectTeam }: TeamsProps) {
 
   const filteredTeams = teams.filter((team) => {
     if (!team) return false;
+    
+    // 🎯 NOVO: Exclui o time do próprio usuário logado
+    if (currentUserId && team.id.toString() === currentUserId) {
+      console.log('🚫 Excluindo meu próprio time da lista:', team.name);
+      return false;
+    }
+    
     return (
       team.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       team.city?.toLowerCase().includes(searchQuery.toLowerCase())

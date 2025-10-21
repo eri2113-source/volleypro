@@ -277,9 +277,12 @@ export function Photos() {
       {/* Photo Detail Dialog */}
       <Dialog open={!!selectedPhoto} onOpenChange={() => setSelectedPhoto(null)}>
         <DialogContent className="max-w-4xl p-0" aria-describedby="photo-detail-description">
-          <DialogDescription id="photo-detail-description" className="sr-only">
-            Visualização detalhada da foto
-          </DialogDescription>
+          <DialogHeader className="sr-only">
+            <DialogTitle>Detalhes da Foto</DialogTitle>
+            <DialogDescription id="photo-detail-description">
+              Visualização detalhada da foto
+            </DialogDescription>
+          </DialogHeader>
           {selectedPhoto && (
             <div className="grid md:grid-cols-2">
               <div className="bg-black flex items-center justify-center">
@@ -290,23 +293,18 @@ export function Photos() {
                 />
               </div>
               <div className="p-6 space-y-4">
-                <DialogHeader>
-                  <div className="flex items-center gap-3">
-                    <Avatar>
-                      <AvatarImage src={selectedPhoto.author.avatar} />
-                      <AvatarFallback>
-                        {selectedPhoto.author.name.substring(0, 2).toUpperCase()}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <DialogTitle>{selectedPhoto.author.name}</DialogTitle>
-                      <DialogDescription className="sr-only">
-                        Foto publicada em {selectedPhoto.createdAt}
-                      </DialogDescription>
-                      <p className="text-sm text-muted-foreground">{selectedPhoto.createdAt}</p>
-                    </div>
+                <div className="flex items-center gap-3">
+                  <Avatar>
+                    <AvatarImage src={selectedPhoto.author.avatar} />
+                    <AvatarFallback>
+                      {selectedPhoto.author.name.substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold">{selectedPhoto.author.name}</p>
+                    <p className="text-sm text-muted-foreground">{selectedPhoto.createdAt}</p>
                   </div>
-                </DialogHeader>
+                </div>
 
                 <p>{selectedPhoto.caption}</p>
 

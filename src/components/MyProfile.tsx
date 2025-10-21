@@ -1,44 +1,95 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Edit, Trophy, Calendar, Ruler, Weight, Users, MapPin, Shield, Crown } from "lucide-react";
+import { 
+  ArrowLeft, Edit, Trophy, MapPin, Users, UserPlus, X, Save, Loader2
+} from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { userApi, masterAdminApi } from "../lib/api";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner@2.0.3";
-import { formatHeight, formatWeight } from "../utils/formatters";
+import { formatHeight } from "../utils/formatters";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "./ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 
 interface MyProfileProps {
   onBack: () => void;
-  onEditProfile: () => void;
+  onEditProfile?: () => void;
+}
+
+interface Player {
+  id: string;
+  name: string;
+  position: string;
+  number: number;
+  age?: number;
+  height?: number;
+  photoUrl?: string;
 }
 
 export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isMaster, setIsMaster] = useState(false);
+  
+  // Estados para times
+  const [players, setPlayers] = useState<Player[]>([]);
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [showDeletePlayerConfirm, setShowDeletePlayerConfirm] = useState(false);
+  const [showAddPlayerModal, setShowAddPlayerModal] = useState(false);
+  const [addPlayerMode, setAddPlayerMode] = useState<'cpf' | 'manual'>('cpf');
+  const [searchCPF, setSearchCPF] = useState("");
+  const [searchingCPF, setSearchingCPF] = useState(false);
+  const [athleteFound, setAthleteFound] = useState<any>(null);
+  const [newPlayer, setNewPlayer] = useState({
+    name: "",
+    position: "",
+    number: "",
+    age: "",
+    height: "",
+    photoUrl: ""
+  });
 
   useEffect(() => {
     loadProfile();
     checkMasterStatus();
   }, []);
 
+  useEffect(() => {
+    if (profile?.userType === 'team') {
+      loadTeamPlayers();
+    }
+  }, [profile]);
+
   async function loadProfile() {
     setLoading(true);
     try {
-      console.log("🔄 Carregando perfil do usuário...");
       const { profile: userProfile } = await userApi.getCurrentUser();
-      console.log("📊 Meu perfil carregado:", userProfile);
-      console.log("📸 Photo URL:", userProfile?.photoUrl);
-      console.log("📊 Followers:", userProfile?.followers, "| Following:", userProfile?.following);
+      console.log("📊 Perfil carregado:", userProfile);
       setProfile(userProfile);
     } catch (error: any) {
       console.error("❌ Erro ao carregar perfil:", error);
-      toast.error("Erro ao carregar perfil", {
-        description: error.message || "Tente fazer login novamente"
-      });
+      toast.error("Erro ao carregar perfil");
     } finally {
       setLoading(false);
     }
@@ -48,163 +99,212 @@ export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
     try {
       const { isMaster: masterStatus } = await masterAdminApi.checkMasterStatus();
       setIsMaster(masterStatus);
-      if (masterStatus) {
-        console.log("👑 MASTER USER no perfil!");
-      }
-    } catch (error: any) {
-      // Silenciar erros - não é crítico
+    } catch (error) {
       setIsMaster(false);
     }
   }
 
+  async function loadTeamPlayers() {
+    try {
+      // Buscar jogadores reais do banco de dados
+      // TODO: Implementar endpoint GET /teams/{teamId}/players
+      setPlayers([]);
+    } catch (error) {
+      console.error('Erro ao carregar jogadores:', error);
+      setPlayers([]);
+    }
+  }
+
+  async function handleSearchCPF() {
+    if (!searchCPF.trim()) {
+      toast.error("Digite um CPF válido");
+      return;
+    }
+
+    setSearchingCPF(true);
+    try {
+      // Buscar atleta real por CPF no banco de dados
+      // TODO: Implementar endpoint GET /athletes/search?cpf={cpf}
+      
+      // Por enquanto, retorna erro até implementar backend
+      throw new Error("Funcionalidade requer implementação backend");
+      
+    } catch (error) {
+      console.error('Erro ao buscar atleta por CPF:', error);
+      toast.error("Atleta não encontrado no sistema. Adicione manualmente.");
+      setAthleteFound(null);
+    } finally {
+      setSearchingCPF(false);
+    }
+  }
+
+  async function handleAddAthleteFromCPF() {
+    if (!athleteFound) return;
+
+    const newPlayer: Player = {
+      id: Date.now().toString(),
+      name: athleteFound.name,
+      position: athleteFound.position,
+      number: players.length + 1,
+      age: athleteFound.age,
+      height: athleteFound.height,
+      photoUrl: athleteFound.photoUrl
+    };
+
+    setPlayers([...players, newPlayer]);
+    toast.success(`${athleteFound.name} adicionado ao elenco!`);
+    
+    setShowAddPlayerModal(false);
+    setSearchCPF("");
+    setAthleteFound(null);
+    setAddPlayerMode('cpf');
+  }
+
+  async function handleAddManualPlayer() {
+    if (!newPlayer.name || !newPlayer.position || !newPlayer.number) {
+      toast.error("Preencha todos os campos obrigatórios");
+      return;
+    }
+
+    const playerToAdd: Player = {
+      id: Date.now().toString(),
+      name: newPlayer.name,
+      position: newPlayer.position,
+      number: parseInt(newPlayer.number),
+      age: newPlayer.age ? parseInt(newPlayer.age) : undefined,
+      height: newPlayer.height ? parseInt(newPlayer.height) : undefined,
+      photoUrl: newPlayer.photoUrl || undefined
+    };
+
+    setPlayers([...players, playerToAdd]);
+    toast.success(`${newPlayer.name} adicionado ao elenco!`);
+    
+    setShowAddPlayerModal(false);
+    setNewPlayer({
+      name: "",
+      position: "",
+      number: "",
+      age: "",
+      height: "",
+      photoUrl: ""
+    });
+    setAddPlayerMode('cpf');
+  }
+
+  function handleDeletePlayer() {
+    if (!selectedPlayer) return;
+    
+    setPlayers(players.filter(p => p.id !== selectedPlayer.id));
+    toast.success("Jogador removido do elenco");
+    setShowDeletePlayerConfirm(false);
+    setSelectedPlayer(null);
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Carregando perfil...</p>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">Perfil não encontrado</p>
-          <Button onClick={onBack}>Voltar</Button>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5">
+        <p>Perfil não encontrado</p>
       </div>
     );
   }
 
-  const displayName = profile.nickname || profile.name;
-  const initials = displayName.split(' ').map((n: string) => n[0]).join('').toUpperCase();
-  
-  // Calcular idade se tiver data de nascimento
-  const calculateAge = (birthDate: string) => {
-    if (!birthDate) return null;
-    const today = new Date();
-    const birth = new Date(birthDate);
-    let age = today.getFullYear() - birth.getFullYear();
-    const monthDiff = today.getMonth() - birth.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
-  const age = profile.dateOfBirth ? calculateAge(profile.dateOfBirth) : null;
+  const isTeam = profile.userType === 'team';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 w-full max-w-full overflow-x-hidden">
-      <div className="bg-gradient-to-br from-primary via-primary to-secondary pb-20 sm:pb-32 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmZmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDE0YzMuMzEgMCA2IDIuNjkgNiA2cy0yLjY5IDYtNiA2LTYtMi42OS02LTYgMi42OS02IDYtNnpNNiAzNGMzLjMxIDAgNiAyLjY5IDYgNnMtMi42OSA2LTYgNi02LTIuNjktNi02IDIuNjktNiA2LTZ6TTM2IDM0YzMuMzEgMCA2IDIuNjkgNiA2cy0yLjY5IDYtNiA2LTYtMi42OS02LTYgMi42OS02IDYtNnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-30"></div>
-        <div className="container mx-auto py-4 sm:py-6 relative z-10 px-4">
-          <Button variant="ghost" onClick={onBack} className="mb-4 sm:mb-6 text-white hover:bg-white/20 hover:text-white">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-primary to-secondary p-6 shadow-lg">
+        <div className="container mx-auto max-w-5xl">
+          <div className="flex items-center justify-between mb-6">
+            <Button
+              variant="ghost"
+              onClick={onBack}
+              className="text-white hover:bg-white/20"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Voltar
+            </Button>
+            
+            {onEditProfile && (
+              <Button
+                onClick={onEditProfile}
+                className="bg-white text-primary hover:bg-white/90"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Editar Perfil
+              </Button>
+            )}
+          </div>
 
-          {/* Layout responsivo: vertical em mobile, horizontal em desktop */}
-          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-8">
-            <Avatar className="h-28 w-28 sm:h-40 sm:w-40 border-4 border-white shadow-2xl ring-4 ring-white/20 shrink-0">
-              {profile.photoUrl ? (
-                <AvatarImage 
-                  src={profile.photoUrl} 
-                  alt={displayName}
-                  className="object-cover"
-                />
-              ) : null}
-              <AvatarFallback className="text-4xl bg-gradient-to-br from-white to-gray-100 text-primary">
-                {initials}
+          <div className="flex flex-col sm:flex-row items-center gap-6">
+            <Avatar className="h-24 w-24 sm:h-32 sm:w-32 ring-4 ring-white/20 shadow-2xl">
+              <AvatarImage src={profile.photoUrl} alt={profile.name} />
+              <AvatarFallback className="text-2xl sm:text-3xl bg-white/20 text-white">
+                {profile.name?.[0]?.toUpperCase() || '?'}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1 w-full">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
-                <div className="text-center sm:text-left">
-                  <div className="flex flex-col sm:flex-row items-center sm:items-center justify-center sm:justify-start gap-2 sm:gap-3 mb-2">
-                    <h1 className="text-white text-xl sm:text-2xl md:text-3xl">{displayName}</h1>
-                    {profile.nickname && profile.name !== profile.nickname && (
-                      <span className="text-white/80 text-sm sm:text-base md:text-lg">({profile.name})</span>
-                    )}
-                    {isMaster && (
-                      <Badge className="bg-gradient-to-r from-yellow-400 to-amber-500 text-black border-0 shadow-lg text-xs">
-                        <Crown className="h-3 w-3 mr-1" />
-                        MASTER
-                      </Badge>
-                    )}
-                  </div>
-                  {profile.userType === 'athlete' && profile.position && (
-                    <p className="text-white/90 text-base sm:text-lg md:text-xl">{profile.position}</p>
+
+            <div className="flex-1 text-center sm:text-left">
+              <div className="flex flex-col sm:flex-row items-center gap-3 mb-2">
+                <h1 className="text-white text-2xl sm:text-3xl">
+                  {profile.nickname || profile.name}
+                </h1>
+                {profile.verified && (
+                  <Badge className="bg-white/20 text-white">
+                    ✓ Verificado
+                  </Badge>
+                )}
+              </div>
+              
+              {isTeam ? (
+                <div className="flex flex-wrap items-center gap-3 justify-center sm:justify-start text-white/90">
+                  {profile.city && (
+                    <span className="flex items-center gap-1 text-sm">
+                      <MapPin className="h-4 w-4" />
+                      {profile.city}
+                    </span>
                   )}
-                  {profile.currentTeam && (
-                    <p className="text-white/80 flex items-center justify-center sm:justify-start gap-2 mt-1 text-sm sm:text-base">
-                      <Users className="h-4 w-4" />
-                      {profile.currentTeam}
-                    </p>
+                  {profile.founded && (
+                    <span className="text-sm">Fundado em {profile.founded}</span>
                   )}
                 </div>
-                <Button 
-                  onClick={onEditProfile}
-                  size="sm"
-                  className="bg-white text-primary hover:bg-white/90 mx-auto sm:mx-0"
-                >
-                  <Edit className="h-4 w-4 mr-1 sm:mr-2" />
-                  <span className="text-xs sm:text-sm">Editar Perfil</span>
-                </Button>
-              </div>
-
-              {profile.city && (
-                <Badge variant="secondary" className="mb-3 sm:mb-4 mx-auto sm:mx-0 block w-fit">
-                  <MapPin className="h-3 w-3 mr-1" />
-                  {profile.city}
-                </Badge>
+              ) : (
+                <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                  {profile.position && (
+                    <Badge className="bg-white/20 text-white">
+                      {profile.position}
+                    </Badge>
+                  )}
+                  {profile.currentTeam && (
+                    <Badge className="bg-white/20 text-white">
+                      {profile.currentTeam}
+                    </Badge>
+                  )}
+                </div>
               )}
 
-              <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                {profile.userType === 'athlete' && (
-                  <>
-                    {age && (
-                      <Card className="overflow-hidden">
-                        <CardContent className="p-2 sm:p-4 text-center">
-                          <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mx-auto mb-1 sm:mb-2 text-muted-foreground" />
-                          <p className="text-muted-foreground text-xs sm:text-sm">Idade</p>
-                          <p className="text-base sm:text-xl md:text-2xl font-semibold">{age}</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                    {profile.height && (
-                      <Card className="overflow-hidden">
-                        <CardContent className="p-2 sm:p-4 text-center">
-                          <Ruler className="h-4 w-4 sm:h-5 sm:w-5 mx-auto mb-1 sm:mb-2 text-muted-foreground" />
-                          <p className="text-muted-foreground text-xs sm:text-sm">Altura</p>
-                          <p className="text-base sm:text-xl md:text-2xl font-semibold">{formatHeight(profile.height)}</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                    {profile.weight && (
-                      <Card className="overflow-hidden">
-                        <CardContent className="p-2 sm:p-4 text-center">
-                          <Weight className="h-4 w-4 sm:h-5 sm:w-5 mx-auto mb-1 sm:mb-2 text-muted-foreground" />
-                          <p className="text-muted-foreground text-xs sm:text-sm">Peso</p>
-                          <p className="text-base sm:text-xl md:text-2xl font-semibold">{formatWeight(profile.weight)}</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                    {profile.gender && (
-                      <Card className="overflow-hidden">
-                        <CardContent className="p-2 sm:p-4 text-center">
-                          <Shield className="h-4 w-4 sm:h-5 sm:w-5 mx-auto mb-1 sm:mb-2 text-muted-foreground" />
-                          <p className="text-muted-foreground text-xs sm:text-sm">Sexo</p>
-                          <p className="text-base sm:text-xl md:text-2xl font-semibold">
-                            {profile.gender === 'M' ? 'M' : profile.gender === 'F' ? 'F' : profile.gender}
-                          </p>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </>
+              <div className="flex gap-6 mt-4 justify-center sm:justify-start">
+                <div className="text-center">
+                  <p className="text-white text-xl">{profile.followers || 0}</p>
+                  <p className="text-white/80 text-sm">Seguidores</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-white text-xl">{profile.following || 0}</p>
+                  <p className="text-white/80 text-sm">Seguindo</p>
+                </div>
+                {isTeam && (
+                  <div className="text-center">
+                    <p className="text-white text-xl">{profile.championships || 0}</p>
+                    <p className="text-white/80 text-sm">Títulos</p>
+                  </div>
                 )}
               </div>
             </div>
@@ -212,19 +312,14 @@ export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
         </div>
       </div>
 
-      <div className="container mx-auto -mt-16 sm:-mt-24 px-4">
-        <Tabs defaultValue="info" className="space-y-4 sm:space-y-6 w-full max-w-full overflow-hidden">
-          <div className="overflow-x-auto scrollbar-hide">
-            <TabsList className="inline-flex w-auto min-w-full sm:min-w-0">
-              <TabsTrigger value="info" className="text-xs sm:text-sm px-3 sm:px-4">Informações</TabsTrigger>
-              {profile.userType === 'athlete' && (
-                <>
-                  <TabsTrigger value="history" className="text-xs sm:text-sm px-3 sm:px-4">Histórico</TabsTrigger>
-                  <TabsTrigger value="achievements" className="text-xs sm:text-sm px-3 sm:px-4">Conquistas</TabsTrigger>
-                </>
-              )}
-            </TabsList>
-          </div>
+      {/* Content */}
+      <div className="container mx-auto max-w-5xl p-6">
+        <Tabs defaultValue="info" className="space-y-6">
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${isTeam ? 3 : 2}, 1fr)` }}>
+            <TabsTrigger value="info">Informações</TabsTrigger>
+            {isTeam && <TabsTrigger value="roster">Elenco</TabsTrigger>}
+            <TabsTrigger value="achievements">Conquistas</TabsTrigger>
+          </TabsList>
 
           <TabsContent value="info" className="space-y-6">
             <Card>
@@ -236,39 +331,29 @@ export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
                   <p className="text-muted-foreground whitespace-pre-wrap">{profile.bio}</p>
                 ) : (
                   <p className="text-muted-foreground italic">
-                    Nenhuma biografia adicionada. Clique em "Editar Perfil" para adicionar.
+                    Nenhuma biografia adicionada.
                   </p>
                 )}
               </CardContent>
             </Card>
 
-            {profile.userType === 'athlete' && (
+            {!isTeam && profile.position && (
               <Card>
                 <CardHeader>
-                  <h3>Informações do Atleta</h3>
+                  <h3>Dados Técnicos</h3>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent>
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">Nome Completo</p>
-                      <p>{profile.name}</p>
-                    </div>
-                    {profile.nickname && (
+                    {profile.height && (
                       <div>
-                        <p className="text-sm text-muted-foreground">Apelido</p>
-                        <p>{profile.nickname}</p>
+                        <p className="text-sm text-muted-foreground">Altura</p>
+                        <p>{formatHeight(profile.height)}</p>
                       </div>
                     )}
-                    {profile.position && (
+                    {profile.age && (
                       <div>
-                        <p className="text-sm text-muted-foreground">Posição</p>
-                        <p>{profile.position}</p>
-                      </div>
-                    )}
-                    {profile.currentTeam && (
-                      <div>
-                        <p className="text-sm text-muted-foreground">Time Atual</p>
-                        <p>{profile.currentTeam}</p>
+                        <p className="text-sm text-muted-foreground">Idade</p>
+                        <p>{profile.age} anos</p>
                       </div>
                     )}
                   </div>
@@ -277,51 +362,271 @@ export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
             )}
           </TabsContent>
 
-          {profile.userType === 'athlete' && (
-            <>
-              <TabsContent value="history">
-                <Card>
-                  <CardHeader>
+          {isTeam && (
+            <TabsContent value="roster" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Users className="h-5 w-5 text-primary" />
-                      <h3>Histórico de Times</h3>
+                      <h3>Elenco ({players.length})</h3>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    {profile.teamHistory ? (
-                      <p className="text-muted-foreground whitespace-pre-wrap">{profile.teamHistory}</p>
-                    ) : (
-                      <p className="text-muted-foreground italic">
-                        Nenhum histórico adicionado. Adicione seus times anteriores em "Editar Perfil".
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                    <Button onClick={() => setShowAddPlayerModal(true)} size="sm">
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Adicionar Atleta
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {players.length === 0 ? (
+                    <p className="text-center text-muted-foreground py-8">
+                      Nenhum jogador no elenco. Clique em "Adicionar Atleta" para começar.
+                    </p>
+                  ) : (
+                    <div className="grid gap-4">
+                      {players.map((player) => (
+                        <div key={player.id} className="flex items-center gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors">
+                          <Avatar className="h-12 w-12">
+                            <AvatarImage src={player.photoUrl} alt={player.name} />
+                            <AvatarFallback>{player.name[0]}</AvatarFallback>
+                          </Avatar>
+                          
+                          <div className="flex-1">
+                            <h4>{player.name}</h4>
+                            <div className="flex gap-2 mt-1">
+                              <Badge variant="outline" className="text-xs">
+                                #{player.number}
+                              </Badge>
+                              <Badge variant="outline" className="text-xs">
+                                {player.position}
+                              </Badge>
+                            </div>
+                          </div>
 
-              <TabsContent value="achievements">
-                <Card>
-                  <CardHeader>
-                    <div className="flex items-center gap-2">
-                      <Trophy className="h-5 w-5 text-amber-500" />
-                      <h3>Conquistas e Títulos</h3>
+                          <div className="text-right text-sm text-muted-foreground">
+                            {player.height && <p>{formatHeight(player.height)}</p>}
+                            {player.age && <p>{player.age} anos</p>}
+                          </div>
+
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedPlayer(player);
+                              setShowDeletePlayerConfirm(true);
+                            }}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    {profile.achievements ? (
-                      <p className="text-muted-foreground whitespace-pre-wrap">{profile.achievements}</p>
-                    ) : (
-                      <p className="text-muted-foreground italic">
-                        Nenhuma conquista adicionada. Adicione seus títulos em "Editar Perfil".
-                      </p>
-                    )}
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
           )}
+
+          <TabsContent value="achievements">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-5 w-5 text-amber-500" />
+                  <h3>Conquistas e Títulos</h3>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {profile.achievements ? (
+                  <p className="text-muted-foreground whitespace-pre-wrap">{profile.achievements}</p>
+                ) : (
+                  <p className="text-muted-foreground italic">
+                    Nenhuma conquista adicionada.
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modal Adicionar Jogador */}
+      <Dialog open={showAddPlayerModal} onOpenChange={setShowAddPlayerModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="add-player-description">
+          <DialogHeader>
+            <DialogTitle>Adicionar Atleta ao Elenco</DialogTitle>
+            <DialogDescription id="add-player-description">
+              Busque por CPF ou adicione manualmente
+            </DialogDescription>
+          </DialogHeader>
+
+          <Tabs value={addPlayerMode} onValueChange={(v) => setAddPlayerMode(v as 'cpf' | 'manual')}>
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="cpf">Buscar por CPF</TabsTrigger>
+              <TabsTrigger value="manual">Adicionar Manualmente</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="cpf" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label>CPF do Atleta</Label>
+                <div className="flex gap-2">
+                  <Input
+                    placeholder="000.000.000-00"
+                    value={searchCPF}
+                    onChange={(e) => setSearchCPF(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSearchCPF()}
+                  />
+                  <Button onClick={handleSearchCPF} disabled={searchingCPF}>
+                    {searchingCPF ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Buscar"
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              {athleteFound && (
+                <Card className="bg-muted/50">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center gap-4">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={athleteFound.photoUrl} alt={athleteFound.name} />
+                        <AvatarFallback>{athleteFound.name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <h4 className="font-medium">{athleteFound.name}</h4>
+                        <p className="text-sm text-muted-foreground">{athleteFound.position}</p>
+                        <div className="flex gap-4 mt-2 text-sm">
+                          {athleteFound.age && <span>{athleteFound.age} anos</span>}
+                          {athleteFound.height && <span>{formatHeight(athleteFound.height)}</span>}
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
+
+            <TabsContent value="manual" className="space-y-4 mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2 space-y-2">
+                  <Label>Nome Completo *</Label>
+                  <Input
+                    value={newPlayer.name}
+                    onChange={(e) => setNewPlayer({ ...newPlayer, name: e.target.value })}
+                    placeholder="Nome do jogador"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Posição *</Label>
+                  <Select
+                    value={newPlayer.position}
+                    onValueChange={(v) => setNewPlayer({ ...newPlayer, position: v })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Levantador">Levantador</SelectItem>
+                      <SelectItem value="Ponteiro">Ponteiro</SelectItem>
+                      <SelectItem value="Central">Central</SelectItem>
+                      <SelectItem value="Oposto">Oposto</SelectItem>
+                      <SelectItem value="Líbero">Líbero</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Número da Camisa *</Label>
+                  <Input
+                    type="number"
+                    value={newPlayer.number}
+                    onChange={(e) => setNewPlayer({ ...newPlayer, number: e.target.value })}
+                    placeholder="Ex: 10"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Idade</Label>
+                  <Input
+                    type="number"
+                    value={newPlayer.age}
+                    onChange={(e) => setNewPlayer({ ...newPlayer, age: e.target.value })}
+                    placeholder="Ex: 25"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Altura (cm)</Label>
+                  <Input
+                    type="number"
+                    value={newPlayer.height}
+                    onChange={(e) => setNewPlayer({ ...newPlayer, height: e.target.value })}
+                    placeholder="Ex: 185"
+                  />
+                </div>
+
+                <div className="col-span-2 space-y-2">
+                  <Label>URL da Foto (Opcional)</Label>
+                  <Input
+                    value={newPlayer.photoUrl}
+                    onChange={(e) => setNewPlayer({ ...newPlayer, photoUrl: e.target.value })}
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowAddPlayerModal(false);
+              setSearchCPF("");
+              setAthleteFound(null);
+              setNewPlayer({
+                name: "",
+                position: "",
+                number: "",
+                age: "",
+                height: "",
+                photoUrl: ""
+              });
+            }}>
+              Cancelar
+            </Button>
+            <Button onClick={addPlayerMode === 'cpf' ? handleAddAthleteFromCPF : handleAddManualPlayer}>
+              <Save className="h-4 w-4 mr-2" />
+              Adicionar ao Elenco
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Confirmar Remover Jogador */}
+      <AlertDialog open={showDeletePlayerConfirm} onOpenChange={setShowDeletePlayerConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover Jogador</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover <strong>{selectedPlayer?.name}</strong> do elenco?
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowDeletePlayerConfirm(false);
+              setSelectedPlayer(null);
+            }}>
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeletePlayer} className="bg-destructive hover:bg-destructive/90">
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

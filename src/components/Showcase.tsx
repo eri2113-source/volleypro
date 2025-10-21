@@ -255,8 +255,11 @@ export function Showcase({ onSelectAthlete }: ShowcaseProps) {
           <Card key={athlete.id} className="overflow-hidden hover:shadow-xl transition-all duration-300 border-2 hover:border-primary/50">
             <CardContent className="p-0">
               {/* Imagem do Atleta */}
-              <div className="relative aspect-[4/3] bg-gradient-to-br from-primary/10 to-secondary/10">
-                <Avatar className="w-full h-full rounded-none">
+              <div 
+                className="relative aspect-[4/3] bg-gradient-to-br from-primary/10 to-secondary/10 cursor-pointer group"
+                onClick={() => onSelectAthlete(athlete.id)}
+              >
+                <Avatar className="w-full h-full rounded-none transition-transform group-hover:scale-105">
                   <AvatarImage
                     src={athlete.photoUrl || athlete.photo_url}
                     alt={athlete.name}
@@ -279,7 +282,7 @@ export function Showcase({ onSelectAthlete }: ShowcaseProps) {
 
                 {/* Overlay com Nome e Seguidores */}
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent p-4">
-                  <h3 className="text-white mb-1">{athlete.name}</h3>
+                  <h3 className="text-white mb-1 hover:text-primary transition-colors">{athlete.name}</h3>
                   <div className="flex items-center gap-1 text-white/90 text-sm">
                     <Users className="h-4 w-4" />
                     <span>{(athlete.followers || 0).toLocaleString('pt-BR')} seguidores</span>
@@ -391,10 +394,10 @@ export function Showcase({ onSelectAthlete }: ShowcaseProps) {
 
       {/* Modal de Convite */}
       <Dialog open={showInviteModal} onOpenChange={setShowInviteModal}>
-        <DialogContent aria-describedby="invite-athlete-description">
+        <DialogContent aria-describedby="invite-description">
           <DialogHeader>
             <DialogTitle>Convocar Atleta</DialogTitle>
-            <DialogDescription id="invite-athlete-description">
+            <DialogDescription id="invite-description">
               Envie uma mensagem para este atleta convidando-o para seu time.
             </DialogDescription>
           </DialogHeader>
