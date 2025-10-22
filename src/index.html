@@ -27,26 +27,32 @@
     
     <title>VolleyPro - Rede Social do Vôlei</title>
     
-    <!-- Google Tag Manager - Carregado via arquivo externo -->
-    <script src="/gtm.js"></script>
+    <!-- ⚡ ORDEM CORRETA DE CARREGAMENTO ⚡ -->
+    
+    <!-- 1️⃣ Google Tag Manager (GTM) - PRIMEIRO -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MV9D2M4P');</script>
     <!-- End Google Tag Manager -->
     
-    <!-- Google Analytics (gtag.js) -->
+    <!-- 2️⃣ Google Analytics 4 (GA4) - INLINE -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-34HHBM1L6C"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-      gtag('config', 'G-34HHBM1L6C');
+      gtag('config', 'G-34HHBM1L6C', {
+        'send_page_view': true,
+        'page_location': window.location.href,
+        'page_title': document.title
+      });
+      console.log('✅ Google Analytics 4 inicializado: G-34HHBM1L6C');
     </script>
     <!-- End Google Analytics -->
     
-    <!-- Inicializar dataLayer -->
-    <script>
-      window.dataLayer = window.dataLayer || [];
-    </script>
-    
-    <!-- 🔒 BLOQUEIO FIGMA MAKE - EXECUTADO ANTES DE TUDO! -->
+    <!-- 3️⃣ BLOQUEIO FIGMA MAKE -->
     <script src="/figma-blocker.js"></script>
   </head>
   <body>

@@ -143,6 +143,20 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
           const parsedReactions = JSON.parse(savedReactions);
           setPostReactions(parsedReactions);
           console.log('✅ Reações carregadas do cache:', Object.keys(parsedReactions).length, 'posts');
+        } else {
+          // 🆕 Se não há reações salvas, inicializar com exemplos para incentivar engajamento
+          const initialReactions: { [postId: string]: { [emoji: string]: number } } = {};
+          userPosts.slice(0, 5).forEach((post, index) => {
+            // Adicionar reações de exemplo nos primeiros posts
+            initialReactions[post.id] = {
+              '🏐': Math.floor(Math.random() * 8) + 3, // 3-10 reações
+              '🔥': Math.floor(Math.random() * 5) + 2, // 2-6 reações
+              '💪': Math.floor(Math.random() * 4) + 1, // 1-4 reações
+            };
+          });
+          setPostReactions(initialReactions);
+          localStorage.setItem('volleypro_post_reactions', JSON.stringify(initialReactions));
+          console.log('🎉 Reações iniciais criadas para incentivar engajamento');
         }
         
         if (savedUserReactions) {

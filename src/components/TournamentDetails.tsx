@@ -1,8 +1,21 @@
+import { useState, useEffect } from "react";
 import { TournamentOrganizerPanel } from "./TournamentOrganizerPanel";
 import { TournamentNotifications } from "./TournamentNotifications";
 import { TournamentSponsorsPanel } from "./TournamentSponsorsPanel";
+import { TournamentStandings } from "./TournamentStandings";
+import { TournamentSchedule } from "./TournamentSchedule";
+import { TournamentBracket } from "./TournamentBracket";
+import { TournamentMVP } from "./TournamentMVP";
+import { TournamentDraw } from "./TournamentDraw";
 import { AnimatedLEDPanel } from "./AnimatedLEDPanel";
 import { LEDPanelConfigModal } from "./LEDPanelConfigModal";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { toast } from "sonner@2.0.3";
 import { 
   ArrowLeft, 
   Trophy, 
