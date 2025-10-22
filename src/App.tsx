@@ -320,6 +320,7 @@ export default function App() {
     if (showMyProfile) {
       return (
         <MyProfile 
+          key={Date.now()} // Força remontagem do componente
           onBack={() => setShowMyProfile(false)} 
           onEditProfile={() => {
             setShowMyProfile(false);
@@ -646,11 +647,28 @@ export default function App() {
       <ProfileEditModal
         open={showProfileEditModal}
         onClose={() => setShowProfileEditModal(false)}
-        onSuccess={() => {
-          toast.success("Perfil atualizado! Suas mudanças foram salvas. 🎉");
-          // Voltar para a view do perfil se estava vendo
+        onSuccess={async () => {
+          console.log("✅ Perfil atualizado com sucesso!");
+          
+          // Recarregar dados do usuário
+          try {
+            await checkAuth();
+            console.log("✅ Dados do usuário atualizados");
+          } catch (error) {
+            console.error("❌ Erro ao atualizar dados:", error);
+          }
+          
+          // Mostrar toast
+          toast.success("Perfil atualizado! 🎉", {
+            description: "Suas mudanças foram salvas com sucesso"
+          });
+          
+          // Se estava vendo o perfil, reativar a visualização
           if (showMyProfile) {
-            window.location.reload(); // Reload para atualizar dados
+            // Pequeno delay para dar tempo do toast aparecer
+            setTimeout(() => {
+              setShowMyProfile(true);
+            }, 100);
           }
         }}
       />

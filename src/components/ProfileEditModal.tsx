@@ -431,24 +431,32 @@ function ProfileEditModalContent({
     setError(null);
 
     try {
+      console.log("💾 Salvando perfil...", { userId, updates: profile });
+      
       const updatedProfile = {
         ...profile,
         photoUrl: photoUrl || profile.photoUrl,
       };
 
-      await userApi.updateUser(userId, updatedProfile);
+      const response = await userApi.updateUser(userId, updatedProfile);
+      
+      console.log("✅ Resposta da API:", response);
 
       toast.success("Perfil atualizado com sucesso! 🎉");
 
+      // Forçar atualização da UI
       if (onSuccess) {
         onSuccess();
       }
 
-      onClose();
+      // Aguardar um pouco antes de fechar para garantir que a UI atualizou
+      setTimeout(() => {
+        onClose();
+      }, 500);
     } catch (err: any) {
-      console.error("Erro ao salvar perfil:", err);
+      console.error("❌ Erro ao salvar perfil:", err);
       setError(err.message || "Erro ao salvar perfil");
-      toast.error("Erro ao atualizar perfil");
+      toast.error(`Erro ao atualizar perfil: ${err.message || "Erro desconhecido"}`);
     } finally {
       setLoading(false);
     }
