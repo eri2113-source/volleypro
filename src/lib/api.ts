@@ -31,6 +31,7 @@ async function getAuthToken() {
     const { data: { session }, error } = await supabase.auth.getSession();
     
     if (error) {
+      // Apenas logar erro real, não warning
       console.error('❌ Erro ao obter sessão:', error);
       return null;
     }
@@ -42,9 +43,10 @@ async function getAuthToken() {
       return session.access_token;
     }
     
-    console.warn('⚠️ Nenhuma sessão ativa encontrada');
+    // Não logar warning - é normal quando usuário não está logado
     return null;
   } catch (error) {
+    // Apenas logar erro real de execução
     console.error('❌ Erro ao obter token:', error);
     return null;
   }
@@ -54,9 +56,7 @@ async function getAuthToken() {
 async function apiCall(endpoint: string, options: RequestInit = {}, silent = false) {
   const token = await getAuthToken();
   
-  if (!token && !silent) {
-    console.warn('⚠️ Nenhum token de autenticação encontrado');
-  }
+  // Não logar warning de token ausente - é normal para usuários não logados
   
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -167,7 +167,14 @@ export const authApi = {
       });
       console.log("✅ Signup API retornou sucesso");
       return result;
-    } catch (error) {
+    } catch (error: any) {
+      // Melhorar mensagem de erro para email já registrado
+      if (error?.message?.includes('already registered') || 
+          error?.message?.includes('already been registered')) {
+        const betterError = new Error('Email já cadastrado. Por favor, faça login.');
+        betterError.name = 'EmailAlreadyRegistered';
+        throw betterError;
+      }
       console.error("❌ Erro na API de signup:", error);
       throw error;
     }
