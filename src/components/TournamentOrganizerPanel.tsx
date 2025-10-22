@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { MatchResultForm, MatchResult } from "./MatchResultForm";
+import { TournamentSponsorsManager } from "./TournamentSponsorsManager";
 import { 
   Trophy, 
   Calendar, 
@@ -13,7 +14,8 @@ import {
   Play,
   Settings,
   Bell,
-  Users
+  Users,
+  ImagePlus
 } from "lucide-react";
 import { toast } from "sonner@2.0.3";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
@@ -472,6 +474,11 @@ export function TournamentOrganizerPanel({
           </div>
         </CardContent>
       </Card>
+
+      {/* Gerenciamento de Patrocinadores */}
+      <TournamentSponsorsManager
+        tournamentId={tournamentId.toString()}
+      />
     </div>
   );
 }

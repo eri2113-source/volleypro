@@ -3,7 +3,8 @@ import {
   ArrowLeft, MapPin, Users, Heart, Trophy, Calendar, 
   Edit, UserPlus, X, Save, Loader2, Shield, Camera, Mail, Phone,
   Globe, Instagram, Facebook, Twitter, Share2, BarChart3, Clock,
-  Award, Star, TrendingUp, Target, Medal, Flag, Clipboard, Search
+  Award, Star, TrendingUp, Target, Medal, Flag, Clipboard, Search,
+  Settings
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader } from "./ui/card";
@@ -35,6 +36,7 @@ import {
 import { userApi, teamRosterApi } from "../lib/api";
 import { toast } from "sonner@2.0.3";
 import { formatHeight } from "../utils/formatters";
+import { TeamSettingsPanel } from "./TeamSettingsPanel";
 
 interface TeamProfileProps {
   teamId: number;
@@ -119,6 +121,7 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
   const [editMode, setEditMode] = useState(false);
   const [editedTeam, setEditedTeam] = useState<Partial<TeamData>>({});
   const [savingProfile, setSavingProfile] = useState(false);
+  const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   
   // Estados para gerenciamento de elenco
   const [players, setPlayers] = useState<Player[]>([]);
@@ -312,6 +315,56 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
       toast.error('Erro ao salvar perfil');
     } finally {
       setSavingProfile(false);
+    }
+  }
+
+  // Função wrapper para atualizar perfil pelo painel de configurações
+  async function handleUpdateProfile(data: Partial<TeamData>) {
+    try {
+      console.log('💾 Salvando dados do time:', data);
+      // TODO: Integrar com API real
+      await userApi.updateProfile(teamId.toString(), data);
+      
+      setTeam(prev => prev ? { ...prev, ...data } : null);
+      toast.success('Informações atualizadas com sucesso!');
+      
+      // Recarregar perfil
+      await loadTeamProfile();
+    } catch (error) {
+      console.error('Erro ao atualizar perfil:', error);
+      throw error;
+    }
+  }
+
+  // Função wrapper para adicionar jogador pelo painel
+  async function handleAddPlayer(playerData: Partial<Player>) {
+    try {
+      console.log('➕ Adicionando jogador:', playerData);
+      
+      const response = await teamRosterApi.addPlayer(teamId.toString(), {
+        ...playerData,
+        teamId: teamId.toString(),
+      });
+      
+      await loadTeamPlayers();
+      toast.success('Atleta adicionado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao adicionar jogador:', error);
+      throw error;
+    }
+  }
+
+  // Função wrapper para atualizar jogador
+  async function handleUpdatePlayer(playerId: string, data: Partial<Player>) {
+    try {
+      console.log('✏️ Atualizando jogador:', playerId, data);
+      
+      await teamRosterApi.updatePlayer(teamId.toString(), playerId, data);
+      await loadTeamPlayers();
+      toast.success('Atleta atualizado com sucesso!');
+    } catch (error) {
+      console.error('Erro ao atualizar jogador:', error);
+      throw error;
     }
   }
 
@@ -530,16 +583,16 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
           Voltar
         </Button>
 
-        {/* Botão Editar Cover (se for dono) */}
+        {/* Botão Configurações (se for dono) */}
         {isOwner && (
           <Button
-            onClick={() => setEditMode(true)}
+            onClick={() => setShowSettingsPanel(true)}
             variant="secondary"
             size="sm"
-            className="absolute top-4 right-4 backdrop-blur-sm bg-white/90 hover:bg-white"
+            className="absolute top-4 right-4 backdrop-blur-sm bg-white/90 hover:bg-white shadow-lg"
           >
-            <Camera className="h-4 w-4 mr-2" />
-            Editar Capa
+            <Settings className="h-4 w-4 mr-2" />
+            Configurações
           </Button>
         )}
       </div>
@@ -1420,6 +1473,27 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Painel de Configurações Unificado */}
+      {showSettingsPanel && team && (
+        <TeamSettingsPanel
+          teamData={team}
+          players={players}
+          onSave={async (data) => {
+            await handleUpdateProfile(data);
+          }}
+          onAddPlayer={async (playerData) => {
+            await handleAddPlayer(playerData);
+          }}
+          onUpdatePlayer={async (playerId, data) => {
+            await handleUpdatePlayer(playerId, data);
+          }}
+          onRemovePlayer={async (playerId) => {
+            await handleDeletePlayer(playerId);
+          }}
+          onClose={() => setShowSettingsPanel(false)}
+        />
+      )}
 
       {/* Modal Adicionar Jogador */}
       <Dialog open={showAddPlayerModal} onOpenChange={setShowAddPlayerModal}>

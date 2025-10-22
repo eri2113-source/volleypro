@@ -12,6 +12,7 @@ import { TournamentDraw } from "./TournamentDraw";
 import { TournamentBracket } from "./TournamentBracket";
 import { TournamentOrganizerPanel } from "./TournamentOrganizerPanel";
 import { TournamentNotifications } from "./TournamentNotifications";
+import { TournamentSponsorsPanel } from "./TournamentSponsorsPanel";
 import { 
   ArrowLeft, 
   Trophy, 
@@ -109,7 +110,29 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
             "3": { teams: 6, matches: 12, liveMatches: 0 },
             "4": { teams: 4, matches: 8, liveMatches: 0 }
           }
-        }
+        },
+        sponsors: [
+          {
+            id: "sponsor-1",
+            type: "image" as const,
+            url: "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=1200&h=400&fit=crop",
+            duration: 5,
+            link: "https://example.com/sponsor1"
+          },
+          {
+            id: "sponsor-2",
+            type: "image" as const,
+            url: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=1200&h=400&fit=crop",
+            duration: 5,
+            link: "https://example.com/sponsor2"
+          },
+          {
+            id: "sponsor-3",
+            type: "image" as const,
+            url: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&h=400&fit=crop",
+            duration: 6
+          }
+        ]
       };
 
       setTournament(mockTournament);
@@ -185,17 +208,21 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/10">
-      {/* Header com Banner */}
-      <div className="relative z-0 h-80 bg-gradient-to-r from-primary via-[#0052cc] to-primary overflow-hidden">
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-30"
-          style={{ backgroundImage: `url(${tournament.bannerImage})` }}
+      {/* Header com Painel de Patrocinadores */}
+      <div className="relative z-0 overflow-hidden">
+        <TournamentSponsorsPanel
+          sponsors={tournament.sponsors || []}
+          height={320}
+          autoPlay={true}
+          showControls={false}
+          layout="grid-3"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
         
-        <div className="relative h-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
+        
+        <div className="absolute inset-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col pointer-events-none">
           {/* Botão Voltar */}
-          <div className="pt-6">
+          <div className="pt-6 pointer-events-auto">
             <Button
               variant="ghost"
               onClick={onBack}
@@ -207,7 +234,7 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
           </div>
 
           {/* Info do Torneio */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between flex-1 pb-6 gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between flex-1 pb-6 gap-4 pointer-events-auto">
             <div className="flex items-end gap-4">
               {/* Avatar do Organizador */}
               <Avatar className="h-20 w-20 border-4 border-white shadow-lg">
@@ -218,14 +245,14 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
               {/* Título e Info Básica */}
               <div className="text-white space-y-2">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-3xl font-bold">{tournament.name}</h1>
+                  <h1 className="text-3xl font-bold drop-shadow-lg">{tournament.name}</h1>
                   <Badge variant="secondary" className="bg-green-500 text-white border-0">
                     <Radio className="h-3 w-3 mr-1 animate-pulse" />
                     {tournament.liveMatches} AO VIVO
                   </Badge>
                 </div>
-                <p className="text-white/90 max-w-2xl">{tournament.description}</p>
-                <div className="flex items-center gap-4 text-sm text-white/80 flex-wrap">
+                <p className="text-white/90 max-w-2xl drop-shadow">{tournament.description}</p>
+                <div className="flex items-center gap-4 text-sm text-white/90 flex-wrap drop-shadow">
                   <div className="flex items-center gap-1">
                     <MapPin className="h-4 w-4" />
                     {tournament.location}
@@ -247,7 +274,7 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
               <Button
                 variant={isFollowing ? "secondary" : "default"}
                 onClick={handleFollow}
-                className="bg-white/10 hover:bg-white/20 text-white border border-white/30"
+                className="bg-white/10 hover:bg-white/20 text-white border border-white/30 backdrop-blur-sm"
               >
                 {isFollowing ? (
                   <>
