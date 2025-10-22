@@ -1,18 +1,8 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { TournamentStandings } from "./TournamentStandings";
-import { TournamentSchedule } from "./TournamentSchedule";
-import { TournamentMVP } from "./TournamentMVP";
-import { TournamentDraw } from "./TournamentDraw";
-import { TournamentBracket } from "./TournamentBracket";
 import { TournamentOrganizerPanel } from "./TournamentOrganizerPanel";
 import { TournamentNotifications } from "./TournamentNotifications";
 import { TournamentSponsorsPanel } from "./TournamentSponsorsPanel";
+import { AnimatedLEDPanel } from "./AnimatedLEDPanel";
+import { LEDPanelConfigModal } from "./LEDPanelConfigModal";
 import { 
   ArrowLeft, 
   Trophy, 
@@ -27,9 +17,9 @@ import {
   Share2,
   Bell,
   BellOff,
-  Filter
+  Filter,
+  Settings
 } from "lucide-react";
-import { toast } from "sonner@2.0.3";
 
 interface TournamentDetailsProps {
   tournamentId: number;
@@ -45,6 +35,8 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
   const [selectedDivision, setSelectedDivision] = useState("1");
   const [isOrganizer, setIsOrganizer] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [showLEDConfig, setShowLEDConfig] = useState(false);
+  const [ledPanelConfig, setLedPanelConfig] = useState<any>(null);
 
   useEffect(() => {
     loadTournamentData();
@@ -208,17 +200,42 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/10">
-      {/* Header com Painel de Patrocinadores */}
+      {/* Header com Painel LED Animado */}
       <div className="relative z-0 overflow-hidden">
-        <TournamentSponsorsPanel
-          sponsors={tournament.sponsors || []}
-          height={320}
-          autoPlay={true}
-          showControls={false}
-          layout="grid-3"
-        />
+        {ledPanelConfig ? (
+          <AnimatedLEDPanel
+            media={ledPanelConfig.media}
+            layout={ledPanelConfig.layout}
+            animationType={ledPanelConfig.animationType}
+            randomOrder={ledPanelConfig.randomOrder}
+            autoPlay={ledPanelConfig.autoPlay}
+            transitionSpeed={ledPanelConfig.transitionSpeed}
+            height={320}
+          />
+        ) : (
+          <TournamentSponsorsPanel
+            sponsors={tournament.sponsors || []}
+            height={320}
+            autoPlay={true}
+            showControls={false}
+            layout="grid-3"
+          />
+        )}
         
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
+        
+        {/* Botão Configurar Painel LED (apenas para organizadores) */}
+        {isOrganizer && (
+          <div className="absolute top-4 right-4 z-20 pointer-events-auto">
+            <Button
+              onClick={() => setShowLEDConfig(true)}
+              className="bg-white/10 hover:bg-white/20 text-white border border-white/30 backdrop-blur-sm"
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Configurar Painel LED
+            </Button>
+          </div>
+        )}
         
         <div className="absolute inset-0 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col pointer-events-none">
           {/* Botão Voltar */}
@@ -622,6 +639,20 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modal de Configuração do Painel LED */}
+      <LEDPanelConfigModal
+        open={showLEDConfig}
+        onOpenChange={setShowLEDConfig}
+        tournamentId={tournamentId.toString()}
+        currentConfig={ledPanelConfig}
+        onSave={(config) => {
+          setLedPanelConfig(config);
+          toast.success("Painel LED configurado!", {
+            description: `${config.media.length} mídias adicionadas com animação ${config.animationType}`
+          });
+        }}
+      />
     </div>
   );
 }
