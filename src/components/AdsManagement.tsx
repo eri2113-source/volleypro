@@ -429,7 +429,7 @@ export function AdsManagement() {
           setActionType(null);
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent aria-describedby="ad-action-description">
           <AlertDialogHeader>
             <AlertDialogTitle>
               {actionType === "approve"
@@ -438,7 +438,7 @@ export function AdsManagement() {
                 ? "Rejeitar anúncio?"
                 : "Deletar anúncio?"}
             </AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription id="ad-action-description">
               {actionType === "approve" &&
                 "O anúncio será publicado e ficará visível para todos os usuários."}
               {actionType === "reject" &&

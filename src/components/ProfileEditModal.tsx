@@ -497,6 +497,7 @@ function ProfileEditModalContent({
         <SheetContent
           side="bottom"
           className="h-[95vh] rounded-t-xl flex flex-col p-0 gap-0 overflow-hidden"
+          aria-describedby="profile-edit-sheet-description"
         >
           <div className="shrink-0 p-6 pb-4 border-b bg-background/95 backdrop-blur-sm">
             <SheetHeader>
@@ -511,7 +512,7 @@ function ProfileEditModalContent({
                   </Badge>
                 )}
               </SheetTitle>
-              <SheetDescription className="text-left">
+              <SheetDescription className="text-left" id="profile-edit-sheet-description">
                 Atualize suas informações pessoais
               </SheetDescription>
             </SheetHeader>

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription, DialogHeader } from "./ui/dialog";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
@@ -176,16 +176,18 @@ export function LivePlayer({ liveId, open, onClose, onLiveEnded }: LivePlayerPro
         `}
         aria-describedby="live-player-description"
       >
-        {/* Títulos para acessibilidade - visualmente escondidos */}
-        <DialogTitle className="sr-only">
-          {live?.title || "Live Player"}
-        </DialogTitle>
-        <DialogDescription id="live-player-description" className="sr-only">
-          {live?.status === 'live' 
-            ? `Assistindo transmissão ao vivo: ${live?.title}`
-            : `Visualizando: ${live?.title}`
-          }
-        </DialogDescription>
+        {/* Header para acessibilidade - visualmente escondido */}
+        <DialogHeader className="sr-only">
+          <DialogTitle>
+            {live?.title || "Live Player"}
+          </DialogTitle>
+          <DialogDescription id="live-player-description">
+            {live?.status === 'live' 
+              ? `Assistindo transmissão ao vivo: ${live?.title}`
+              : `Visualizando: ${live?.title}`
+            }
+          </DialogDescription>
+        </DialogHeader>
 
         {loading ? (
           <div className="flex items-center justify-center h-96">

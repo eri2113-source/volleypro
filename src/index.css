@@ -101,7 +101,9 @@
     --color-orange-700: oklch(.553 .195 38.402);
     --color-orange-950: oklch(.266 .079 36.259);
     --color-amber-50: oklch(.987 .022 95.277);
+    --color-amber-100: oklch(.962 .059 95.617);
     --color-amber-200: oklch(.924 .12 95.746);
+    --color-amber-300: oklch(.879 .169 91.605);
     --color-amber-500: oklch(.769 .188 70.08);
     --color-amber-800: oklch(.473 .137 46.201);
     --color-amber-900: oklch(.414 .112 45.904);
@@ -1097,6 +1099,10 @@
     margin-left: calc(var(--spacing) * 6);
   }
 
+  .ml-10 {
+    margin-left: calc(var(--spacing) * 10);
+  }
+
   .ml-auto {
     margin-left: auto;
   }
@@ -1796,6 +1802,10 @@
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
+  .grid-cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
   .grid-cols-\[0_1fr\] {
     grid-template-columns: 0 1fr;
   }
@@ -2122,6 +2132,14 @@
 
   .border-amber-200 {
     border-color: var(--color-amber-200);
+  }
+
+  .border-amber-300 {
+    border-color: var(--color-amber-300);
+  }
+
+  .border-amber-500 {
+    border-color: var(--color-amber-500);
   }
 
   .border-blue-200 {
@@ -2454,6 +2472,10 @@
     .bg-amber-50\/50 {
       background-color: color-mix(in oklab, var(--color-amber-50) 50%, transparent);
     }
+  }
+
+  .bg-amber-100 {
+    background-color: var(--color-amber-100);
   }
 
   .bg-amber-500 {
@@ -2993,6 +3015,11 @@
 
   .bg-\[url\(\'https\:\/\/images\.unsplash\.com\/photo-1612872087720-bb876e2e67d1\?w\=1200\&h\=400\&fit\=crop\'\)\] {
     background-image: url("https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=1200&h=400&fit=crop");
+  }
+
+  .from-amber-50 {
+    --tw-gradient-from: var(--color-amber-50);
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
 
   .from-background {
@@ -4064,6 +4091,10 @@
 
   .text-amber-800 {
     color: var(--color-amber-800);
+  }
+
+  .text-amber-900 {
+    color: var(--color-amber-900);
   }
 
   .text-background {
@@ -6636,6 +6667,10 @@
     }
   }
 
+  .dark\:border-amber-800:is(.dark *) {
+    border-color: var(--color-amber-800);
+  }
+
   .dark\:border-amber-900:is(.dark *) {
     border-color: var(--color-amber-900);
   }
@@ -6672,6 +6707,26 @@
     border-color: var(--color-red-900);
   }
 
+  .dark\:bg-amber-900\/30:is(.dark *) {
+    background-color: color-mix(in srgb, oklch(.414 .112 45.904) 30%, transparent);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .dark\:bg-amber-900\/30:is(.dark *) {
+      background-color: color-mix(in oklab, var(--color-amber-900) 30%, transparent);
+    }
+  }
+
+  .dark\:bg-amber-950\/20:is(.dark *) {
+    background-color: color-mix(in srgb, oklch(.279 .077 45.635) 20%, transparent);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .dark\:bg-amber-950\/20:is(.dark *) {
+      background-color: color-mix(in oklab, var(--color-amber-950) 20%, transparent);
+    }
+  }
+
   .dark\:bg-amber-950\/30:is(.dark *) {
     background-color: color-mix(in srgb, oklch(.279 .077 45.635) 30%, transparent);
   }
@@ -6688,6 +6743,16 @@
 
   .dark\:bg-blue-950:is(.dark *) {
     background-color: var(--color-blue-950);
+  }
+
+  .dark\:bg-blue-950\/20:is(.dark *) {
+    background-color: color-mix(in srgb, oklch(.282 .091 267.935) 20%, transparent);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .dark\:bg-blue-950\/20:is(.dark *) {
+      background-color: color-mix(in oklab, var(--color-blue-950) 20%, transparent);
+    }
   }
 
   .dark\:bg-blue-950\/30:is(.dark *) {
@@ -6808,6 +6873,28 @@
     background-color: var(--color-yellow-950);
   }
 
+  .dark\:from-amber-950\/20:is(.dark *) {
+    --tw-gradient-from: color-mix(in srgb, oklch(.279 .077 45.635) 20%, transparent);
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .dark\:from-amber-950\/20:is(.dark *) {
+      --tw-gradient-from: color-mix(in oklab, var(--color-amber-950) 20%, transparent);
+    }
+  }
+
+  .dark\:from-green-950\/20:is(.dark *) {
+    --tw-gradient-from: color-mix(in srgb, oklch(.266 .065 152.934) 20%, transparent);
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .dark\:from-green-950\/20:is(.dark *) {
+      --tw-gradient-from: color-mix(in oklab, var(--color-green-950) 20%, transparent);
+    }
+  }
+
   .dark\:from-yellow-950\/20:is(.dark *) {
     --tw-gradient-from: color-mix(in srgb, oklch(.286 .066 53.813) 20%, transparent);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
@@ -6816,6 +6903,17 @@
   @supports (color: color-mix(in lab, red, red)) {
     .dark\:from-yellow-950\/20:is(.dark *) {
       --tw-gradient-from: color-mix(in oklab, var(--color-yellow-950) 20%, transparent);
+    }
+  }
+
+  .dark\:to-blue-950\/20:is(.dark *) {
+    --tw-gradient-to: color-mix(in srgb, oklch(.282 .091 267.935) 20%, transparent);
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .dark\:to-blue-950\/20:is(.dark *) {
+      --tw-gradient-to: color-mix(in oklab, var(--color-blue-950) 20%, transparent);
     }
   }
 
@@ -6828,6 +6926,10 @@
     .dark\:to-orange-950\/20:is(.dark *) {
       --tw-gradient-to: color-mix(in oklab, var(--color-orange-950) 20%, transparent);
     }
+  }
+
+  .dark\:text-amber-100:is(.dark *) {
+    color: var(--color-amber-100);
   }
 
   .dark\:text-amber-200:is(.dark *) {

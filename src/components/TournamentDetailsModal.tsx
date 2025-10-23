@@ -36,6 +36,12 @@ import { tournamentApi, userApi } from "../lib/api";
 import { toast } from "sonner@2.0.3";
 import { Trophy, Users, Calendar, MapPin, Award, Play, CheckCircle2, X, XCircle, UserPlus } from "lucide-react";
 import { TournamentRosterModal } from "./TournamentRosterModal";
+import { BeachTournamentRegistration } from "./BeachTournamentRegistration";
+import { TournamentBracket } from "./TournamentBracket";
+import { TournamentStandings } from "./TournamentStandings";
+import { BeachTournamentBracket } from "./BeachTournamentBracket";
+import { BeachTournamentStandings } from "./BeachTournamentStandings";
+import { AnimatedLEDPanel } from "./AnimatedLEDPanel";
 
 interface TournamentDetailsModalProps {
   open: boolean;
@@ -76,6 +82,9 @@ export function TournamentDetailsModal({
   // Roster/Convocação
   const [showRosterModal, setShowRosterModal] = useState(false);
   const [currentUserTeamName, setCurrentUserTeamName] = useState("");
+  
+  // Beach Tournament Registration
+  const [showBeachRegistration, setShowBeachRegistration] = useState(false);
 
   useEffect(() => {
     if (open && tournamentId && tournamentId !== '') {
@@ -278,8 +287,14 @@ export function TournamentDetailsModal({
 
   const isOrganizer = currentUserId === tournament.organizerId;
   const isRegistered = tournament.registeredTeams?.includes(currentUserId);
-  // Organizador também pode se inscrever no próprio torneio para jogar
-  const canRegister = userType === 'team' && tournament.status === 'upcoming' && !isRegistered;
+  
+  // Detectar se é torneio de areia
+  const isBeachTournament = tournament.modalityType === 'beach';
+  
+  // Para torneios de AREIA: qualquer atleta pode se inscrever formando dupla
+  // Para torneios de QUADRA: apenas times podem se inscrever
+  const canRegister = !isBeachTournament && userType === 'team' && tournament.status === 'upcoming' && !isRegistered;
+  const canRegisterBeach = isBeachTournament && userType === 'athlete' && tournament.status === 'upcoming' && !isRegistered;
   const canUnregister = userType === 'team' && tournament.status === 'upcoming' && isRegistered;
 
   // Debug log detalhado
@@ -287,12 +302,15 @@ export function TournamentDetailsModal({
     tournamentId,
     tournamentName: tournament.name,
     tournamentStatus: tournament.status,
+    modalityType: tournament.modalityType,
+    isBeachTournament,
     organizerId: tournament.organizerId,
     currentUserId,
     userType,
     isOrganizer,
     isRegistered,
     canRegister,
+    canRegisterBeach,
     canUnregister,
     registeredTeams: tournament.registeredTeams,
     registeredTeamsLength: tournament.registeredTeams?.length || 0,
@@ -415,6 +433,17 @@ export function TournamentDetailsModal({
               </Button>
             )}
 
+            {canRegisterBeach && (
+              <Button 
+                onClick={() => setShowBeachRegistration(true)}
+                disabled={loading}
+                className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+              >
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Inscrever Dupla
+              </Button>
+            )}
+
             {canUnregister && (
               <Button 
                 variant="outline" 
@@ -447,13 +476,21 @@ export function TournamentDetailsModal({
             {/* Mensagens explicativas sobre inscrição */}
             {!userType && tournament.status === 'upcoming' && (
               <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg px-4 py-2 text-sm text-blue-800 dark:text-blue-200">
-                ℹ️ Faça login como time para se inscrever neste torneio
+                ℹ️ {isBeachTournament ? 'Faça login como atleta para inscrever sua dupla' : 'Faça login como time para se inscrever neste torneio'}
               </div>
             )}
             
-            {userType && userType !== 'team' && tournament.status === 'upcoming' && (
+            {/* Mensagem para vôlei de QUADRA - Apenas times podem se inscrever */}
+            {userType && userType !== 'team' && tournament.status === 'upcoming' && !isBeachTournament && (
               <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg px-4 py-2 text-sm text-amber-800 dark:text-amber-200">
-                ℹ️ Apenas times podem se inscrever em torneios. Atletas participam através de convocação.
+                ℹ️ Torneio de Quadra: Apenas times podem se inscrever. Atletas participam através de convocação.
+              </div>
+            )}
+
+            {/* Mensagem para vôlei de AREIA - Apenas atletas podem inscrever duplas */}
+            {userType && userType !== 'athlete' && tournament.status === 'upcoming' && isBeachTournament && (
+              <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 rounded-lg px-4 py-2 text-sm text-amber-800 dark:text-amber-200">
+                🏖️ Torneio de Areia: Apenas atletas podem inscrever duplas. Busque parceiros e registre sua equipe!
               </div>
             )}
 
@@ -490,11 +527,12 @@ export function TournamentDetailsModal({
         </div>
 
         <Tabs defaultValue="teams" className="mt-4">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="teams">Times ({teams.length})</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="teams">{isBeachTournament ? '🏖️ Duplas' : 'Times'} ({teams.length})</TabsTrigger>
             <TabsTrigger value="matches">Jogos ({matches.length})</TabsTrigger>
             <TabsTrigger value="standings">Classificação</TabsTrigger>
-            <TabsTrigger value="mvp">MVP</TabsTrigger>
+            <TabsTrigger value="bracket">Chaveamento</TabsTrigger>
+            <TabsTrigger value="led">Painel LED</TabsTrigger>
           </TabsList>
 
           <TabsContent value="teams" className="space-y-2">
@@ -714,6 +752,56 @@ export function TournamentDetailsModal({
             )}
           </TabsContent>
 
+          <TabsContent value="bracket">
+            {isBeachTournament ? (
+              <BeachTournamentBracket tournament={tournament} />
+            ) : (
+              <TournamentBracket tournament={tournament} />
+            )}
+          </TabsContent>
+
+          <TabsContent value="led" className="space-y-4">
+            {/* Banner LED Animado com Patrocinadores */}
+            <AnimatedLEDPanel 
+              layout="grid-3"
+              animationType="horizontal"
+              randomOrder={true}
+              autoPlay={true}
+              transitionSpeed={5}
+              height={280}
+              media={[
+                {
+                  id: "sponsor-1",
+                  type: "image",
+                  url: "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=800&h=400&fit=crop",
+                  duration: 5,
+                  name: "Patrocinador 1"
+                },
+                {
+                  id: "sponsor-2",
+                  type: "image",
+                  url: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&h=400&fit=crop",
+                  duration: 5,
+                  name: "Patrocinador 2"
+                },
+                {
+                  id: "sponsor-3",
+                  type: "image",
+                  url: "https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=800&h=400&fit=crop",
+                  duration: 5,
+                  name: "Patrocinador 3"
+                },
+              ]}
+            />
+            
+            {/* Card informativo sobre classificação com tema de areia se for beach */}
+            {isBeachTournament ? (
+              <BeachTournamentStandings tournamentId={parseInt(tournamentId)} />
+            ) : (
+              <TournamentStandings tournamentId={parseInt(tournamentId)} />
+            )}
+          </TabsContent>
+
           <TabsContent value="mvp">
             {mvpRankings.length === 0 ? (
               <Card>
@@ -773,18 +861,38 @@ export function TournamentDetailsModal({
           tournamentName={tournament.name}
           teamId={currentUserId}
           teamName={currentUserTeamName}
+          modalityType={tournament.modalityType || 'indoor'}
+          teamSize={tournament.teamSize || 'duo'}
+        />
+      )}
+
+      {/* Beach Tournament Registration Modal */}
+      {showBeachRegistration && (
+        <BeachTournamentRegistration
+          open={showBeachRegistration}
+          onClose={() => {
+            setShowBeachRegistration(false);
+            // Recarregar detalhes do torneio após inscrição
+            loadTournamentDetails();
+            if (onRegistrationSuccess) {
+              onRegistrationSuccess();
+            }
+          }}
+          tournamentId={tournamentId}
+          tournamentName={tournament.name}
+          teamSize={tournament.teamSize || 'duo'}
         />
       )}
 
       {/* AlertDialog para solicitar motivo do cancelamento */}
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent aria-describedby="cancel-tournament-description">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <XCircle className="h-5 w-5 text-destructive" />
               Cancelar Torneio
             </AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription id="cancel-tournament-description">
               Esta ação é irreversível. Todos os times inscritos serão notificados sobre o cancelamento.
             </AlertDialogDescription>
           </AlertDialogHeader>

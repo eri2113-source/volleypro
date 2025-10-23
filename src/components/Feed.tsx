@@ -282,9 +282,9 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
     if (!file) return;
 
     // Validate file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
+    const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'video/mp4', 'video/webm'];
     if (!validTypes.includes(file.type)) {
-      toast.error("Tipo de arquivo não suportado. Use JPEG, PNG, GIF, WEBP, MP4 ou WEBM.");
+      toast.error("Tipo de arquivo não suportado. Use JPEG, PNG, GIF, WEBP, AVIF, MP4 ou WEBM.");
       return;
     }
 
@@ -930,7 +930,7 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm"
+              accept="image/jpeg,image/png,image/gif,image/webp,image/avif,video/mp4,video/webm"
               onChange={handleMediaSelect}
               className="hidden"
               id="media-upload"
@@ -1455,13 +1455,13 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
           if (!open) setConfirmDeletePost(null);
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent aria-describedby="delete-post-description">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <Trash2 className="h-5 w-5 text-destructive" />
               Excluir postagem?
             </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
+            <AlertDialogDescription id="delete-post-description" className="space-y-2">
               <p>
                 Tem certeza que deseja excluir esta postagem de <strong>{confirmDeletePost?.authorName}</strong>?
               </p>
@@ -1489,10 +1489,10 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
           if (!open) setConfirmRemoveReaction(null);
         }}
       >
-        <AlertDialogContent>
+        <AlertDialogContent aria-describedby="remove-reaction-description">
           <AlertDialogHeader>
             <AlertDialogTitle>Remover reação?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription id="remove-reaction-description">
               Tem certeza que deseja remover sua reação {confirmRemoveReaction?.emoji} deste post?
             </AlertDialogDescription>
           </AlertDialogHeader>

@@ -375,6 +375,11 @@ export const userApi = {
     return retryWithDelay(() => apiCall('/users/me'));
   },
 
+  // Alias para getUserProfile (compatibilidade)
+  async getUserProfile(userId: string) {
+    return this.getUser(userId);
+  },
+
   async updateCurrentUser(updates: any) {
     const userId = authApi.getCurrentUserId();
     if (!userId) throw new Error('Not authenticated');
@@ -574,6 +579,14 @@ export const tournamentApi = {
     return apiCall(`/tournaments/${tournamentId}/register-individual`, {
       method: 'POST',
       body: JSON.stringify({ partnerId }),
+    });
+  },
+
+  // Beach volleyball - Team registration with team name and players
+  async registerBeachTeam(tournamentId: string, teamName: string, playerIds: string[]) {
+    return apiCall(`/tournaments/${tournamentId}/register-beach-team`, {
+      method: 'POST',
+      body: JSON.stringify({ teamName, playerIds }),
     });
   },
 

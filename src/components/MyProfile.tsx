@@ -606,10 +606,10 @@ export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
 
       {/* Confirmar Remover Jogador */}
       <AlertDialog open={showDeletePlayerConfirm} onOpenChange={setShowDeletePlayerConfirm}>
-        <AlertDialogContent>
+        <AlertDialogContent aria-describedby="delete-player-description">
           <AlertDialogHeader>
             <AlertDialogTitle>Remover Jogador</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription id="delete-player-description">
               Tem certeza que deseja remover <strong>{selectedPlayer?.name}</strong> do elenco?
               Esta ação não pode ser desfeita.
             </AlertDialogDescription>

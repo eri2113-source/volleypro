@@ -41,9 +41,9 @@ export function AvatarUpload({
       return;
     }
 
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
     if (!allowedTypes.includes(file.type)) {
-      toast.error("Formato inválido. Use JPG, PNG ou WEBP");
+      toast.error("Formato inválido. Use JPG, PNG, WEBP ou AVIF");
       return;
     }
 
@@ -174,7 +174,7 @@ export function AvatarUpload({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/jpg,image/png,image/webp"
+          accept="image/jpeg,image/jpg,image/png,image/webp,image/avif"
           onChange={handleFileSelect}
           className="hidden"
           disabled={uploading}

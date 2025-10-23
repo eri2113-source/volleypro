@@ -34,6 +34,8 @@ interface TournamentRosterModalProps {
   tournamentName: string;
   teamId: string;
   teamName: string;
+  modalityType?: 'indoor' | 'beach'; // Nova prop
+  teamSize?: 'duo' | 'trio' | 'quartet' | 'quintet'; // Para vôlei de praia
 }
 
 interface Player {
@@ -55,7 +57,8 @@ interface RosterLimits {
   auxiliar: number;
 }
 
-const POSITION_LIMITS: RosterLimits = {
+// VÔLEI DE QUADRA (Indoor) - 12 jogadores
+const POSITION_LIMITS_INDOOR: RosterLimits = {
   levantador: 4,
   ponteiro: 6,
   oposto: 3,
@@ -63,6 +66,47 @@ const POSITION_LIMITS: RosterLimits = {
   libero: 2,
   tecnico: 1,
   auxiliar: 4,
+};
+
+// VÔLEI DE PRAIA (Beach) - Simplificado
+const POSITION_LIMITS_BEACH_DUO: RosterLimits = {
+  levantador: 0,
+  ponteiro: 2, // Dupla = 2 jogadores
+  oposto: 0,
+  central: 0,
+  libero: 0,
+  tecnico: 1,
+  auxiliar: 0,
+};
+
+const POSITION_LIMITS_BEACH_TRIO: RosterLimits = {
+  levantador: 0,
+  ponteiro: 3, // Trio = 3 jogadores
+  oposto: 0,
+  central: 0,
+  libero: 0,
+  tecnico: 1,
+  auxiliar: 0,
+};
+
+const POSITION_LIMITS_BEACH_QUARTET: RosterLimits = {
+  levantador: 0,
+  ponteiro: 4, // Quarteto = 4 jogadores
+  oposto: 0,
+  central: 0,
+  libero: 0,
+  tecnico: 1,
+  auxiliar: 0,
+};
+
+const POSITION_LIMITS_BEACH_QUINTET: RosterLimits = {
+  levantador: 0,
+  ponteiro: 5, // Quinteto = 5 jogadores
+  oposto: 0,
+  central: 0,
+  libero: 0,
+  tecnico: 1,
+  auxiliar: 0,
 };
 
 const POSITION_LABELS: Record<keyof RosterLimits, string> = {
@@ -92,7 +136,23 @@ export function TournamentRosterModal({
   tournamentName,
   teamId,
   teamName,
+  modalityType = 'indoor',
+  teamSize = 'duo',
 }: TournamentRosterModalProps) {
+  // Determinar limites baseado na modalidade
+  const POSITION_LIMITS: RosterLimits = 
+    modalityType === 'beach' 
+      ? teamSize === 'duo' ? POSITION_LIMITS_BEACH_DUO
+        : teamSize === 'trio' ? POSITION_LIMITS_BEACH_TRIO
+        : teamSize === 'quartet' ? POSITION_LIMITS_BEACH_QUARTET
+        : POSITION_LIMITS_BEACH_QUINTET
+      : POSITION_LIMITS_INDOOR;
+
+  const isBeach = modalityType === 'beach';
+  const minPlayers = isBeach 
+    ? (teamSize === 'duo' ? 2 : teamSize === 'trio' ? 3 : teamSize === 'quartet' ? 4 : 5)
+    : 6;
+
   const [roster, setRoster] = useState<Record<keyof RosterLimits, Player[]>>({
     levantador: [],
     ponteiro: [],
@@ -215,9 +275,9 @@ export function TournamentRosterModal({
     // Verificar se tem pelo menos 6 jogadores (mínimo para um time)
     const totalPlayers = Object.values(roster).reduce((sum, players) => sum + players.length, 0);
     
-    if (totalPlayers < 6) {
+    if (totalPlayers < minPlayers) {
       toast.error("Convocação incompleta", {
-        description: "Você precisa convocar pelo menos 6 jogadores"
+        description: `Você precisa convocar pelo menos ${minPlayers} jogadores`
       });
       return;
     }
@@ -334,7 +394,9 @@ export function TournamentRosterModal({
                 <div className="space-y-2">
                   <Label>1. Selecione a posição</Label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {(Object.keys(POSITION_LIMITS) as Array<keyof RosterLimits>).map((pos) => (
+                    {(Object.keys(POSITION_LIMITS) as Array<keyof RosterLimits>)
+                      .filter(pos => POSITION_LIMITS[pos] > 0) // Só mostra posições com limite > 0
+                      .map((pos) => (
                       <Button
                         key={pos}
                         variant={selectedPosition === pos ? "default" : "outline"}
@@ -555,10 +617,21 @@ export function TournamentRosterModal({
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
           <p className="font-semibold mb-1">📋 Informações importantes:</p>
           <ul className="list-disc list-inside space-y-0.5 text-xs">
-            <li>Mínimo de 6 jogadores e 1 técnico obrigatório</li>
-            <li>Apenas jogadores do seu time podem ser convocados</li>
-            <li>Os jogadores receberão notificação e precisam confirmar</li>
-            <li>Você pode editar a convocação até o início do torneio</li>
+            {isBeach ? (
+              <>
+                <li>Mínimo de {minPlayers} jogador(es) e 1 técnico obrigatório</li>
+                <li>Torneio de vôlei de praia - {teamSize === 'duo' ? 'Dupla' : teamSize === 'trio' ? 'Trio' : teamSize === 'quartet' ? 'Quarteto' : 'Quinteto'}</li>
+                <li>Os jogadores receberão notificação e precisam confirmar</li>
+                <li>Você pode editar a convocação até o início do torneio</li>
+              </>
+            ) : (
+              <>
+                <li>Mínimo de 6 jogadores e 1 técnico obrigatório</li>
+                <li>Apenas jogadores do seu time podem ser convocados</li>
+                <li>Os jogadores receberão notificação e precisam confirmar</li>
+                <li>Você pode editar a convocação até o início do torneio</li>
+              </>
+            )}
           </ul>
         </div>
       </DialogContent>

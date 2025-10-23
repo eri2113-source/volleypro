@@ -168,7 +168,7 @@ async function initStorage() {
       console.log('📦 Creating avatars bucket...');
       const { data, error } = await supabaseClient.storage.createBucket(bucketName, {
         public: true,
-        fileSizeLimit: 5242880, // 5MB\n        allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
+        fileSizeLimit: 5242880, // 5MB\n        allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif']
       });
       
       // Ignorar erro se bucket já existe (race condition)
@@ -891,10 +891,46 @@ app.post('/make-server-0ea22bba/upload', authMiddleware, async (c) => {
     });
     
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'video/mp4', 'video/webm'];
-    if (!allowedTypes.includes(file.type)) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/avif', 'video/mp4', 'video/webm'];
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif', 'mp4', 'webm'];
+    
+    // Get file extension
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    
+    // Log detalhado para debug
+    console.log('🔍 Type validation:', {
+      received: file.type,
+      extension: fileExt,
+      isEmpty: file.type === '',
+      isNull: file.type === null,
+      isUndefined: file.type === undefined,
+      length: file.type?.length,
+      allowed: allowedTypes
+    });
+    
+    // Se o tipo MIME estiver vazio ou inválido, tentar validar pela extensão
+    let isValid = allowedTypes.includes(file.type);
+    
+    if (!isValid && (!file.type || file.type === '')) {
+      console.log('⚠️ MIME type empty, checking extension:', fileExt);
+      isValid = fileExt ? allowedExtensions.includes(fileExt) : false;
+      if (isValid) {
+        console.log('✅ File validated by extension:', fileExt);
+      }
+    }
+    
+    if (!isValid) {
       console.error('❌ Invalid file type:', file.type);
-      return c.json({ error: 'Invalid file type. Only images and videos are allowed.' }, 400);
+      console.error('❌ File name:', file.name);
+      console.error('❌ Extension:', fileExt);
+      console.error('❌ Type check failed - received:', JSON.stringify(file.type));
+      return c.json({ 
+        error: 'Invalid file type. Only images and videos are allowed.',
+        received: file.type,
+        fileName: file.name,
+        extension: fileExt,
+        allowed: allowedTypes 
+      }, 400);
     }
     
     // Validate file size (50MB max)
@@ -904,9 +940,8 @@ app.post('/make-server-0ea22bba/upload', authMiddleware, async (c) => {
       return c.json({ error: 'File too large. Maximum size is 50MB.' }, 400);
     }
     
-    // Generate unique filename
+    // Generate unique filename (fileExt já foi declarado acima na validação)
     const timestamp = Date.now();
-    const fileExt = file.name.split('.').pop();
     const fileName = `${userId}/${timestamp}.${fileExt}`;
     
     console.log('📤 Uploading to storage:', fileName);
@@ -972,11 +1007,31 @@ app.post('/make-server-0ea22bba/upload-avatar', authMiddleware, async (c) => {
     console.log('📸 Avatar upload request from user:', userId);
     console.log('📸 File type:', file.type);
     console.log('📸 File size:', file.size);
+    console.log('📸 File name:', file.name);
     
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      return c.json({ error: 'Invalid file type. Only JPG, PNG, and WEBP are allowed.' }, 400);
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/avif'];
+    const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    
+    // Validar por MIME type ou extensão (fallback)
+    let isValid = allowedTypes.includes(file.type);
+    
+    if (!isValid && (!file.type || file.type === '')) {
+      console.log('⚠️ Avatar MIME type empty, checking extension:', fileExt);
+      isValid = fileExt ? allowedExtensions.includes(fileExt) : false;
+      if (isValid) {
+        console.log('✅ Avatar validated by extension:', fileExt);
+      }
+    }
+    
+    if (!isValid) {
+      console.error('❌ Invalid avatar file type:', file.type, 'Extension:', fileExt);
+      return c.json({ 
+        error: 'Invalid file type. Only JPG, PNG, WEBP, and AVIF are allowed.',
+        received: file.type,
+        extension: fileExt
+      }, 400);
     }
     
     // Validate file size (5MB max)
@@ -985,9 +1040,8 @@ app.post('/make-server-0ea22bba/upload-avatar', authMiddleware, async (c) => {
       return c.json({ error: 'File too large. Maximum size is 5MB.' }, 400);
     }
     
-    // Generate unique filename
+    // Generate unique filename (fileExt já declarado na linha 1015)
     const timestamp = Date.now();
-    const fileExt = file.name.split('.').pop();
     const fileName = `avatars/${userId}-${timestamp}.${fileExt}`;
     
     console.log('📸 Uploading to:', fileName);
@@ -1105,7 +1159,7 @@ app.get('/make-server-0ea22bba/follow/check', authMiddleware, async (c) => {
 app.post('/make-server-0ea22bba/tournaments', authMiddleware, async (c) => {
   try {
     const userId = c.get('userId');
-    const { name, startDate, endDate, location, maxTeams } = await c.req.json();
+    const { name, startDate, endDate, location, maxTeams, modalityType, teamSize, arena, format } = await c.req.json();
     
     const userProfile = await kv.get(`user:${userId}`);
     if (!userProfile) {
@@ -1122,41 +1176,22 @@ app.post('/make-server-0ea22bba/tournaments', authMiddleware, async (c) => {
       startDate,
       endDate,
       location,
+      arena: arena || undefined, // Arena para vôlei de praia
       maxTeams: maxTeams || 16,
-      format: 'single_elimination', // Default format
+      format: format || 'single_elimination', // Formato do torneio
+      modalityType: modalityType || 'indoor', // indoor ou beach
+      teamSize: teamSize || 'duo', // Para vôlei de praia: duo, trio, quartet, quintet
       registeredTeams: [], // Lista de times registrados
       status: 'upcoming',
       createdAt: new Date().toISOString(),
     };
     
     await kv.set(tournamentKey, tournament);
-    console.log(`✅ Tournament created: ${tournamentKey} - ${name}`);
+    console.log(`✅ Tournament created: ${tournamentKey} - ${name} (${modalityType || 'indoor'})`);
     
     return c.json({ tournament });
   } catch (error: any) {
     console.log('Error creating tournament:', error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-app.get('/make-server-0ea22bba/tournaments', async (c) => {
-  try {
-    const status = c.req.query('status');
-    
-    const tournaments = await kv.getByPrefix('tournament:');
-    let filteredTournaments = tournaments;
-    
-    if (status) {
-      filteredTournaments = filteredTournaments.filter((t: any) => t.status === status);
-    }
-    
-    const sortedTournaments = filteredTournaments.sort((a: any, b: any) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-    
-    return c.json({ tournaments: sortedTournaments });
-  } catch (error: any) {
-    console.log('Error fetching tournaments:', error);
     return c.json({ error: error.message }, 500);
   }
 });
@@ -1270,49 +1305,7 @@ app.put('/make-server-0ea22bba/users/:userId/free-agent', authMiddleware, async 
   }
 });
 
-// ============= TOURNAMENT ROUTES =============
-
-// Create tournament (only teams can create)
-app.post('/make-server-0ea22bba/tournaments', authMiddleware, async (c) => {
-  try {
-    const userId = c.get('userId');
-    const organizer = await kv.get(`user:${userId}`);
-    
-    if (!organizer || organizer.userType !== 'team') {
-      return c.json({ error: 'Only teams can create tournaments' }, 403);
-    }
-    
-    const { name, location, startDate, endDate, maxTeams = 16, format = 'single_elimination' } = await c.req.json();
-    
-    if (!name || !location || !startDate || !endDate) {
-      return c.json({ error: 'Missing required fields' }, 400);
-    }
-    
-    const tournamentId = `tournament:${Date.now()}:${userId}`;
-    const tournament = {
-      id: tournamentId,
-      name,
-      location,
-      startDate,
-      endDate,
-      organizerId: userId,
-      organizerName: organizer.name,
-      status: 'upcoming', // upcoming, ongoing, finished
-      maxTeams,
-      format, // single_elimination, double_elimination, round_robin
-      registeredTeams: [],
-      createdAt: new Date().toISOString(),
-    };
-    
-    await kv.set(tournamentId, tournament);
-    console.log('✅ Tournament created:', tournamentId);
-    
-    return c.json({ tournament });
-  } catch (error: any) {
-    console.error('❌ Error creating tournament:', error);
-    return c.json({ error: error.message }, 500);
-  }
-});
+// ============= TOURNAMENTS ROUTES =============
 
 // Get all tournaments
 app.get('/make-server-0ea22bba/tournaments', async (c) => {
@@ -1491,6 +1484,84 @@ app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register', authMiddl
     return c.json({ tournament });
   } catch (error: any) {
     console.error('❌ Error unregistering team:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Register beach volleyball team (for beach tournaments)
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-beach-team', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const { teamName, playerIds } = await c.req.json();
+    
+    console.log('🏖️ Beach team registration request:', {
+      userId,
+      tournamentId,
+      teamName,
+      playerIds,
+    });
+    
+    if (!teamName || !playerIds || !Array.isArray(playerIds) || playerIds.length === 0) {
+      return c.json({ error: 'Missing team name or player IDs' }, 400);
+    }
+    
+    const tournamentKey = `tournament:${tournamentId}`;
+    const tournament = await kv.get(tournamentKey);
+    
+    if (!tournament) {
+      console.log('❌ Tournament not found:', { tournamentId, tournamentKey });
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    if (tournament.modalityType !== 'beach') {
+      return c.json({ error: 'This endpoint is only for beach volleyball tournaments' }, 400);
+    }
+    
+    if (tournament.status !== 'upcoming') {
+      console.log('❌ Tournament not accepting registrations, status:', tournament.status);
+      return c.json({ error: 'Tournament is not accepting registrations' }, 400);
+    }
+    
+    const registeredTeams = tournament.registeredTeams || [];
+    
+    // Verificar se o usuário já está registrado
+    const alreadyRegistered = registeredTeams.find((team: any) => 
+      team.captainId === userId || (team.playerIds && team.playerIds.includes(userId))
+    );
+    
+    if (alreadyRegistered) {
+      console.log('❌ User already registered in this tournament');
+      return c.json({ error: 'You are already registered in this tournament' }, 400);
+    }
+    
+    if (registeredTeams.length >= tournament.maxTeams) {
+      console.log('❌ Tournament is full:', {
+        currentTeams: registeredTeams.length,
+        maxTeams: tournament.maxTeams
+      });
+      return c.json({ error: 'Tournament is full' }, 400);
+    }
+    
+    // Criar registro da equipe de praia
+    const beachTeam = {
+      id: crypto.randomUUID(),
+      name: teamName,
+      captainId: userId,
+      playerIds: [userId, ...playerIds],
+      createdAt: new Date().toISOString(),
+    };
+    
+    registeredTeams.push(beachTeam);
+    tournament.registeredTeams = registeredTeams;
+    await kv.set(tournamentKey, tournament);
+    
+    console.log(`✅ Beach team "${teamName}" registered for tournament ${tournament.name}`);
+    console.log(`   Players: ${beachTeam.playerIds.join(', ')}`);
+    
+    return c.json({ tournament, beachTeam });
+  } catch (error: any) {
+    console.error('❌ Error registering beach team:', error);
     return c.json({ error: error.message }, 500);
   }
 });
@@ -1730,6 +1801,7 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/mvp/vote', authMiddlew
     }
     
     const vote = {
+      id: voteKey, // Adicionar ID para facilitar deleção
       tournamentId,
       athleteId,
       voterId: userId,
@@ -1798,63 +1870,7 @@ app.get('/make-server-0ea22bba/tournaments/:tournamentId/mvp', async (c) => {
 });
 
 // ============= ADMIN ROUTES =============
-
-// Reset tournaments - delete all and create seed tournament
-app.post('/make-server-0ea22bba/admin/reset-tournaments', async (c) => {
-  try {
-    console.log('🔄 Resetting tournaments...');
-    
-    // Delete all tournaments
-    const allTournaments = await kv.getByPrefix('tournament:');
-    for (const tournament of allTournaments) {
-      await kv.del(tournament.id);
-      console.log(`🗑️ Deleted tournament: ${tournament.id}`);
-    }
-    
-    // Delete all matches
-    const allMatches = await kv.getByPrefix('match:');
-    for (const match of allMatches) {
-      await kv.del(match.id);
-      console.log(`🗑️ Deleted match: ${match.id}`);
-    }
-    
-    // Delete all MVP votes
-    const allVotes = await kv.getByPrefix('mvp:');
-    for (const vote of allVotes) {
-      await kv.del(`mvp:${vote.tournamentId}:${vote.voterId}`);
-      console.log(`🗑️ Deleted MVP vote`);
-    }
-    
-    // Create seed tournament: Campeonato Municipal 2025
-    const seedTournamentId = 'tournament:1700000000000:seed';
-    const seedTournament = {
-      id: seedTournamentId,
-      name: 'Campeonato Municipal 2025',
-      location: 'São Paulo, SP',
-      startDate: '2025-03-01',
-      endDate: '2025-05-30',
-      organizerId: 'system',
-      organizerName: 'Prefeitura de São Paulo',
-      status: 'upcoming',
-      maxTeams: 16,
-      format: 'single_elimination',
-      registeredTeams: [],
-      createdAt: new Date().toISOString(),
-    };
-    
-    await kv.set(seedTournamentId, seedTournament);
-    console.log('✅ Created seed tournament: Campeonato Municipal 2025');
-    
-    return c.json({ 
-      success: true,
-      message: 'Tournaments reset successfully',
-      seedTournament,
-    });
-  } catch (error: any) {
-    console.error('❌ Error resetting tournaments:', error);
-    return c.json({ error: error.message }, 500);
-  }
-});
+// (A rota /admin/reset-tournaments está mais abaixo com autenticação)
 
 // Cancel tournament (only organizer can cancel)
 app.post('/make-server-0ea22bba/tournaments/:tournamentId/cancel', authMiddleware, async (c) => {
@@ -3040,72 +3056,6 @@ app.get('/make-server-0ea22bba/tournaments/:tournamentId', async (c) => {
   }
 });
 
-// Register team (indoor tournaments)
-app.post('/make-server-0ea22bba/tournaments/:tournamentId/register', authMiddleware, async (c) => {
-  try {
-    const userId = c.get('userId');
-    const tournamentId = c.req.param('tournamentId');
-    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
-    
-    const tournament = await kv.get(fullTournamentId);
-    if (!tournament) {
-      return c.json({ error: 'Tournament not found' }, 404);
-    }
-    
-    if (tournament.modalityType !== 'indoor') {
-      return c.json({ error: 'This tournament requires individual registration' }, 400);
-    }
-    
-    // Check if tournament is full
-    if (tournament.registeredTeams.length >= tournament.maxTeams) {
-      return c.json({ error: 'Tournament is full' }, 400);
-    }
-    
-    // Check if team is already registered
-    if (tournament.registeredTeams.includes(userId)) {
-      return c.json({ error: 'Team already registered' }, 400);
-    }
-    
-    // Add team to tournament
-    tournament.registeredTeams.push(userId);
-    tournament.updatedAt = new Date().toISOString();
-    
-    await kv.set(fullTournamentId, tournament);
-    console.log(`✅ Time inscrito no torneio: ${tournament.name}`);
-    
-    return c.json({ success: true, tournament });
-  } catch (error: any) {
-    console.error('❌ Error registering team:', error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// Unregister team (indoor tournaments)
-app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register', authMiddleware, async (c) => {
-  try {
-    const userId = c.get('userId');
-    const tournamentId = c.req.param('tournamentId');
-    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
-    
-    const tournament = await kv.get(fullTournamentId);
-    if (!tournament) {
-      return c.json({ error: 'Tournament not found' }, 404);
-    }
-    
-    // Remove team from tournament
-    tournament.registeredTeams = tournament.registeredTeams.filter((id: string) => id !== userId);
-    tournament.updatedAt = new Date().toISOString();
-    
-    await kv.set(fullTournamentId, tournament);
-    console.log(`✅ Time removido do torneio: ${tournament.name}`);
-    
-    return c.json({ success: true, tournament });
-  } catch (error: any) {
-    console.error('❌ Error unregistering team:', error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
 // Register individual player (beach tournaments)
 app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-individual', authMiddleware, async (c) => {
   try {
@@ -3195,6 +3145,154 @@ app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register-individual'
   }
 });
 
+// ============= BEACH TOURNAMENT TEAM REGISTRATION =============
+
+// Register beach team (dupla/trio/quartet/quintet)
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-beach-team', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    const { teamName, players, teamSize, captainId } = await c.req.json();
+    
+    console.log('🏖️ Registering beach team:', { tournamentId, teamName, playerCount: players.length, teamSize });
+    
+    // Validações
+    if (!teamName || !players || players.length === 0) {
+      return c.json({ error: 'Missing required fields' }, 400);
+    }
+    
+    const tournament = await kv.get(fullTournamentId);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    if (tournament.modalityType !== 'beach') {
+      return c.json({ error: 'This endpoint is only for beach tournaments' }, 400);
+    }
+    
+    // Verificar número de jogadores
+    const requiredPlayers = teamSize === 'duo' ? 2 : teamSize === 'trio' ? 3 : teamSize === 'quartet' ? 4 : 5;
+    if (players.length !== requiredPlayers) {
+      return c.json({ 
+        error: `Team must have exactly ${requiredPlayers} players for ${teamSize} format` 
+      }, 400);
+    }
+    
+    // Initialize arrays if needed
+    if (!tournament.registeredTeams) {
+      tournament.registeredTeams = [];
+    }
+    
+    // Check if any player is already registered in another team
+    for (const player of players) {
+      const alreadyRegistered = tournament.registeredTeams.some((team: any) =>
+        team.players.some((p: any) => p.id === player.id)
+      );
+      if (alreadyRegistered) {
+        return c.json({ 
+          error: `Player ${player.name} is already registered in this tournament` 
+        }, 400);
+      }
+    }
+    
+    // Check if tournament is full
+    if (tournament.registeredTeams.length >= tournament.maxTeams) {
+      return c.json({ error: 'Tournament is full' }, 400);
+    }
+    
+    // Create team ID
+    const teamId = `beach-team:${Date.now()}:${userId}`;
+    
+    // Create team object
+    const newTeam = {
+      id: teamId,
+      name: teamName,
+      players: players.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        avatar: p.avatar,
+        position: p.position,
+      })),
+      teamSize,
+      captainId: captainId || userId,
+      registeredAt: new Date().toISOString(),
+    };
+    
+    // Add team to tournament
+    tournament.registeredTeams.push(newTeam);
+    tournament.updatedAt = new Date().toISOString();
+    
+    await kv.set(fullTournamentId, tournament);
+    console.log(`✅ Equipe de praia inscrita: ${teamName} no torneio ${tournament.name}`);
+    
+    return c.json({ 
+      success: true, 
+      team: newTeam,
+      tournament 
+    });
+  } catch (error: any) {
+    console.error('❌ Error registering beach team:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// ============= USER SEARCH ROUTES =============
+
+// Search users (for finding partners)
+app.get('/make-server-0ea22bba/users/search', authMiddleware, async (c) => {
+  try {
+    const query = c.req.query('query');
+    const type = c.req.query('type'); // 'athlete', 'team', 'fan', etc.
+    
+    if (!query || query.trim().length === 0) {
+      return c.json({ error: 'Search query is required' }, 400);
+    }
+    
+    console.log('🔍 Searching users:', { query, type });
+    
+    // Get all users
+    const allUsers = await kv.getByPrefix('user:');
+    console.log(`📊 Total users in database: ${allUsers.length}`);
+    
+    // Count athletes
+    const athletes = allUsers.filter((user: any) => user.userType === 'athlete');
+    console.log(`🏃 Total athletes in database: ${athletes.length}`);
+    
+    // Filter by name (case insensitive) and type
+    const searchLower = query.toLowerCase();
+    let filteredUsers = allUsers.filter((user: any) => 
+      user.name && user.name.toLowerCase().includes(searchLower)
+    );
+    
+    console.log(`🔍 Users matching name "${query}": ${filteredUsers.length}`);
+    
+    // Filter by type if specified
+    if (type) {
+      filteredUsers = filteredUsers.filter((user: any) => user.userType === type);
+      console.log(`🎯 Users matching name AND type "${type}": ${filteredUsers.length}`);
+    }
+    
+    // Remove sensitive data and limit results
+    const results = filteredUsers.slice(0, 20).map((user: any) => ({
+      id: user.id,
+      name: user.name,
+      avatar: user.avatar,
+      position: user.position,
+      userType: user.userType,
+      currentTeam: user.currentTeam,
+    }));
+    
+    console.log(`✅ Found ${results.length} users`);
+    console.log(`📋 Results:`, results.map(u => `${u.name} (${u.userType})`));
+    
+    return c.json({ users: results });
+  } catch (error: any) {
+    console.error('❌ Error searching users:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // Reset all tournaments (master only)
 app.post('/make-server-0ea22bba/admin/reset-tournaments', authMiddleware, async (c) => {
   try {
@@ -3213,6 +3311,22 @@ app.post('/make-server-0ea22bba/admin/reset-tournaments', authMiddleware, async 
     }
     
     console.log(`🗑️ Todos os torneios foram deletados (${allTournaments.length} torneios)`);
+    
+    // Delete all matches
+    const allMatches = await kv.getByPrefix('match:');
+    for (const match of allMatches) {
+      await kv.del(match.id);
+    }
+    console.log(`🗑️ Todas as partidas foram deletadas (${allMatches.length} partidas)`);
+    
+    // Delete all MVP votes
+    const allVotes = await kv.getByPrefix('mvp:');
+    for (const vote of allVotes) {
+      // Se o voto tem id, usar ele; senão, construir a key
+      const voteKey = vote.id || `mvp:${vote.tournamentId}:${vote.voterId}`;
+      await kv.del(voteKey);
+    }
+    console.log(`🗑️ Todos os votos MVP foram deletados (${allVotes.length} votos)`);
     
     // Create default tournament
     const organizer = await kv.get(`user:${userId}`);

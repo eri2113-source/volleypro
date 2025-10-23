@@ -1812,10 +1812,10 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
 
       {/* Confirmação de Exclusão */}
       <AlertDialog open={showDeletePlayerConfirm} onOpenChange={setShowDeletePlayerConfirm}>
-        <AlertDialogContent>
+        <AlertDialogContent aria-describedby="delete-player-team-description">
           <AlertDialogHeader>
             <AlertDialogTitle>Remover Jogador</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription id="delete-player-team-description">
               Tem certeza que deseja remover {selectedPlayer?.name} do elenco?
               Esta ação não pode ser desfeita.
             </AlertDialogDescription>
