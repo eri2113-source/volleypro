@@ -3239,6 +3239,33 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-beach-team', 
 
 // ============= USER SEARCH ROUTES =============
 
+// Debug endpoint - Check how many athletes exist (public, no auth required)
+app.get('/make-server-0ea22bba/debug/athletes-count', async (c) => {
+  try {
+    const allUsers = await kv.getByPrefix('user:');
+    const athletes = allUsers.filter((user: any) => user.userType === 'athlete');
+    const teams = allUsers.filter((user: any) => user.userType === 'team');
+    const fans = allUsers.filter((user: any) => user.userType === 'fan');
+    
+    const athletesList = athletes.map((a: any) => ({
+      name: a.name,
+      position: a.position,
+      id: a.id
+    }));
+    
+    return c.json({
+      total_users: allUsers.length,
+      athletes: athletes.length,
+      teams: teams.length,
+      fans: fans.length,
+      athlete_list: athletesList
+    });
+  } catch (error: any) {
+    console.error('❌ Error counting athletes:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // Search users (for finding partners)
 app.get('/make-server-0ea22bba/users/search', authMiddleware, async (c) => {
   try {
