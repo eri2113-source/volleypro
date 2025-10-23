@@ -425,38 +425,60 @@ function ProfileEditModalContent({
 
   // Salvar perfil
   const handleSave = async () => {
-    if (!profile || !userId) return;
+    if (!profile || !userId) {
+      console.error("❌ Erro: profile ou userId ausente", { profile, userId });
+      toast.error("Erro: Dados do perfil não carregados");
+      return;
+    }
+
+    // Validação básica
+    if (!profile.name || profile.name.trim() === "") {
+      toast.error("Nome é obrigatório");
+      setError("Nome é obrigatório");
+      return;
+    }
+
+    if (!profile.userType) {
+      toast.error("Tipo de conta é obrigatório");
+      setError("Tipo de conta é obrigatório");
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     try {
-      console.log("💾 Salvando perfil...", { userId, updates: profile });
+      console.log("💾 [SAVE PROFILE] Iniciando salvamento...", { userId, profile });
       
       const updatedProfile = {
         ...profile,
         photoUrl: photoUrl || profile.photoUrl,
       };
 
+      console.log("💾 [SAVE PROFILE] Chamando API updateUser...");
       const response = await userApi.updateUser(userId, updatedProfile);
       
-      console.log("✅ Resposta da API:", response);
+      console.log("✅ [SAVE PROFILE] Resposta da API:", response);
 
       toast.success("Perfil atualizado com sucesso! 🎉");
 
       // Forçar atualização da UI
       if (onSuccess) {
+        console.log("✅ [SAVE PROFILE] Chamando onSuccess callback");
         onSuccess();
       }
 
       // Aguardar um pouco antes de fechar para garantir que a UI atualizou
       setTimeout(() => {
+        console.log("✅ [SAVE PROFILE] Fechando modal");
         onClose();
       }, 500);
     } catch (err: any) {
-      console.error("❌ Erro ao salvar perfil:", err);
-      setError(err.message || "Erro ao salvar perfil");
-      toast.error(`Erro ao atualizar perfil: ${err.message || "Erro desconhecido"}`);
+      console.error("❌ [SAVE PROFILE] Erro ao salvar perfil:", err);
+      console.error("❌ [SAVE PROFILE] Stack:", err.stack);
+      const errorMessage = err.message || "Erro desconhecido ao salvar perfil";
+      setError(errorMessage);
+      toast.error(`Erro ao atualizar perfil: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

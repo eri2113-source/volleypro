@@ -99,6 +99,8 @@ export function LEDPanelConfigModal({
           continue;
         }
 
+        console.log('📤 [LED UPLOAD] Uploading file:', file.name);
+
         // Upload para Supabase Storage
         const formData = new FormData();
         formData.append("file", file);
@@ -116,10 +118,13 @@ export function LEDPanelConfigModal({
         );
 
         if (!response.ok) {
-          throw new Error(`Erro ao fazer upload de ${file.name}`);
+          const errorData = await response.json().catch(() => ({}));
+          console.error('❌ [LED UPLOAD] Upload failed:', errorData);
+          throw new Error(errorData.error || `Erro ao fazer upload de ${file.name}`);
         }
 
         const { url } = await response.json();
+        console.log('✅ [LED UPLOAD] File uploaded successfully:', file.name);
 
         uploadedMedia.push({
           id: crypto.randomUUID(),
@@ -135,10 +140,10 @@ export function LEDPanelConfigModal({
         media: [...prev.media, ...uploadedMedia],
       }));
 
-      toast.success(`${uploadedMedia.length} arquivo(s) adicionado(s)`);
-    } catch (error) {
-      console.error("Erro no upload:", error);
-      toast.error("Erro ao fazer upload dos arquivos");
+      toast.success(`✅ ${uploadedMedia.length} arquivo(s) adicionado(s) com sucesso!`);
+    } catch (error: any) {
+      console.error("❌ [LED UPLOAD] Erro no upload:", error);
+      toast.error(`Erro ao fazer upload: ${error.message}`);
     } finally {
       setUploadingFiles(false);
     }
@@ -239,7 +244,10 @@ export function LEDPanelConfigModal({
           <TabsContent value="media" className="space-y-4">
             {/* Upload de arquivos */}
             <div className="space-y-2">
-              <Label>Upload de Fotos/Vídeos</Label>
+              <Label className="flex items-center gap-2">
+                <Upload className="h-4 w-4 text-primary" />
+                📁 Upload Direto do Computador (Recomendado)
+              </Label>
               <div className="flex gap-2">
                 <Input
                   type="file"
@@ -255,17 +263,46 @@ export function LEDPanelConfigModal({
                   disabled={uploadingFiles}
                   onClick={() => document.querySelector<HTMLInputElement>('input[type="file"]')?.click()}
                 >
-                  <Upload className="h-4 w-4" />
+                  {uploadingFiles ? (
+                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Formatos aceitos: JPG, PNG, GIF, MP4, WEBM
-              </p>
+              <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+                <p className="text-xs text-muted-foreground flex items-center gap-2">
+                  <ImageIcon className="h-3 w-3" />
+                  <strong>Formatos de Imagem:</strong> JPG, PNG, GIF
+                </p>
+                <p className="text-xs text-muted-foreground flex items-center gap-2">
+                  <Video className="h-3 w-3" />
+                  <strong>Formatos de Vídeo:</strong> MP4, WEBM
+                </p>
+                <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                  ✅ Clique em "Escolher arquivos" e selecione as fotos/vídeos do seu computador
+                </p>
+              </div>
+            </div>
+
+            {/* Divisor */}
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-border"></div>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground">
+                  ou
+                </span>
+              </div>
             </div>
 
             {/* URL Externa */}
             <div className="space-y-2">
-              <Label>Ou adicione uma URL externa</Label>
+              <Label className="flex items-center gap-2">
+                <LinkIcon className="h-4 w-4" />
+                🔗 Adicionar Link de Imagem/Vídeo (Opcional)
+              </Label>
               <div className="flex gap-2">
                 <Input
                   placeholder="https://exemplo.com/imagem.jpg"
@@ -277,6 +314,9 @@ export function LEDPanelConfigModal({
                   Adicionar
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                💡 Use este campo apenas se a mídia já estiver hospedada online
+              </p>
             </div>
 
             {/* Lista de mídias */}

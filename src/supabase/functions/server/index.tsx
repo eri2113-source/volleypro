@@ -485,16 +485,28 @@ app.put('/make-server-0ea22bba/users/:userId', authMiddleware, async (c) => {
     const userId = c.req.param('userId');
     const currentUserId = c.get('userId');
     
+    console.log('📝 [UPDATE USER] Request received:', {
+      userId,
+      currentUserId,
+      match: userId === currentUserId
+    });
+    
     if (userId !== currentUserId) {
+      console.error('❌ [UPDATE USER] Unauthorized: userId mismatch');
       return c.json({ error: 'Unauthorized' }, 403);
     }
     
     const updates = await c.req.json();
+    console.log('📝 [UPDATE USER] Updates received:', JSON.stringify(updates, null, 2));
+    
     const profile = await kv.get(`user:${userId}`);
     
     if (!profile) {
+      console.error('❌ [UPDATE USER] User not found:', userId);
       return c.json({ error: 'User not found' }, 404);
     }
+    
+    console.log('📝 [UPDATE USER] Current profile:', JSON.stringify(profile, null, 2));
     
     // Garantir que altura e peso sejam números se fornecidos
     if (updates.height !== undefined && updates.height !== null) {
@@ -505,13 +517,17 @@ app.put('/make-server-0ea22bba/users/:userId', authMiddleware, async (c) => {
     }
     
     const updatedProfile = { ...profile, ...updates };
+    
+    console.log('📝 [UPDATE USER] Saving updated profile:', JSON.stringify(updatedProfile, null, 2));
+    
     await kv.set(`user:${userId}`, updatedProfile);
     
-    console.log('✅ Profile updated with height:', updatedProfile.height, 'weight:', updatedProfile.weight);
+    console.log('✅ [UPDATE USER] Profile updated successfully!');
     
     return c.json({ profile: updatedProfile });
   } catch (error: any) {
-    console.log('Error updating user profile:', error);
+    console.error('❌ [UPDATE USER] Error:', error);
+    console.error('❌ [UPDATE USER] Stack:', error.stack);
     return c.json({ error: error.message }, 500);
   }
 });
@@ -4102,6 +4118,93 @@ app.get('/make-server-0ea22bba/athletes/search', async (c) => {
     });
   } catch (error: any) {
     console.error('❌ Error searching athlete:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// ============= FILE UPLOAD ROUTES =============
+
+// Upload file to Supabase Storage
+app.post('/make-server-0ea22bba/upload', authMiddleware, async (c) => {
+  try {
+    console.log('📤 [UPLOAD] File upload request received');
+    
+    const formData = await c.req.formData();
+    const file = formData.get('file') as File;
+    const path = formData.get('path') as string;
+    
+    if (!file) {
+      console.error('❌ [UPLOAD] No file provided');
+      return c.json({ error: 'No file provided' }, 400);
+    }
+    
+    if (!path) {
+      console.error('❌ [UPLOAD] No path provided');
+      return c.json({ error: 'No path provided' }, 400);
+    }
+    
+    console.log('📤 [UPLOAD] File details:', {
+      name: file.name,
+      type: file.type,
+      size: file.size,
+      path: path
+    });
+    
+    // Convert File to ArrayBuffer
+    const arrayBuffer = await file.arrayBuffer();
+    const fileData = new Uint8Array(arrayBuffer);
+    
+    console.log('📤 [UPLOAD] Uploading to Supabase Storage...');
+    
+    // Upload to Supabase Storage
+    const bucketName = 'make-0ea22bba-uploads';
+    
+    // Ensure bucket exists
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    
+    if (!bucketExists) {
+      console.log('📦 [UPLOAD] Creating bucket:', bucketName);
+      await supabase.storage.createBucket(bucketName, {
+        public: false,
+        fileSizeLimit: 52428800, // 50MB
+      });
+    }
+    
+    // Upload file
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from(bucketName)
+      .upload(path, fileData, {
+        contentType: file.type,
+        upsert: true,
+      });
+    
+    if (uploadError) {
+      console.error('❌ [UPLOAD] Upload error:', uploadError);
+      return c.json({ error: uploadError.message }, 500);
+    }
+    
+    console.log('✅ [UPLOAD] File uploaded:', uploadData.path);
+    
+    // Generate signed URL (valid for 1 year)
+    const { data: urlData, error: urlError } = await supabase.storage
+      .from(bucketName)
+      .createSignedUrl(path, 31536000); // 1 year in seconds
+    
+    if (urlError) {
+      console.error('❌ [UPLOAD] Error generating signed URL:', urlError);
+      return c.json({ error: urlError.message }, 500);
+    }
+    
+    console.log('✅ [UPLOAD] Signed URL generated');
+    
+    return c.json({ 
+      url: urlData.signedUrl,
+      path: uploadData.path
+    });
+  } catch (error: any) {
+    console.error('❌ [UPLOAD] Error:', error);
+    console.error('❌ [UPLOAD] Stack:', error.stack);
     return c.json({ error: error.message }, 500);
   }
 });
