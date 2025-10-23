@@ -217,7 +217,8 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
       <div className="relative z-0 overflow-hidden">
         {ledPanelConfig ? (
           <AnimatedLEDPanel
-            media={ledPanelConfig.media}
+            zones={ledPanelConfig.zones}
+            media={ledPanelConfig.media} // Retrocompatibilidade
             layout={ledPanelConfig.layout}
             animationType={ledPanelConfig.animationType}
             randomOrder={ledPanelConfig.randomOrder}

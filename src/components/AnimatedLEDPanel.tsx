@@ -11,7 +11,13 @@ interface LEDMedia {
 }
 
 interface AnimatedLEDPanelProps {
-  media: LEDMedia[];
+  zones?: {
+    zone1: LEDMedia[];
+    zone2: LEDMedia[];
+    zone3: LEDMedia[];
+    zone4: LEDMedia[];
+  };
+  media?: LEDMedia[]; // Retrocompatibilidade
   layout?: "single" | "grid-2" | "grid-3" | "grid-4";
   animationType?: "horizontal" | "fade" | "zoom" | "slide";
   randomOrder?: boolean;
@@ -21,6 +27,7 @@ interface AnimatedLEDPanelProps {
 }
 
 export function AnimatedLEDPanel({
+  zones,
   media,
   layout = "grid-3",
   animationType = "horizontal",
@@ -29,14 +36,26 @@ export function AnimatedLEDPanel({
   transitionSpeed = 5,
   height = 320,
 }: AnimatedLEDPanelProps) {
-  // Determinar número de slots
+  // Determinar número de slots baseado no layout
   const numSlots =
     layout === "single" ? 1 : layout === "grid-2" ? 2 : layout === "grid-3" ? 3 : 4;
 
-  // Distribuir mídias entre slots
-  const slotMedia = Array.from({ length: numSlots }, (_, slotIndex) => {
-    return media.filter((_, index) => index % numSlots === slotIndex);
-  });
+  // Determinar mídia para cada slot
+  let slotMedia: LEDMedia[][] = [];
+
+  if (zones) {
+    // 🆕 NOVO SISTEMA: Usar zonas separadas
+    const zoneKeys = ["zone1", "zone2", "zone3", "zone4"] as const;
+    slotMedia = zoneKeys.slice(0, numSlots).map((key) => zones[key] || []);
+  } else if (media && media.length > 0) {
+    // 🔙 RETROCOMPATIBILIDADE: Distribuir mídia única entre slots
+    slotMedia = Array.from({ length: numSlots }, (_, slotIndex) => {
+      return media.filter((_, index) => index % numSlots === slotIndex);
+    });
+  } else {
+    // Vazio
+    slotMedia = Array.from({ length: numSlots }, () => []);
+  }
 
   // Classes de grid
   const gridClasses = {
@@ -46,8 +65,11 @@ export function AnimatedLEDPanel({
     "grid-4": "grid-cols-2 lg:grid-cols-4",
   };
 
+  // Verificar se há alguma mídia
+  const hasAnyMedia = slotMedia.some((slot) => slot.length > 0);
+
   // Se não há mídia, mostra placeholder
-  if (!media || media.length === 0) {
+  if (!hasAnyMedia) {
     return (
       <div
         className="relative overflow-hidden bg-gradient-to-r from-primary via-[#0052cc] to-primary"
