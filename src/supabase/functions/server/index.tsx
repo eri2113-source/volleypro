@@ -3154,6 +3154,126 @@ app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register-individual'
 
 // ============= BEACH TOURNAMENT TEAM REGISTRATION =============
 
+// 🆕 INDIVIDUAL REGISTRATION - Atleta se inscreve para participar do torneio
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-individual', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    
+    console.log('🏖️ Individual registration:', { tournamentId, userId });
+    
+    const tournament = await kv.get(fullTournamentId);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    if (tournament.modalityType !== 'beach') {
+      return c.json({ error: 'This endpoint is only for beach tournaments' }, 400);
+    }
+    
+    // Initialize arrays if needed
+    if (!tournament.individualRegistrations) {
+      tournament.individualRegistrations = [];
+    }
+    
+    // Check if already registered
+    const alreadyRegistered = tournament.individualRegistrations.some((reg: any) => reg.userId === userId);
+    if (alreadyRegistered) {
+      return c.json({ error: 'You are already registered for this tournament' }, 400);
+    }
+    
+    // Get user profile
+    const userKey = `user:${userId}`;
+    const userProfile = await kv.get(userKey);
+    
+    if (!userProfile) {
+      return c.json({ error: 'User profile not found' }, 404);
+    }
+    
+    // Add individual registration
+    const registration = {
+      userId,
+      name: userProfile.name,
+      avatar: userProfile.avatar,
+      position: userProfile.position || 'Atleta',
+      registeredAt: new Date().toISOString(),
+      hasTeam: false, // Ainda não formou equipe
+    };
+    
+    tournament.individualRegistrations.push(registration);
+    tournament.updatedAt = new Date().toISOString();
+    
+    await kv.set(fullTournamentId, tournament);
+    console.log(`✅ Atleta inscrito individualmente: ${userProfile.name} no torneio ${tournament.name}`);
+    
+    return c.json({ 
+      success: true, 
+      registration,
+      message: 'Successfully registered for the tournament'
+    });
+  } catch (error: any) {
+    console.error('❌ Error in individual registration:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// 🆕 GET REGISTERED PLAYERS - Lista atletas inscritos no torneio
+app.get('/make-server-0ea22bba/tournaments/:tournamentId/registered-players', authMiddleware, async (c) => {
+  try {
+    const tournamentId = c.req.param('tournamentId');
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    
+    console.log('📋 Getting registered players:', tournamentId);
+    
+    const tournament = await kv.get(fullTournamentId);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    const registrations = tournament.individualRegistrations || [];
+    
+    // Filtrar apenas os que ainda não formaram equipe
+    const availablePlayers = registrations.filter((reg: any) => !reg.hasTeam);
+    
+    console.log(`✅ ${availablePlayers.length} jogadores disponíveis de ${registrations.length} inscritos`);
+    
+    return c.json({ 
+      players: availablePlayers,
+      total: registrations.length,
+      available: availablePlayers.length
+    });
+  } catch (error: any) {
+    console.error('❌ Error getting registered players:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// 🆕 CHECK IF USER IS REGISTERED - Verifica se o usuário já se inscreveu
+app.get('/make-server-0ea22bba/tournaments/:tournamentId/check-registration', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    
+    const tournament = await kv.get(fullTournamentId);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    const registrations = tournament.individualRegistrations || [];
+    const registration = registrations.find((reg: any) => reg.userId === userId);
+    
+    return c.json({ 
+      isRegistered: !!registration,
+      registration: registration || null
+    });
+  } catch (error: any) {
+    console.error('❌ Error checking registration:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // Register beach team (dupla/trio/quartet/quintet)
 app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-beach-team', authMiddleware, async (c) => {
   try {
@@ -3189,6 +3309,19 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-beach-team', 
     // Initialize arrays if needed
     if (!tournament.registeredTeams) {
       tournament.registeredTeams = [];
+    }
+    if (!tournament.individualRegistrations) {
+      tournament.individualRegistrations = [];
+    }
+    
+    // 🆕 Verificar se todos os jogadores estão inscritos individualmente
+    for (const player of players) {
+      const isRegistered = tournament.individualRegistrations.some((reg: any) => reg.userId === player.id);
+      if (!isRegistered) {
+        return c.json({ 
+          error: `Player ${player.name} is not registered for this tournament. They need to register individually first.` 
+        }, 400);
+      }
     }
     
     // Check if any player is already registered in another team
@@ -3228,6 +3361,17 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-beach-team', 
     
     // Add team to tournament
     tournament.registeredTeams.push(newTeam);
+    
+    // 🆕 Marcar jogadores como "hasTeam = true"
+    for (const player of players) {
+      const registration = tournament.individualRegistrations.find((reg: any) => reg.userId === player.id);
+      if (registration) {
+        registration.hasTeam = true;
+        registration.teamId = teamId;
+        registration.teamName = teamName;
+      }
+    }
+    
     tournament.updatedAt = new Date().toISOString();
     
     await kv.set(fullTournamentId, tournament);

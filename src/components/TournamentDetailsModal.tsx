@@ -37,6 +37,7 @@ import { toast } from "sonner@2.0.3";
 import { Trophy, Users, Calendar, MapPin, Award, Play, CheckCircle2, X, XCircle, UserPlus } from "lucide-react";
 import { TournamentRosterModal } from "./TournamentRosterModal";
 import { BeachTournamentRegistration } from "./BeachTournamentRegistration";
+import { BeachTournamentIndividualRegistration } from "./BeachTournamentIndividualRegistration";
 import { TournamentBracket } from "./TournamentBracket";
 import { TournamentStandings } from "./TournamentStandings";
 import { BeachTournamentBracket } from "./BeachTournamentBracket";
@@ -85,6 +86,7 @@ export function TournamentDetailsModal({
   
   // Beach Tournament Registration
   const [showBeachRegistration, setShowBeachRegistration] = useState(false);
+  const [showIndividualRegistration, setShowIndividualRegistration] = useState(false);
 
   useEffect(() => {
     if (open && tournamentId && tournamentId !== '') {
@@ -434,14 +436,24 @@ export function TournamentDetailsModal({
             )}
 
             {canRegisterBeach && (
-              <Button 
-                onClick={() => setShowBeachRegistration(true)}
-                disabled={loading}
-                className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
-              >
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                Inscrever Dupla
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => setShowIndividualRegistration(true)}
+                  disabled={loading}
+                  className="bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Me Inscrever
+                </Button>
+                <Button 
+                  onClick={() => setShowBeachRegistration(true)}
+                  disabled={loading}
+                  className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Formar Dupla
+                </Button>
+              </div>
             )}
 
             {canUnregister && (

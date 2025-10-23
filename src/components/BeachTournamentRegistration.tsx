@@ -75,8 +75,68 @@ export function BeachTournamentRegistration({
     if (open) {
       loadCurrentUser();
       checkDatabaseAthletes(); // Verificar quantos atletas tem no banco
+      loadRegisteredPlayers(); // 🆕 Carregar jogadores inscritos
     }
   }, [open]);
+
+  // 🆕 Carregar jogadores que JÁ se inscreveram individualmente neste torneio
+  async function loadRegisteredPlayers() {
+    try {
+      console.log("📋 Carregando jogadores inscritos no torneio...");
+      
+      const session = await authApi.getSession();
+      if (!session?.access_token) {
+        console.log("⚠️ Sem sessão válida");
+        return;
+      }
+
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/registered-players`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        console.error("❌ Erro ao buscar jogadores inscritos");
+        return;
+      }
+
+      const data = await response.json();
+      console.log("✅ Jogadores inscritos:", data);
+
+      // Filtrar jogadores: remover o usuário atual e os já selecionados
+      const availablePlayers = (data.players || [])
+        .filter((player: any) => 
+          player.userId !== currentUser?.id &&
+          !selectedPartners.find(p => p.id === player.userId)
+        )
+        .map((player: any) => ({
+          id: player.userId,
+          name: player.name,
+          avatar: player.avatar,
+          position: player.position || "Atleta",
+          userType: "athlete",
+        }));
+
+      setSearchResults(availablePlayers);
+      setDbAthletes(data.available || 0); // Mostrar quantos disponíveis
+
+      if (availablePlayers.length === 0) {
+        toast.info("Nenhum atleta disponível ainda", {
+          description: "Os atletas precisam se inscrever individualmente primeiro",
+        });
+      } else {
+        toast.success(`${availablePlayers.length} atleta(s) disponível(is)!`, {
+          description: "Escolha seus parceiros entre os inscritos",
+        });
+      }
+    } catch (error) {
+      console.error("❌ Erro ao carregar jogadores inscritos:", error);
+    }
+  }
 
   // Verificar quantos atletas existem no banco REAL
   async function checkDatabaseAthletes() {
@@ -87,12 +147,10 @@ export function BeachTournamentRegistration({
       
       if (response.ok) {
         const data = await response.json();
-        setDbAthletes(data.athletes || 0);
         console.log(`✅ Banco de dados conectado! ${data.athletes} atletas cadastrados`);
       }
     } catch (error) {
       console.log("⚠️ Não foi possível conectar ao banco real");
-      setDbAthletes(null);
     }
   }
 
@@ -139,154 +197,25 @@ export function BeachTournamentRegistration({
       return;
     }
 
-    setLoading(true);
-    try {
-      console.log("🔍 Buscando atletas com nome:", searchQuery);
+    // Filtrar a lista já carregada por nome
+    const filtered = searchResults.filter((player) =>
+      player.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
-      // Tentar buscar do banco real primeiro
-      const session = await authApi.getSession();
-      
-      if (!session?.access_token) {
-        console.log("⚠️ Sem sessão válida - usando dados de exemplo");
-        usarDadosDeExemplo();
-        return;
-      }
-
-      console.log("✅ Sessão válida - buscando no banco real");
-
-      // Buscar apenas ATLETAS REAIS do banco - APENAS POR NOME
-      const url = `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/users/search?query=${encodeURIComponent(searchQuery)}&type=athlete`;
-      console.log("📡 URL da requisição:", url);
-
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+    if (filtered.length === 0) {
+      toast.info(`Nenhum atleta encontrado com "${searchQuery}"`, {
+        description: "Tente buscar por outro nome",
       });
-
-      console.log("📥 Status da resposta:", response.status);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error("❌ Erro da API:", errorData);
-        
-        // Se o erro for de autenticação, usar dados de exemplo
-        if (errorData.error?.includes("User not found") || 
-            errorData.error?.includes("Unauthorized") ||
-            errorData.code === "USER_NOT_FOUND" ||
-            errorData.code === "TOKEN_INVALID") {
-          
-          console.log("⚠️ Erro de autenticação - usando dados de exemplo");
-          toast.info("Não foi possível conectar ao banco de dados", {
-            description: "Mostrando atletas de exemplo para teste",
-          });
-          
-          usarDadosDeExemplo();
-          return;
-        }
-        
-        throw new Error(errorData.error || "Erro ao buscar jogadores");
-      }
-
-      const data = await response.json();
-      console.log("✅ Atletas encontrados:", data);
-
-      // Filtrar apenas atletas (userType = 'athlete') e remover o usuário atual
-      const athletes = (data.users || []).filter(
-        (user: any) => 
-          user.userType === 'athlete' && 
-          user.id !== currentUser?.id &&
-          !selectedPartners.find(p => p.id === user.id)
-      );
-
-      if (athletes.length === 0) {
-        toast.info("Nenhum atleta encontrado com esse nome", {
-          description: "Tente buscar por outro nome ou verifique se o atleta está cadastrado",
-        });
-        setSearchResults([]);
-        return;
-      }
-
-      const results: Player[] = athletes.map((user: any) => ({
-        id: user.id,
-        name: user.name,
-        avatar: user.avatar,
-        position: user.position || "Atleta",
-        userType: user.userType,
-      }));
-
-      setSearchResults(results);
-      toast.success(`${results.length} atleta(s) encontrado(s)`);
-    } catch (error) {
-      console.error("❌ Erro ao buscar jogadores:", error);
-      const errorMessage = error instanceof Error ? error.message : "Erro ao buscar jogadores";
-      toast.error(errorMessage, {
-        description: "Verifique sua conexão e tente novamente",
-      });
-      setSearchResults([]);
-    } finally {
-      setLoading(false);
+    } else {
+      toast.success(`${filtered.length} atleta(s) encontrado(s)`);
     }
   };
 
-  // Função auxiliar para usar dados de exemplo
-  function usarDadosDeExemplo() {
-    const exemploAtletas = [
-      {
-        id: "atleta-1",
-        name: "Gabriel Alves",
-        avatar: "https://i.pravatar.cc/150?img=12",
-        position: "Ponteiro",
-        userType: "athlete"
-      },
-      {
-        id: "atleta-2",
-        name: "Gabriel Santos",
-        avatar: "https://i.pravatar.cc/150?img=13",
-        position: "Bloqueador",
-        userType: "athlete"
-      },
-      {
-        id: "atleta-3",
-        name: "Pedro Gabriel",
-        avatar: "https://i.pravatar.cc/150?img=14",
-        position: "Levantador",
-        userType: "athlete"
-      },
-      {
-        id: "atleta-4",
-        name: "Lucas Silva",
-        avatar: "https://i.pravatar.cc/150?img=15",
-        position: "Líbero",
-        userType: "athlete"
-      },
-      {
-        id: "atleta-5",
-        name: "Mateus Oliveira",
-        avatar: "https://i.pravatar.cc/150?img=16",
-        position: "Oposto",
-        userType: "athlete"
-      }
-    ];
-
-    // Filtrar por nome
-    const resultadosFiltrados = exemploAtletas.filter(atleta =>
-      atleta.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      atleta.id !== currentUser?.id
-    );
-
-    if (resultadosFiltrados.length === 0) {
-      toast.info(`Nenhum atleta encontrado com "${searchQuery}"`, {
-        description: "Tente: Gabriel, Lucas, Pedro ou Mateus",
-      });
-      setSearchResults([]);
-    } else {
-      setSearchResults(resultadosFiltrados);
-      toast.success(`${resultadosFiltrados.length} atleta(s) de exemplo encontrado(s)`);
-    }
-    
-    setLoading(false);
-  }
+  // Recarregar lista completa
+  const handleShowAll = async () => {
+    setSearchQuery("");
+    loadRegisteredPlayers();
+  };
 
   // Adicionar parceiro
   const handleAddPartner = (player: Player) => {
@@ -420,13 +349,13 @@ export function BeachTournamentRegistration({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" aria-describedby="beach-tournament-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Volleyball className="h-5 w-5 text-primary" />
             Inscrever {getTeamTypeLabel()} no Torneio
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="beach-tournament-description">
             {tournamentName} - Vôlei de Praia - Monte sua {getTeamTypeLabel().toLowerCase()} e participe do torneio!
           </DialogDescription>
         </DialogHeader>
@@ -511,6 +440,12 @@ export function BeachTournamentRegistration({
               >
                 <Search className="h-4 w-4 mr-2" />
                 Buscar
+              </Button>
+              <Button
+                onClick={handleShowAll}
+                disabled={loading || selectedPartners.length >= partnersNeeded}
+              >
+                Ver Todos
               </Button>
             </div>
             <p className="text-xs text-muted-foreground flex items-center gap-1">
