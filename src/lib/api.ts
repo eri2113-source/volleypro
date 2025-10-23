@@ -263,6 +263,11 @@ export const authApi = {
     }
   },
 
+  // Alias para signOut (compatibilidade)
+  async logout() {
+    return this.signOut();
+  },
+
   async getSession() {
     try {
       const { createClient } = await import('../utils/supabase/client');
@@ -476,7 +481,7 @@ export const postApi = {
         throw new Error('Erro de conexão. Verifique sua internet e tente novamente.');
       }
       
-      console.error('❌ Erro desconhecido no upload:', error);
+      console.error('��� Erro desconhecido no upload:', error);
       throw error;
     }
   },

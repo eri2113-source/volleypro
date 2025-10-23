@@ -242,10 +242,17 @@ async function authMiddleware(c: any, next: any) {
     if (!user) {
       console.log('❌ No user found for token');
       return c.json({ 
-        error: 'Unauthorized - Invalid token',
+        error: 'User not found',
         code: 'USER_NOT_FOUND',
         needsRefresh: true 
       }, 401);
+    }
+    
+    // IMPORTANTE: Verificar se o perfil do usuário existe no KV
+    const userProfile = await kv.get(`user:${user.id}`);
+    if (!userProfile) {
+      console.log('⚠️ User authenticated but profile not found in KV:', user.id);
+      // Permitir acesso mesmo sem perfil - será criado depois
     }
     
     console.log('✅ User authenticated:', user.email);
