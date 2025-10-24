@@ -3,7 +3,9 @@ import ReactDOM from 'react-dom/client';
 import App from '../App.tsx';
 import '../styles/globals.css';
 
-// Registrar Service Worker para PWA
+// ⚠️ Service Worker DESATIVADO temporariamente até deploy correto
+// Será reativado após commit/push do arquivo service-worker.js
+/*
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
@@ -16,6 +18,7 @@ if ('serviceWorker' in navigator) {
       });
   });
 }
+*/
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
