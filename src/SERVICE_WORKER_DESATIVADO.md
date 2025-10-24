@@ -1,43 +1,44 @@
-# ✅ CORREÇÕES APLICADAS - Google Ads + Acessibilidade
+# ✅ CORREÇÃO GOOGLE ADS - ORDEM DE CARREGAMENTO
 
-## 🎯 Problemas resolvidos:
+## 🎯 PROBLEMA ENCONTRADO:
 
-### 1. **Service Worker 404** ❌→✅
-- **Problema:** Erro 404 tentando carregar `/service-worker.js`
-- **Causa:** PWAManager tentando registrar SW que não existe
-- **Solução:** Desativado temporariamente + auto-desregistro de SWs antigos
+❌ **Google Analytics não aparecia no console**  
+❌ **Google Ads não detectava a tag**
 
-### 2. **Acessibilidade Dialogs** ⚠️→✅
-- **Problema:** Warning `Missing Description or aria-describedby={undefined}`
-- **Causa:** Radix UI exige DialogDescription no DOM com ID correspondente
-- **Solução:** DialogContent **SEMPRE** cria Description oculto automaticamente
+### 🔍 Causa Raiz:
 
----
+O `figma-blocker.js` estava carregando **ANTES** do Google Analytics no HTML!
 
-## 📋 Arquivos alterados:
-
-1. ✅ `/components/PWAManager.tsx` - Desativa Service Worker
-2. ✅ `/src/main.tsx` - Desregistra SWs antigos  
-3. ✅ `/components/ui/dialog.tsx` - **SEMPRE** cria DialogDescription oculto
-
----
-
-## 🔧 Solução DEFINITIVA de Dialogs:
-
-O `DialogContent` agora **SEMPRE** renderiza um `DialogDescription` oculto no final:
-
-```tsx
-<DialogPrimitive.Description id={descriptionId} className="sr-only">
-  Dialog window
-</DialogPrimitive.Description>
+**Ordem ERRADA:**
+```
+1. GTM
+2. Google Analytics  ← Deveria ser PRIMEIRO!
+3. figma-blocker.js  ← Executava antes do Analytics
 ```
 
-**Por quê isso funciona:**
-- ✅ Garante que **SEMPRE** existe um elemento com o ID do `aria-describedby`
-- ✅ Não importa se o código já tem DialogDescription visível
-- ✅ O oculto fica no final, não interfere visualmente
-- ✅ **100% compatível** com Radix UI
-- ✅ **ZERO warnings**
+---
+
+## ✅ SOLUÇÃO APLICADA:
+
+### **Nova Ordem Correta:**
+
+```html
+1️⃣ Google Analytics (gtag.js) ← PRIMEIRO SEMPRE!
+2️⃣ Google Tag Manager (GTM)
+3️⃣ figma-blocker.js ← POR ÚLTIMO
+```
+
+**Por quê funciona:**
+- ✅ Google Analytics carrega ANTES de qualquer outro script
+- ✅ Inicializa imediatamente ao carregar a página
+- ✅ Google Ads detecta a tag sem problemas
+- ✅ figma-blocker não interfere (executa depois)
+
+---
+
+## 📋 Arquivo alterado:
+
+✅ `/index.html` - Ordem de scripts corrigida
 
 ---
 
@@ -46,7 +47,7 @@ O `DialogContent` agora **SEMPRE** renderiza um `DialogDescription` oculto no fi
 ### **GitHub Desktop - Commit + Push:**
 
 ```
-Mensagem: "Fix: Dialog sempre com Description oculto + remove Service Worker"
+Mensagem: "Fix: Google Analytics ordem de carregamento"
 ```
 
 ---
@@ -56,22 +57,19 @@ Mensagem: "Fix: Dialog sempre com Description oculto + remove Service Worker"
 ```
 ✅ Google Analytics 4 inicializado: G-34HHBM1L6C
 ✅ Google Ads Conversion Tracking inicializado: AW-977142326
-🗑️ Service Worker antigo removido
+✅ Produção detectada - acesso liberado
 ✅ MASTER USER detected!
 ✅ Posts carregados: 22
-
-❌ SEM ERROS
-❌ SEM WARNINGS ← DEVE SUMIR AGORA!
 ```
 
 ---
 
-## 🎯 Status Google Ads:
+## 🎯 Google Ads:
 
-Com console 100% limpo, o Google Ads **FINALMENTE** vai detectar a tag!
+Agora que o Analytics carrega PRIMEIRO, o Google Ads VAI detectar!
 
-**Testar em:** https://volleypro-zw96.vercel.app
+**Testar:** https://volleypro-zw96.vercel.app
 
 ---
 
-**Commit/push AGORA e me avise!** 🔥
+**COMMIT/PUSH AGORA!** 🚀
