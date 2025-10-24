@@ -38,22 +38,7 @@ const DialogContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   // Auto-generate unique ID for aria-describedby
   const uniqueId = React.useId();
-  const descriptionId = props['aria-describedby'] || `dialog-description-${uniqueId}`;
-  
-  // Check if DialogDescription exists in children
-  const hasDescription = React.Children.toArray(children).some((child: any) => {
-    if (React.isValidElement(child)) {
-      // Check if it's a DialogHeader containing DialogDescription
-      if (child.props?.children) {
-        const headerChildren = React.Children.toArray(child.props.children);
-        return headerChildren.some((hChild: any) => 
-          React.isValidElement(hChild) && hChild.type === DialogDescription
-        );
-      }
-      return child.type === DialogDescription;
-    }
-    return false;
-  });
+  const descriptionId = props['aria-describedby'] || `dialog-auto-desc-${uniqueId}`;
   
   return (
   <DialogPortal>
@@ -68,14 +53,14 @@ const DialogContent = React.forwardRef<
       )}
       {...props}
     >
-      {/* Hidden description for accessibility if none provided */}
-      {!hasDescription && (
-        <DialogPrimitive.Description id={descriptionId} className="sr-only">
-          Dialog content
-        </DialogPrimitive.Description>
-      )}
-      
       {children}
+      
+      {/* Always render a hidden fallback description for accessibility */}
+      {/* This prevents Radix UI warnings even if DialogDescription exists in children */}
+      <DialogPrimitive.Description id={descriptionId} className="sr-only">
+        Dialog window
+      </DialogPrimitive.Description>
+      
       <DialogPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
         <XIcon />
         <span className="sr-only">Close</span>
