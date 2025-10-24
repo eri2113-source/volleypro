@@ -3,22 +3,15 @@ import ReactDOM from 'react-dom/client';
 import App from '../App.tsx';
 import '../styles/globals.css';
 
-// ⚠️ Service Worker DESATIVADO temporariamente até deploy correto
-// Será reativado após commit/push do arquivo service-worker.js
-/*
+// 🔥 DESREGISTRAR Service Workers antigos que estão causando erro 404
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/service-worker.js')
-      .then((registration) => {
-        console.log('✅ Service Worker registrado com sucesso:', registration.scope);
-      })
-      .catch((error) => {
-        console.error('❌ Erro ao registrar Service Worker:', error);
-      });
+  navigator.serviceWorker.getRegistrations().then((registrations) => {
+    registrations.forEach((registration) => {
+      registration.unregister();
+      console.log('🗑️ Service Worker antigo removido:', registration.scope);
+    });
   });
 }
-*/
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
