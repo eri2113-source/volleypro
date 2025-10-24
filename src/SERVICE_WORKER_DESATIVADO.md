@@ -1,44 +1,58 @@
-# 🔥 Service Worker DESATIVADO
+# ✅ CORREÇÕES APLICADAS - Google Ads + Acessibilidade
 
-## ✅ Arquivos corrigidos:
+## 🎯 Problemas resolvidos:
 
-1. **`/src/main.tsx`** - Desregistra Service Workers antigos no boot
-2. **`/components/PWAManager.tsx`** - Não registra mais Service Worker
+### 1. **Service Worker 404** ❌→✅
+- **Problema:** Erro 404 tentando carregar `/service-worker.js`
+- **Causa:** PWAManager tentando registrar SW que não existe
+- **Solução:** Desativado temporariamente + auto-desregistro de SWs antigos
 
-## 🎯 O problema:
+### 2. **Acessibilidade Dialogs** ⚠️→✅
+- **Problema:** Warning de `aria-describedby` em Dialogs
+- **Causa:** Radix UI exige Description ou aria-describedby único
+- **Solução:** Auto-geração de ID único com `React.useId()`
 
-O `PWAManager.tsx` estava tentando registrar `/service-worker.js` que não existe, causando erro 404.
+---
 
-## ✅ A solução:
+## 📋 Arquivos alterados:
 
-Ambos os arquivos agora **desregistram automaticamente** qualquer Service Worker antigo que esteja em cache no navegador.
+1. ✅ `/components/PWAManager.tsx` - Desativa Service Worker
+2. ✅ `/src/main.tsx` - Desregistra SWs antigos  
+3. ✅ `/components/ui/dialog.tsx` - Auto-gera aria-describedby único
 
 ---
 
 ## 🚀 PRÓXIMO PASSO:
 
-### **Commit + Push no GitHub Desktop:**
+### **GitHub Desktop - Commit + Push:**
 
 ```
-Mensagem: "Desativa PWA Manager + remove Service Workers antigos"
+Mensagem: "Fix: Remove Service Worker + corrige acessibilidade Dialogs"
 ```
 
 ---
 
-## 📋 Depois do deploy:
-
-Console DEVE mostrar:
+## ✅ Depois do deploy, console DEVE mostrar:
 
 ```
 ✅ Google Analytics 4 inicializado: G-34HHBM1L6C
 ✅ Google Ads Conversion Tracking inicializado: AW-977142326
 🗑️ Service Worker antigo removido
-✅ Feed carregados
+✅ MASTER USER detected!
+✅ Posts carregados: 22
 
-❌ SEM ERROS 404
-❌ SEM ERROS de Service Worker
+❌ SEM ERROS
+❌ SEM WARNINGS
 ```
 
 ---
 
-**Status:** Pronto para commit! 🎉
+## 🎯 Status Google Ads:
+
+Agora que os erros foram corrigidos, o Google Ads deve detectar a tag corretamente!
+
+**Testar em:** https://volleypro-zw96.vercel.app
+
+---
+
+**Pronto para commit!** 🚀
