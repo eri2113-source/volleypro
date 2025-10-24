@@ -9,8 +9,8 @@
 
 ### 2. **Acessibilidade Dialogs** ⚠️→✅
 - **Problema:** Warning de `aria-describedby` em Dialogs
-- **Causa:** Radix UI exige Description ou aria-describedby único
-- **Solução:** Auto-geração de ID único com `React.useId()`
+- **Causa:** Radix UI exige DialogDescription no DOM com ID correspondente
+- **Solução:** DialogContent agora auto-detecta e cria Description oculto se necessário
 
 ---
 
@@ -18,7 +18,17 @@
 
 1. ✅ `/components/PWAManager.tsx` - Desativa Service Worker
 2. ✅ `/src/main.tsx` - Desregistra SWs antigos  
-3. ✅ `/components/ui/dialog.tsx` - Auto-gera aria-describedby único
+3. ✅ `/components/ui/dialog.tsx` - Auto-cria DialogDescription oculto quando ausente
+
+---
+
+## 🔧 Como funciona a correção de Dialogs:
+
+O `DialogContent` agora:
+1. ✅ Verifica se há `DialogDescription` nos filhos
+2. ✅ Se **não houver**, cria um automaticamente **oculto** com `sr-only`
+3. ✅ Garante que o `aria-describedby` sempre aponta para um elemento existente
+4. ✅ **Zero warnings** de acessibilidade!
 
 ---
 
@@ -27,7 +37,7 @@
 ### **GitHub Desktop - Commit + Push:**
 
 ```
-Mensagem: "Fix: Remove Service Worker + corrige acessibilidade Dialogs"
+Mensagem: "Fix: Dialog auto-description + remove Service Worker"
 ```
 
 ---
