@@ -86,23 +86,7 @@
   ],
   "rewrites": [
     {
-      "source": "/sitemap.xml",
-      "destination": "/sitemap.xml"
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "/robots.txt"
-    },
-    {
-      "source": "/manifest.json",
-      "destination": "/manifest.json"
-    },
-    {
-      "source": "/service-worker.js",
-      "destination": "/service-worker.js"
-    },
-    {
-      "source": "/(.*)",
+      "source": "/((?!sitemap\\.xml|robots\\.txt|manifest\\.json|service-worker\\.js|icon-.*\\.(?:png|svg)|screenshot-.*\\.png|.*\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot)).*)",
       "destination": "/index.html"
     }
   ]

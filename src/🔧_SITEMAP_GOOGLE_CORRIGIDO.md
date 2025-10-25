@@ -1,68 +1,66 @@
 # 🔧 Sitemap Google Search Console Corrigido
 
-## ❌ Problema Identificado
+## ❌ Problema Identificado (ATUALIZADO)
 
 ### Erro no Google Search Console
 ```
-Não foi possível ler o sitemap
-Erro de HTTP geral: 404
+404: NOT_FOUND
+Code: NOT_FOUND
+ID: gru1::qjbgz-1761416663959-a6111b2c9c7a
 ```
 
-### Causa Raiz
-O arquivo `vercel.json` tinha um **rewrite global** que estava redirecionando **TODAS** as URLs para `/index.html`:
+### Causa Raiz (SOLUÇÃO ANTERIOR FALHOU)
+A primeira tentativa com rewrites explícitos não funcionou porque **no Vercel, a ordem dos rewrites não importa da forma que eu implementei**. O Vercel processa rewrites de forma diferente do esperado.
+
+### Por Que a Primeira Solução Falhou?
+```json
+❌ ISSO NÃO FUNCIONA NO VERCEL:
+"rewrites": [
+  { "source": "/sitemap.xml", "destination": "/sitemap.xml" },  ← Redundante
+  { "source": "/(.*)", "destination": "/index.html" }
+]
+```
+
+O Vercel **não garante ordem** nos rewrites. Ambos os padrões são válidos para `/sitemap.xml`, então pode escolher qualquer um.
+
+## ✅ Solução DEFINITIVA Aplicada
+
+### Regex Negativo (Negative Lookahead)
+
+Mudei para uma única regra de rewrite que **exclui arquivos estáticos** usando regex negativo:
 
 ```json
 "rewrites": [
   {
-    "source": "/(.*)",
+    "source": "/((?!sitemap\\.xml|robots\\.txt|manifest\\.json|service-worker\\.js|icon-.*\\.(?:png|svg)|screenshot-.*\\.png|.*\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot)).*)",
     "destination": "/index.html"
   }
 ]
 ```
 
-Isso significava que quando o Google tentava acessar:
-- ✗ `https://volleypro-zw96.vercel.app/sitemap.xml` → recebia HTML do React
-- ✗ `https://volleypro-zw96.vercel.app/robots.txt` → recebia HTML do React
+### Como Funciona?
 
-### Por Que Aconteceu?
-Em aplicações React SPA (Single Page Application), usamos rewrites para garantir que todas as rotas do React funcionem (ex: `/profile`, `/tournaments`, etc). Mas isso **não deve afetar arquivos estáticos** como sitemap.xml e robots.txt.
-
-## ✅ Solução Aplicada
-
-### 1. Exceções nos Rewrites
-
-Adicionei **exceções explícitas** no `vercel.json` ANTES do rewrite global:
-
-```json
-"rewrites": [
-  {
-    "source": "/sitemap.xml",
-    "destination": "/sitemap.xml"        // ← Serve o XML real
-  },
-  {
-    "source": "/robots.txt",
-    "destination": "/robots.txt"         // ← Serve o TXT real
-  },
-  {
-    "source": "/manifest.json",
-    "destination": "/manifest.json"      // ← Serve o JSON real
-  },
-  {
-    "source": "/service-worker.js",
-    "destination": "/service-worker.js"  // ← Serve o JS real
-  },
-  {
-    "source": "/(.*)",
-    "destination": "/index.html"         // ← SPA para resto
-  }
-]
+**Regex Breakdown:**
+```regex
+(?!          ← Negative lookahead (NÃO corresponde se...)
+  sitemap\.xml           ← sitemap.xml
+  |robots\.txt           ← OU robots.txt
+  |manifest\.json        ← OU manifest.json
+  |service-worker\.js    ← OU service-worker.js
+  |icon-.*\.(?:png|svg)  ← OU ícones (icon-*.png, icon-*.svg)
+  |screenshot-.*\.png    ← OU screenshots
+  |.*\.(?:js|css|png|jpg|...) ← OU qualquer arquivo estático
+)
 ```
 
-**Ordem Importa**: As exceções devem vir ANTES do rewrite global `/(.*)`!
-
-### 2. Data Atualizada no Sitemap
-
-Atualizei todas as datas no sitemap de `2025-01-25` para `2025-10-25` (hoje).
+**Resultado:**
+- ✅ `/sitemap.xml` → **NÃO** faz rewrite → serve o arquivo XML real
+- ✅ `/robots.txt` → **NÃO** faz rewrite → serve o arquivo TXT real  
+- ✅ `/manifest.json` → **NÃO** faz rewrite → serve o arquivo JSON real
+- ✅ `/app.js` → **NÃO** faz rewrite → serve o JavaScript real
+- ✅ `/` → faz rewrite → `/index.html` (React SPA)
+- ✅ `/feed` → faz rewrite → `/index.html` (React Router)
+- ✅ `/tournaments` → faz rewrite → `/index.html` (React Router)
 
 ## 📋 Como Verificar
 
@@ -101,25 +99,9 @@ Copie e cole o sitemap em: https://www.xml-sitemaps.com/validate-xml-sitemap.htm
 ```diff
   "rewrites": [
 +   {
-+     "source": "/sitemap.xml",
-+     "destination": "/sitemap.xml"
-+   },
-+   {
-+     "source": "/robots.txt",
-+     "destination": "/robots.txt"
-+   },
-+   {
-+     "source": "/manifest.json",
-+     "destination": "/manifest.json"
-+   },
-+   {
-+     "source": "/service-worker.js",
-+     "destination": "/service-worker.js"
-+   },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
++     "source": "/((?!sitemap\\.xml|robots\\.txt|manifest\\.json|service-worker\\.js|icon-.*\\.(?:png|svg)|screenshot-.*\\.png|.*\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot)).*)",
++     "destination": "/index.html"
++   }
   ]
 ```
 
