@@ -1,15 +1,140 @@
-
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Rede Social VolleyPro</title>
-    </head>
-
-    <body>
-      <div id="root"></div>
-      <script type="module" src="/src/main.tsx"></script>
-    </body>
-  </html>
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/icon-192x192.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- SEO Meta Tags -->
+    <title>VolleyPro - Rede Social do Vôlei | Atletas, Times, Torneios e Lives</title>
+    <meta name="description" content="A maior rede social do vôlei brasileiro! Conecte-se com atletas, crie seu time, participe de torneios, assista transmissões ao vivo e encontre jogadores para sua equipe. Vôlei de quadra e praia." />
+    <meta name="keywords" content="vôlei, voleibol, rede social vôlei, atletas vôlei, times vôlei, torneios vôlei, vôlei de praia, beach volleyball, transmissão ao vivo vôlei, VolleyPro, jogadores vôlei, vitrine atletas, campeonatos vôlei" />
+    <meta name="author" content="VolleyPro" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <meta name="googlebot" content="index, follow" />
+    <meta name="google-site-verification" content="google39a31f791fe69452" />
+    <link rel="canonical" href="https://volleypro-zw96.vercel.app/" />
+    
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://volleypro-zw96.vercel.app/" />
+    <meta property="og:title" content="VolleyPro - Rede Social do Vôlei" />
+    <meta property="og:description" content="A maior rede social do vôlei brasileiro! Conecte-se com atletas, crie seu time, participe de torneios e assista transmissões ao vivo." />
+    <meta property="og:image" content="https://volleypro-zw96.vercel.app/icon-512x512.svg" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:site_name" content="VolleyPro" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://volleypro-zw96.vercel.app/" />
+    <meta name="twitter:title" content="VolleyPro - Rede Social do Vôlei" />
+    <meta name="twitter:description" content="A maior rede social do vôlei brasileiro! Atletas, times, torneios e lives." />
+    <meta name="twitter:image" content="https://volleypro-zw96.vercel.app/icon-512x512.svg" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#0066ff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="VolleyPro" />
+    
+    <!-- PWA Icons -->
+    <link rel="apple-touch-icon" sizes="72x72" href="/icon-72x72.svg" />
+    <link rel="apple-touch-icon" sizes="96x96" href="/icon-96x96.svg" />
+    <link rel="apple-touch-icon" sizes="128x128" href="/icon-128x128.svg" />
+    <link rel="apple-touch-icon" sizes="144x144" href="/icon-144x144.svg" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icon-152x152.svg" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.svg" />
+    <link rel="apple-touch-icon" sizes="384x384" href="/icon-384x384.svg" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512x512.svg" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "name": "VolleyPro",
+          "url": "https://volleypro-zw96.vercel.app",
+          "logo": "https://volleypro-zw96.vercel.app/icon-512x512.svg",
+          "description": "A maior rede social do vôlei brasileiro",
+          "sameAs": [],
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "Customer Service",
+            "availableLanguage": "Portuguese"
+          }
+        },
+        {
+          "@type": "WebSite",
+          "name": "VolleyPro",
+          "url": "https://volleypro-zw96.vercel.app",
+          "description": "Rede social completa para o mundo do vôlei",
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://volleypro-zw96.vercel.app/?s={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "SportsOrganization",
+          "name": "VolleyPro",
+          "sport": "Volleyball",
+          "url": "https://volleypro-zw96.vercel.app",
+          "description": "Plataforma digital para atletas, times e torneios de vôlei"
+        }
+      ]
+    }
+    </script>
+    
+    <!-- ⚡ ORDEM CORRETA DE CARREGAMENTO ⚡ -->
+    
+    <!-- 1️⃣ Global Site Tag (gtag.js) - GA4 + Google Ads - PRIMEIRO SEMPRE! -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-34HHBM1L6C"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      
+      // Google Analytics 4
+      gtag('config', 'G-34HHBM1L6C', {
+        'send_page_view': true,
+        'page_location': window.location.href,
+        'page_title': document.title
+      });
+      
+      // Google Ads Conversion Tracking
+      gtag('config', 'AW-971142262');
+      
+      console.log('✅ Google Analytics 4 inicializado: G-34HHBM1L6C');
+      console.log('✅ Google Ads Conversion Tracking inicializado: AW-971142262');
+    </script>
+    <!-- End Google Analytics & Ads -->
+    
+    <!-- 2️⃣ Google Tag Manager (GTM) -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-MV9D2M4P');</script>
+    <!-- End Google Tag Manager -->
+    
+    <!-- 3️⃣ BLOQUEIO FIGMA MAKE - POR ÚLTIMO -->
+    <script src="/figma-blocker.js"></script>
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MV9D2M4P"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
   
