@@ -18,7 +18,7 @@ import {
   AlertCircle,
   CheckCircle2,
 } from "lucide-react";
-import { authApi } from "../lib/api";
+import { authApi, userApi } from "../lib/api";
 import { projectId } from "../utils/supabase/info";
 
 interface BeachTournamentIndividualRegistrationProps {
@@ -66,25 +66,25 @@ export function BeachTournamentIndividualRegistration({
         return;
       }
 
-      // Buscar perfil do usuário
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/users/${session.user.id}/profile`,
-        {
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-          },
+      // Buscar perfil do usuário usando userApi
+      try {
+        const { profile } = await userApi.getCurrentUser();
+        if (profile) {
+          setCurrentUser({
+            id: profile.id,
+            name: profile.name,
+            avatar: profile.avatar,
+            position: profile.position || "Atleta",
+            userType: profile.userType,
+          });
+        } else {
+          toast.error("Perfil não encontrado");
+          return;
         }
-      );
-
-      if (response.ok) {
-        const profile = await response.json();
-        setCurrentUser({
-          id: profile.id,
-          name: profile.name,
-          avatar: profile.avatar,
-          position: profile.position || "Atleta",
-          userType: profile.userType,
-        });
+      } catch (error) {
+        console.error("❌ Erro ao buscar perfil:", error);
+        toast.error("Erro ao carregar perfil do usuário");
+        return;
       }
 
       // Verificar se já está inscrito
