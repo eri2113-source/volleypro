@@ -896,6 +896,24 @@ export function TournamentDetailsModal({
         />
       )}
 
+      {/* Beach Tournament Individual Registration Modal */}
+      {showIndividualRegistration && (
+        <BeachTournamentIndividualRegistration
+          open={showIndividualRegistration}
+          onClose={() => {
+            setShowIndividualRegistration(false);
+            // Recarregar detalhes do torneio após inscrição
+            loadTournamentDetails();
+            if (onRegistrationSuccess) {
+              onRegistrationSuccess();
+            }
+          }}
+          tournamentId={tournamentId}
+          tournamentName={tournament.name}
+          teamSize={tournament.teamSize || 'duo'}
+        />
+      )}
+
       {/* AlertDialog para solicitar motivo do cancelamento */}
       <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
         <AlertDialogContent aria-describedby="cancel-tournament-description">
