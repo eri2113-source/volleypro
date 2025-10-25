@@ -113,6 +113,15 @@ export function TournamentDetailsModal({
         return;
       }
 
+      console.log('🔍 DEBUG Frontend - Dados recebidos:', {
+        tournamentId: t?.id,
+        tournamentName: t?.name,
+        modalityType: t?.modalityType,
+        teamsReceived: tm?.length,
+        teamsSample: tm?.slice(0, 2),
+        registeredTeamsInTournament: t?.registeredTeams?.length
+      });
+      
       setTournament(t);
       setMatches(m || []);
       setTeams(tm || []);
@@ -570,9 +579,15 @@ export function TournamentDetailsModal({
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-white">
                         {index + 1}
                       </div>
-                      <div>
-                        <p>{team.name}</p>
-                        <p className="text-sm text-muted-foreground">{team.city}</p>
+                      <div className="flex-1">
+                        <p>{team.teamName || team.name}</p>
+                        {team.players && team.players.length > 0 ? (
+                          <p className="text-sm text-muted-foreground">
+                            {team.players.map((p: any) => p.name).join(' / ')}
+                          </p>
+                        ) : (
+                          <p className="text-sm text-muted-foreground">{team.city}</p>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
