@@ -1,74 +1,15 @@
-<!doctype html>
-<html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/icon-192x192.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#0066ff" />
-    <meta name="description" content="VolleyPro - Rede Social Completa para o Mundo do Vôlei. Conecte-se com atletas, times, torneios e transmissões ao vivo!" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="VolleyPro" />
-    
-    <!-- PWA Icons -->
-    <link rel="apple-touch-icon" sizes="72x72" href="/icon-72x72.svg" />
-    <link rel="apple-touch-icon" sizes="96x96" href="/icon-96x96.svg" />
-    <link rel="apple-touch-icon" sizes="128x128" href="/icon-128x128.svg" />
-    <link rel="apple-touch-icon" sizes="144x144" href="/icon-144x144.svg" />
-    <link rel="apple-touch-icon" sizes="152x152" href="/icon-152x152.svg" />
-    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192x192.svg" />
-    <link rel="apple-touch-icon" sizes="384x384" href="/icon-384x384.svg" />
-    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512x512.svg" />
-    
-    <!-- PWA Manifest -->
-    <link rel="manifest" href="/manifest.json" />
-    
-    <title>VolleyPro - Rede Social do Vôlei</title>
-    
-    <!-- ⚡ ORDEM CORRETA DE CARREGAMENTO ⚡ -->
-    
-    <!-- 1️⃣ Global Site Tag (gtag.js) - GA4 + Google Ads - PRIMEIRO SEMPRE! -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-34HHBM1L6C"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      
-      // Google Analytics 4
-      gtag('config', 'G-34HHBM1L6C', {
-        'send_page_view': true,
-        'page_location': window.location.href,
-        'page_title': document.title
-      });
-      
-      // Google Ads Conversion Tracking
-      gtag('config', 'AW-971142262');
-      
-      console.log('✅ Google Analytics 4 inicializado: G-34HHBM1L6C');
-      console.log('✅ Google Ads Conversion Tracking inicializado: AW-971142262');
-    </script>
-    <!-- End Google Analytics & Ads -->
-    
-    <!-- 2️⃣ Google Tag Manager (GTM) -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-MV9D2M4P');</script>
-    <!-- End Google Tag Manager -->
-    
-    <!-- 3️⃣ BLOQUEIO FIGMA MAKE - POR ÚLTIMO -->
-    <script src="/figma-blocker.js"></script>
-  </head>
-  <body>
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MV9D2M4P"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
-    
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+
+  <!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Rede Social VolleyPro</title>
+    </head>
+
+    <body>
+      <div id="root"></div>
+      <script type="module" src="/src/main.tsx"></script>
+    </body>
+  </html>
+  

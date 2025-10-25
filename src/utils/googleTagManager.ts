@@ -31,6 +31,16 @@ export const trackSignUp = (method: 'email' | 'google') => {
     method,
     timestamp: new Date().toISOString(),
   });
+  
+  // 🎯 GOOGLE ADS CONVERSION - INSCRIÇÃO
+  if (typeof window !== 'undefined' && (window as any).gtag) {
+    (window as any).gtag('event', 'conversion', {
+      'send_to': 'AW-971142262/YOUR_CONVERSION_LABEL', // Label será fornecido pelo Google Ads
+      'value': 1.0,
+      'currency': 'BRL'
+    });
+    console.log('🎯 Google Ads Conversion: Inscrição rastreada!');
+  }
 };
 
 // Rastrear login
