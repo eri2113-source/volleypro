@@ -85,15 +85,5 @@
         }
       ]
     }
-  ],
-  "rewrites": [
-    {
-      "source": "/sitemap.xml",
-      "destination": "https://waibxabxlcbfyxyagaow.supabase.co/functions/v1/make-server-0ea22bba/sitemap.xml"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
   ]
 }
