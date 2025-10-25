@@ -293,10 +293,16 @@ export function TournamentDetailsModal({
   // Detectar se é torneio de areia
   const isBeachTournament = tournament.modalityType === 'beach';
   
+  // Para torneios de AREIA: verificar se está em individualRegistrations ou registeredTeams
+  const isRegisteredBeach = isBeachTournament && (
+    tournament.individualRegistrations?.some((reg: any) => reg.userId === currentUserId) ||
+    tournament.registeredTeams?.some((team: any) => team.players?.some((p: any) => p.id === currentUserId))
+  );
+  
   // Para torneios de AREIA: qualquer atleta pode se inscrever formando dupla
   // Para torneios de QUADRA: apenas times podem se inscrever
   const canRegister = !isBeachTournament && userType === 'team' && tournament.status === 'upcoming' && !isRegistered;
-  const canRegisterBeach = isBeachTournament && userType === 'athlete' && tournament.status === 'upcoming' && !isRegistered;
+  const canRegisterBeach = isBeachTournament && userType === 'athlete' && tournament.status === 'upcoming';
   const canUnregister = userType === 'team' && tournament.status === 'upcoming' && isRegistered;
 
   // Debug log detalhado
@@ -311,11 +317,13 @@ export function TournamentDetailsModal({
     userType,
     isOrganizer,
     isRegistered,
+    isRegisteredBeach: isRegisteredBeach || false,
     canRegister,
     canRegisterBeach,
     canUnregister,
     registeredTeams: tournament.registeredTeams,
     registeredTeamsLength: tournament.registeredTeams?.length || 0,
+    individualRegistrations: tournament.individualRegistrations?.length || 0,
     isRegisteredCheck: {
       registeredTeamsArray: tournament.registeredTeams,
       includes: tournament.registeredTeams?.includes(currentUserId),

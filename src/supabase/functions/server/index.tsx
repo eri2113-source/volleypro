@@ -1500,84 +1500,6 @@ app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register', authMiddl
   }
 });
 
-// Register beach volleyball team (for beach tournaments)
-app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-beach-team', authMiddleware, async (c) => {
-  try {
-    const userId = c.get('userId');
-    const tournamentId = c.req.param('tournamentId');
-    const { teamName, playerIds } = await c.req.json();
-    
-    console.log('🏖️ Beach team registration request:', {
-      userId,
-      tournamentId,
-      teamName,
-      playerIds,
-    });
-    
-    if (!teamName || !playerIds || !Array.isArray(playerIds) || playerIds.length === 0) {
-      return c.json({ error: 'Missing team name or player IDs' }, 400);
-    }
-    
-    const tournamentKey = `tournament:${tournamentId}`;
-    const tournament = await kv.get(tournamentKey);
-    
-    if (!tournament) {
-      console.log('❌ Tournament not found:', { tournamentId, tournamentKey });
-      return c.json({ error: 'Tournament not found' }, 404);
-    }
-    
-    if (tournament.modalityType !== 'beach') {
-      return c.json({ error: 'This endpoint is only for beach volleyball tournaments' }, 400);
-    }
-    
-    if (tournament.status !== 'upcoming') {
-      console.log('❌ Tournament not accepting registrations, status:', tournament.status);
-      return c.json({ error: 'Tournament is not accepting registrations' }, 400);
-    }
-    
-    const registeredTeams = tournament.registeredTeams || [];
-    
-    // Verificar se o usuário já está registrado
-    const alreadyRegistered = registeredTeams.find((team: any) => 
-      team.captainId === userId || (team.playerIds && team.playerIds.includes(userId))
-    );
-    
-    if (alreadyRegistered) {
-      console.log('❌ User already registered in this tournament');
-      return c.json({ error: 'You are already registered in this tournament' }, 400);
-    }
-    
-    if (registeredTeams.length >= tournament.maxTeams) {
-      console.log('❌ Tournament is full:', {
-        currentTeams: registeredTeams.length,
-        maxTeams: tournament.maxTeams
-      });
-      return c.json({ error: 'Tournament is full' }, 400);
-    }
-    
-    // Criar registro da equipe de praia
-    const beachTeam = {
-      id: crypto.randomUUID(),
-      name: teamName,
-      captainId: userId,
-      playerIds: [userId, ...playerIds],
-      createdAt: new Date().toISOString(),
-    };
-    
-    registeredTeams.push(beachTeam);
-    tournament.registeredTeams = registeredTeams;
-    await kv.set(tournamentKey, tournament);
-    
-    console.log(`✅ Beach team "${teamName}" registered for tournament ${tournament.name}`);
-    console.log(`   Players: ${beachTeam.playerIds.join(', ')}`);
-    
-    return c.json({ tournament, beachTeam });
-  } catch (error: any) {
-    console.error('❌ Error registering beach team:', error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
 // Draw/generate brackets (only organizer)
 app.post('/make-server-0ea22bba/tournaments/:tournamentId/draw', authMiddleware, async (c) => {
   try {
@@ -3090,95 +3012,6 @@ app.get('/make-server-0ea22bba/tournaments/:tournamentId', async (c) => {
   }
 });
 
-// Register individual player (beach tournaments)
-app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-individual', authMiddleware, async (c) => {
-  try {
-    const userId = c.get('userId');
-    const tournamentId = c.req.param('tournamentId');
-    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
-    const { partnerId } = await c.req.json();
-    
-    const tournament = await kv.get(fullTournamentId);
-    if (!tournament) {
-      return c.json({ error: 'Tournament not found' }, 404);
-    }
-    
-    if (tournament.modalityType !== 'beach') {
-      return c.json({ error: 'This tournament requires team registration' }, 400);
-    }
-    
-    // Initialize array if needed
-    if (!tournament.registeredPlayers) {
-      tournament.registeredPlayers = [];
-    }
-    
-    // Check if player is already registered
-    const alreadyRegistered = tournament.registeredPlayers.some((p: any) => p.id === userId);
-    if (alreadyRegistered) {
-      return c.json({ error: 'You are already registered' }, 400);
-    }
-    
-    // Check if tournament is full
-    if (tournament.registeredPlayers.length >= tournament.maxTeams * 2) {
-      return c.json({ error: 'Tournament is full' }, 400);
-    }
-    
-    // Get player info
-    const player = await kv.get(`user:${userId}`);
-    if (!player) {
-      return c.json({ error: 'User not found' }, 404);
-    }
-    
-    // Add player to tournament
-    tournament.registeredPlayers.push({
-      id: userId,
-      name: player.name,
-      userType: player.userType,
-      partnerId: partnerId || null,
-      registeredAt: new Date().toISOString(),
-    });
-    tournament.updatedAt = new Date().toISOString();
-    
-    await kv.set(fullTournamentId, tournament);
-    console.log(`✅ Jogador inscrito no torneio de praia: ${tournament.name}`);
-    
-    return c.json({ success: true, tournament });
-  } catch (error: any) {
-    console.error('❌ Error registering player:', error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
-// Unregister individual player (beach tournaments)
-app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register-individual', authMiddleware, async (c) => {
-  try {
-    const userId = c.get('userId');
-    const tournamentId = c.req.param('tournamentId');
-    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
-    
-    const tournament = await kv.get(fullTournamentId);
-    if (!tournament) {
-      return c.json({ error: 'Tournament not found' }, 404);
-    }
-    
-    if (!tournament.registeredPlayers) {
-      tournament.registeredPlayers = [];
-    }
-    
-    // Remove player from tournament
-    tournament.registeredPlayers = tournament.registeredPlayers.filter((p: any) => p.id !== userId);
-    tournament.updatedAt = new Date().toISOString();
-    
-    await kv.set(fullTournamentId, tournament);
-    console.log(`✅ Jogador removido do torneio de praia: ${tournament.name}`);
-    
-    return c.json({ success: true, tournament });
-  } catch (error: any) {
-    console.error('❌ Error unregistering player:', error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
 // ============= BEACH TOURNAMENT TEAM REGISTRATION =============
 
 // 🆕 INDIVIDUAL REGISTRATION - Atleta se inscreve para participar do torneio
@@ -3408,12 +3241,12 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-beach-team', 
     tournament.updatedAt = new Date().toISOString();
     
     await kv.set(fullTournamentId, tournament);
-    console.log(`✅ Equipe de praia inscrita: ${teamName} no torneio ${tournament.name}`);
+    console.log(`✅ Beach team ${teamName} registered successfully with ${players.length} players`);
     
     return c.json({ 
       success: true, 
       team: newTeam,
-      tournament 
+      message: 'Team registered successfully'
     });
   } catch (error: any) {
     console.error('❌ Error registering beach team:', error);
