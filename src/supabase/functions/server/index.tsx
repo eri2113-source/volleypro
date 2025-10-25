@@ -1521,162 +1521,6 @@ app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register', authMiddl
   }
 });
 
-// 🏖️ Register beach volleyball team (dupla) in tournament
-app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-beach-team', authMiddleware, async (c) => {
-  try {
-    const userId = c.get('userId');
-    const tournamentId = c.req.param('tournamentId');
-    const { teamName, playerIds } = await c.req.json();
-    
-    console.log('🏖️ Beach team registration request:', {
-      userId,
-      tournamentId,
-      teamName,
-      playerIds
-    });
-    
-    if (!teamName || !playerIds || playerIds.length < 2) {
-      return c.json({ error: 'Team name and at least 2 players required' }, 400);
-    }
-    
-    // Verificar se o torneio existe
-    const tournamentKey = `tournament:${tournamentId}`;
-    const tournament = await kv.get(tournamentKey);
-    if (!tournament) {
-      console.log('❌ Tournament not found:', { tournamentId, tournamentKey });
-      return c.json({ error: 'Tournament not found' }, 404);
-    }
-    
-    // Verificar se é torneio de praia
-    if (tournament.modalityType !== 'beach') {
-      return c.json({ error: 'This tournament is not for beach volleyball' }, 400);
-    }
-    
-    console.log('🏆 Beach tournament found:', {
-      name: tournament.name,
-      status: tournament.status,
-      currentTeams: (tournament.registeredTeams || []).length,
-      maxTeams: tournament.maxTeams
-    });
-    
-    if (tournament.status !== 'upcoming') {
-      return c.json({ error: 'Tournament is not accepting registrations' }, 400);
-    }
-    
-    // Verificar se o usuário atual está na lista de jogadores
-    if (!playerIds.includes(userId)) {
-      return c.json({ error: 'You must be one of the team players' }, 403);
-    }
-    
-    // Buscar dados completos dos jogadores
-    const players = await Promise.all(
-      playerIds.map(async (playerId: string) => {
-        const player = await kv.get(`user:${playerId}`);
-        if (!player) {
-          throw new Error(`Player ${playerId} not found`);
-        }
-        if (player.userType !== 'athlete') {
-          throw new Error(`User ${playerId} is not an athlete`);
-        }
-        return {
-          id: player.id,
-          name: player.name,
-          photoUrl: player.photoUrl,
-          cpf: player.cpf,
-        };
-      })
-    );
-    
-    // Verificar se algum jogador já está em outra dupla neste torneio
-    const registeredTeams = tournament.registeredTeams || [];
-    for (const team of registeredTeams) {
-      const teamPlayerIds = Array.isArray(team.playerIds) ? team.playerIds : [];
-      for (const playerId of playerIds) {
-        if (teamPlayerIds.includes(playerId)) {
-          const conflictPlayer = players.find((p: any) => p.id === playerId);
-          return c.json({ 
-            error: `O jogador ${conflictPlayer?.name} já está inscrito em outra dupla neste torneio` 
-          }, 400);
-        }
-      }
-    }
-    
-    // Verificar se há vagas
-    if (registeredTeams.length >= tournament.maxTeams) {
-      return c.json({ error: 'Tournament is full' }, 400);
-    }
-    
-    // Criar objeto da dupla
-    const beachTeam = {
-      id: `beach-team:${tournamentId}:${crypto.randomUUID()}`,
-      teamName,
-      playerIds,
-      players,
-      registeredBy: userId,
-      registeredAt: new Date().toISOString(),
-    };
-    
-    // Adicionar ao array de times inscritos
-    registeredTeams.push(beachTeam);
-    tournament.registeredTeams = registeredTeams;
-    await kv.set(tournamentKey, tournament);
-    
-    console.log(`✅ Beach team "${teamName}" registered for tournament ${tournament.name}`);
-    console.log(`   Players: ${players.map((p: any) => p.name).join(', ')}`);
-    console.log(`   Total teams now: ${registeredTeams.length}/${tournament.maxTeams}`);
-    
-    return c.json({ 
-      tournament,
-      team: beachTeam,
-      message: `Dupla "${teamName}" inscrita com sucesso!`
-    });
-  } catch (error: any) {
-    console.error('❌ Error registering beach team:', error);
-    return c.json({ error: error.message || 'Internal server error' }, 500);
-  }
-});
-
-// 🏖️ Unregister beach volleyball team
-app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register-beach-team', authMiddleware, async (c) => {
-  try {
-    const userId = c.get('userId');
-    const tournamentId = c.req.param('tournamentId');
-    
-    const tournamentKey = `tournament:${tournamentId}`;
-    const tournament = await kv.get(tournamentKey);
-    if (!tournament) {
-      return c.json({ error: 'Tournament not found' }, 404);
-    }
-    
-    if (tournament.status !== 'upcoming') {
-      return c.json({ error: 'Cannot unregister from ongoing tournament' }, 400);
-    }
-    
-    const registeredTeams = tournament.registeredTeams || [];
-    
-    // Encontrar a dupla que contém o usuário atual
-    const teamIndex = registeredTeams.findIndex((team: any) => 
-      team.playerIds && team.playerIds.includes(userId)
-    );
-    
-    if (teamIndex === -1) {
-      return c.json({ error: 'You are not registered in this tournament' }, 400);
-    }
-    
-    const removedTeam = registeredTeams[teamIndex];
-    registeredTeams.splice(teamIndex, 1);
-    tournament.registeredTeams = registeredTeams;
-    await kv.set(tournamentKey, tournament);
-    
-    console.log(`✅ Beach team "${removedTeam.teamName}" unregistered from tournament ${tournamentId}`);
-    
-    return c.json({ tournament, message: 'Inscrição cancelada com sucesso' });
-  } catch (error: any) {
-    console.error('❌ Error unregistering beach team:', error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
 // Draw/generate brackets (only organizer)
 app.post('/make-server-0ea22bba/tournaments/:tournamentId/draw', authMiddleware, async (c) => {
   try {
@@ -3427,6 +3271,72 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-beach-team', 
     });
   } catch (error: any) {
     console.error('❌ Error registering beach team:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Unregister beach team (dupla/trio/quartet/quintet)
+app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register-beach-team', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    
+    console.log('🗑️ Unregistering beach team:', { tournamentId, userId });
+    
+    const tournament = await kv.get(fullTournamentId);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    if (tournament.modalityType !== 'beach') {
+      return c.json({ error: 'This endpoint is only for beach tournaments' }, 400);
+    }
+    
+    if (tournament.status !== 'upcoming') {
+      return c.json({ error: 'Cannot unregister from ongoing tournament' }, 400);
+    }
+    
+    const registeredTeams = tournament.registeredTeams || [];
+    
+    // Find team that contains current user
+    const teamIndex = registeredTeams.findIndex((team: any) => 
+      team.players && team.players.some((p: any) => p.id === userId)
+    );
+    
+    if (teamIndex === -1) {
+      return c.json({ error: 'You are not registered in this tournament' }, 400);
+    }
+    
+    const removedTeam = registeredTeams[teamIndex];
+    
+    // Remove team
+    registeredTeams.splice(teamIndex, 1);
+    tournament.registeredTeams = registeredTeams;
+    
+    // 🆕 Desmarcar jogadores (hasTeam = false)
+    if (tournament.individualRegistrations) {
+      for (const player of removedTeam.players) {
+        const registration = tournament.individualRegistrations.find((reg: any) => reg.userId === player.id);
+        if (registration) {
+          registration.hasTeam = false;
+          delete registration.teamId;
+          delete registration.teamName;
+        }
+      }
+    }
+    
+    tournament.updatedAt = new Date().toISOString();
+    await kv.set(fullTournamentId, tournament);
+    
+    console.log(`✅ Beach team "${removedTeam.name}" unregistered successfully`);
+    
+    return c.json({ 
+      success: true,
+      message: 'Team unregistered successfully'
+    });
+  } catch (error: any) {
+    console.error('❌ Error unregistering beach team:', error);
     return c.json({ error: error.message }, 500);
   }
 });
