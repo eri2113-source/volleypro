@@ -51,8 +51,12 @@ export function BeachTournamentIndividualRegistration({
   const [totalPlayers, setTotalPlayers] = useState(0);
 
   useEffect(() => {
-    if (open) {
+    if (open && tournamentId && tournamentId !== '' && tournamentId !== 'undefined') {
       loadUserAndStatus();
+    } else if (open && (!tournamentId || tournamentId === '' || tournamentId === 'undefined')) {
+      console.error('❌ Modal opened with invalid tournamentId:', tournamentId);
+      toast.error('ID do torneio inválido');
+      onClose();
     }
   }, [open, tournamentId]);
 
@@ -148,6 +152,13 @@ export function BeachTournamentIndividualRegistration({
       return;
     }
 
+    // Validar tournamentId
+    if (!tournamentId || tournamentId === '' || tournamentId === 'undefined') {
+      console.error('❌ TournamentId inválido:', tournamentId);
+      toast.error("ID do torneio inválido");
+      return;
+    }
+
     setLoading(true);
     try {
       const session = await authApi.getSession();
@@ -157,6 +168,12 @@ export function BeachTournamentIndividualRegistration({
         return;
       }
 
+      console.log('📝 Registering individual player:', {
+        tournamentId,
+        userId: session.user.id,
+        userName: currentUser.name
+      });
+
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/register-individual`,
         {
@@ -165,11 +182,13 @@ export function BeachTournamentIndividualRegistration({
             "Content-Type": "application/json",
             Authorization: `Bearer ${session.access_token}`,
           },
+          body: JSON.stringify({}), // Enviar body vazio como JSON válido
         }
       );
 
       if (!response.ok) {
         const error = await response.json();
+        console.error('❌ Server error:', error);
         throw new Error(error.error || "Erro ao se inscrever");
       }
 

@@ -271,7 +271,8 @@ export default function App() {
           console.log("✅ Tipo de usuário:", type);
         }
       } catch (error) {
-        console.error("⚠️ Erro ao carregar perfil do usuário:", error);
+        // Não mostrar erro crítico - o app ainda funciona sem userType inicial
+        console.warn("⚠️ Não foi possível carregar tipo de usuário (será carregado posteriormente):", error);
       }
       
       setIsAuthenticated(true);

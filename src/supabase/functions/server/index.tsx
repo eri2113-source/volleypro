@@ -379,7 +379,12 @@ app.get('/make-server-0ea22bba/users/me', authMiddleware, async (c) => {
       return c.json({ error: 'User not found' }, 404);
     }
     
-    return c.json({ profile });
+    // Retornar no formato esperado pelo frontend
+    return c.json({ 
+      user: profile,
+      profile: profile,
+      userType: profile.userType
+    });
   } catch (error: any) {
     console.log('Error fetching current user profile:', error);
     return c.json({ error: error.message }, 500);
@@ -2971,10 +2976,32 @@ app.delete('/make-server-0ea22bba/lives/:liveId', authMiddleware, async (c) => {
 
 // ============= TOURNAMENTS ROUTES =============
 
+// 🔍 DEBUG: Log ALL incoming requests
+app.use('/make-server-0ea22bba/tournaments/*', async (c, next) => {
+  console.log('📥 Incoming tournament request:', {
+    method: c.req.method,
+    path: c.req.path,
+    url: c.req.url,
+    hasBody: c.req.header('content-length') !== '0',
+    contentType: c.req.header('content-type')
+  });
+  await next();
+});
+
 // Create tournament
 app.post('/make-server-0ea22bba/tournaments', authMiddleware, async (c) => {
   try {
     const userId = c.get('userId');
+    
+    // 🔍 DEBUG: Log before parsing JSON
+    const contentLength = c.req.header('content-length');
+    console.log('📝 Creating tournament - Content-Length:', contentLength);
+    
+    if (!contentLength || contentLength === '0') {
+      console.error('❌ No body provided for tournament creation');
+      return c.json({ error: 'Request body is required' }, 400);
+    }
+    
     const { name, location, arena, startDate, endDate, maxTeams, format, modalityType } = await c.req.json();
     
     if (!name || !location || !startDate || !endDate) {
@@ -3161,7 +3188,13 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-individual', 
     const tournamentId = c.req.param('tournamentId');
     const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
     
-    console.log('🏖️ Individual registration:', { tournamentId, userId });
+    console.log('🏖️ Individual registration REQUEST:', { 
+      tournamentId, 
+      fullTournamentId,
+      userId,
+      method: c.req.method,
+      path: c.req.path
+    });
     
     const tournament = await kv.get(fullTournamentId);
     if (!tournament) {

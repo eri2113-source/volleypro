@@ -910,7 +910,6 @@ export function TournamentDetailsModal({
           }}
           tournamentId={tournamentId}
           tournamentName={tournament.name}
-          teamSize={tournament.teamSize || 'duo'}
         />
       )}
 
