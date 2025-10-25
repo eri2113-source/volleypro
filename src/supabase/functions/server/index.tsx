@@ -130,7 +130,7 @@ app.use('*', cors());
 app.use('*', logger(console.log));
 
 // ============= SITEMAP.XML ROUTE (SEO) =============
-app.get('/sitemap.xml', (c) => {
+app.get('/make-server-0ea22bba/sitemap.xml', (c) => {
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
