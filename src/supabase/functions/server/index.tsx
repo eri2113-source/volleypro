@@ -1377,14 +1377,24 @@ app.get('/make-server-0ea22bba/tournaments/:tournamentId', async (c) => {
     console.log(`📋 ${allMatches?.length || 0} partidas encontradas`);
     
     // Get registered teams details
-    const teamsDetails = await Promise.all(
-      (tournament.registeredTeams || []).map(async (teamId: string) => {
-        const team = await kv.get(`user:${teamId}`);
-        return team;
-      })
-    );
+    // 🏖️ Para torneios de PRAIA: registeredTeams já contém objetos completos
+    // 🏐 Para torneios de QUADRA: registeredTeams contém apenas IDs
+    let teamsDetails = [];
     
-    console.log(`👥 ${teamsDetails.filter(Boolean).length} times encontrados`);
+    if (tournament.modalityType === 'beach') {
+      // Torneio de praia: registeredTeams já são objetos completos
+      teamsDetails = tournament.registeredTeams || [];
+      console.log(`🏖️ Torneio de praia: ${teamsDetails.length} duplas/equipes inscritas`);
+    } else {
+      // Torneio de quadra: registeredTeams são IDs que precisam ser buscados
+      teamsDetails = await Promise.all(
+        (tournament.registeredTeams || []).map(async (teamId: string) => {
+          const team = await kv.get(`user:${teamId}`);
+          return team;
+        })
+      );
+      console.log(`🏐 Torneio de quadra: ${teamsDetails.filter(Boolean).length} times encontrados`);
+    }
     
     return c.json({ 
       tournament,

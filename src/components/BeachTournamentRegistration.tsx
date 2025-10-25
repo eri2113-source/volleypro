@@ -73,9 +73,12 @@ export function BeachTournamentRegistration({
 
   useEffect(() => {
     if (open) {
-      loadCurrentUser();
-      checkDatabaseAthletes(); // Verificar quantos atletas tem no banco
-      loadRegisteredPlayers(); // 🆕 Carregar jogadores inscritos
+      const init = async () => {
+        await loadCurrentUser();
+        checkDatabaseAthletes(); // Verificar quantos atletas tem no banco
+        loadRegisteredPlayers(); // 🆕 Carregar jogadores inscritos
+      };
+      init();
     }
   }, [open]);
 
@@ -87,6 +90,13 @@ export function BeachTournamentRegistration({
       const session = await authApi.getSession();
       if (!session?.access_token) {
         console.log("⚠️ Sem sessão válida");
+        return;
+      }
+      
+      // Get current user ID for filtering
+      const currentUserId = session.user?.id;
+      if (!currentUserId) {
+        console.log("⚠️ Sem ID de usuário");
         return;
       }
 
@@ -101,6 +111,11 @@ export function BeachTournamentRegistration({
 
       if (!response.ok) {
         console.error("❌ Erro ao buscar jogadores inscritos");
+        const errorText = await response.text();
+        console.error("Erro do servidor:", errorText);
+        toast.error("Erro ao carregar jogadores", {
+          description: "Tente novamente em alguns instantes"
+        });
         return;
       }
 
@@ -110,7 +125,7 @@ export function BeachTournamentRegistration({
       // Filtrar jogadores: remover o usuário atual e os já selecionados
       const availablePlayers = (data.players || [])
         .filter((player: any) => 
-          player.userId !== currentUser?.id &&
+          player.userId !== currentUserId &&
           !selectedPartners.find(p => p.id === player.userId)
         )
         .map((player: any) => ({
@@ -135,6 +150,9 @@ export function BeachTournamentRegistration({
       }
     } catch (error) {
       console.error("❌ Erro ao carregar jogadores inscritos:", error);
+      toast.error("Erro ao carregar jogadores", {
+        description: error instanceof Error ? error.message : "Erro desconhecido"
+      });
     }
   }
 
