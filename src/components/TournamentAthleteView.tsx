@@ -198,6 +198,21 @@ export function TournamentAthleteView({
       .some((player: any) => player?.id === currentUserId);
   }
 
+  // 🆕 Função para contar jogadores em torneios de vôlei de praia
+  function getTotalPlayers() {
+    // Se for vôlei de praia, contar jogadores diretamente dos times
+    if (tournament?.modalityType === 'beach') {
+      return teams.reduce((sum, team) => {
+        return sum + (team.players?.length || 0);
+      }, 0);
+    }
+    
+    // Se for vôlei de quadra, contar das convocações (rosters)
+    return Object.values(teamRosters).reduce((sum, roster) => {
+      return sum + getRosterStats(roster).total;
+    }, 0);
+  }
+
   if (loading) {
     return (
       <Dialog open={open} onOpenChange={onClose}>
@@ -265,9 +280,7 @@ export function TournamentAthleteView({
               <div className="text-center">
                 <Users className="h-8 w-8 mx-auto mb-2 text-secondary" />
                 <p className="text-2xl font-bold">
-                  {Object.values(teamRosters).reduce((sum, roster) => {
-                    return sum + getRosterStats(roster).total;
-                  }, 0)}
+                  {getTotalPlayers()}
                 </p>
                 <p className="text-sm text-muted-foreground">Jogadores Convocados</p>
               </div>
@@ -314,8 +327,18 @@ export function TournamentAthleteView({
                 const rosterStats = roster ? getRosterStats(roster) : null;
                 const userInThisTeam = roster ? isUserInRoster(roster) : false;
 
+                // 🏖️ Para vôlei de praia, verificar se usuário está no time
+                const userInBeachTeam = tournament?.modalityType === 'beach' && 
+                  team.players?.some((p: any) => p.id === currentUserId);
+                
+                const isUserInTeam = userInThisTeam || userInBeachTeam;
+                
+                // 🏖️ Para vôlei de praia, contar jogadores do time
+                const beachTeamPlayerCount = tournament?.modalityType === 'beach' ? 
+                  (team.players?.length || 0) : 0;
+
                 return (
-                  <Card key={team.id} className={userInThisTeam ? "border-2 border-primary" : ""}>
+                  <Card key={team.id} className={isUserInTeam ? "border-2 border-primary" : ""}>
                     <CardHeader className="pb-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -359,6 +382,17 @@ export function TournamentAthleteView({
                                   <Clock className="h-3 w-3 text-yellow-500" />
                                   {rosterStats.pending}
                                 </span>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* 🏖️ Para vôlei de praia, mostrar número de jogadores */}
+                          {tournament?.modalityType === 'beach' && beachTeamPlayerCount > 0 && (
+                            <div className="text-right mr-3">
+                              <p className="text-sm font-semibold">{beachTeamPlayerCount} jogadores</p>
+                              <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                <CheckCircle2 className="h-3 w-3 text-green-500" />
+                                <span>Confirmados</span>
                               </div>
                             </div>
                           )}
@@ -467,6 +501,58 @@ export function TournamentAthleteView({
                             <p>Nenhum jogador convocado ainda</p>
                           </div>
                         )}
+                      </CardContent>
+                    )}
+                    
+                    {/* 🏖️ Para vôlei de praia, mostrar jogadores quando expandido */}
+                    {isExpanded && tournament?.modalityType === 'beach' && team.players && team.players.length > 0 && (
+                      <CardContent>
+                        <Separator className="mb-4" />
+                        
+                        <h4 className="font-semibold mb-3 flex items-center gap-2">
+                          <Users className="h-4 w-4" />
+                          Jogadores da {team.teamSize === 'duo' ? 'Dupla' : team.teamSize === 'trio' ? 'Trio' : team.teamSize === 'quartet' ? 'Quarteto' : 'Equipe'}
+                        </h4>
+
+                        <div className="space-y-2">
+                          {team.players.map((player: any, index: number) => (
+                            <div
+                              key={player.id}
+                              className={`flex items-center gap-3 p-3 rounded-lg ${
+                                player.id === currentUserId 
+                                  ? 'bg-primary/10 border border-primary/20' 
+                                  : 'bg-muted/30'
+                              }`}
+                            >
+                              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                {player.avatar ? (
+                                  <img
+                                    src={player.avatar}
+                                    alt={player.name}
+                                    className="h-full w-full rounded-full object-cover"
+                                  />
+                                ) : (
+                                  <User className="h-5 w-5 text-primary" />
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium">
+                                  {player.name}
+                                  {player.id === currentUserId && (
+                                    <span className="ml-2 text-xs text-primary"> (Você)</span>
+                                  )}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {player.position || 'Atleta'}
+                                </p>
+                              </div>
+                              <Badge variant="default" className="gap-1">
+                                <CheckCircle2 className="h-3 w-3" />
+                                Confirmado
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
                       </CardContent>
                     )}
                   </Card>
