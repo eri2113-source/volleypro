@@ -55,6 +55,7 @@ function injectGTM() {
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), injectGTM()],
+  publicDir: 'public',  // Garante que public/ seja copiado para dist/
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

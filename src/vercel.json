@@ -4,6 +4,8 @@
   "framework": "vite",
   "installCommand": "npm install --legacy-peer-deps",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD",
+  "cleanUrls": false,
+  "trailingSlash": false,
   "headers": [
     {
       "source": "/service-worker.js",
@@ -84,10 +86,29 @@
       ]
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/((?!sitemap\\.xml|robots\\.txt|manifest\\.json|service-worker\\.js|icon-.*\\.(?:png|svg)|screenshot-.*\\.png|.*\\.(?:js|css|png|jpg|jpeg|gif|svg|ico|webp|woff|woff2|ttf|eot)).*)",
-      "destination": "/index.html"
+      "src": "/sitemap.xml",
+      "dest": "/sitemap.xml"
+    },
+    {
+      "src": "/robots.txt",
+      "dest": "/robots.txt"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/manifest.json"
+    },
+    {
+      "src": "/service-worker.js",
+      "dest": "/service-worker.js"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
     }
   ]
 }
