@@ -129,8 +129,13 @@ const app = new Hono();
 app.use('*', cors());
 app.use('*', logger(console.log));
 
-// ============= SITEMAP.XML ROUTE (SEO) =============
+// ============= ROTAS PÚBLICAS (SEM AUTENTICAÇÃO) =============
+// IMPORTANTE: Estas rotas são 100% PÚBLICAS para o Google
+
+// SITEMAP.XML - 100% PÚBLICO
 app.get('/make-server-0ea22bba/sitemap.xml', (c) => {
+  console.log('📄 ✅ Sitemap.xml acessado (PÚBLICO - SEM AUTENTICAÇÃO)');
+  
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
@@ -175,7 +180,7 @@ app.get('/make-server-0ea22bba/sitemap.xml', (c) => {
     <priority>0.9</priority>
   </url>
   
-  <!-- Lives / Transmissões -->
+  <!-- Lives -->
   <url>
     <loc>https://volleypro-zw96.vercel.app/#lives</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
@@ -183,7 +188,7 @@ app.get('/make-server-0ea22bba/sitemap.xml', (c) => {
     <priority>0.9</priority>
   </url>
   
-  <!-- Planos / Monetização -->
+  <!-- Planos -->
   <url>
     <loc>https://volleypro-zw96.vercel.app/#monetization</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
@@ -196,6 +201,32 @@ app.get('/make-server-0ea22bba/sitemap.xml', (c) => {
   return c.body(sitemap, 200, {
     'Content-Type': 'application/xml; charset=utf-8',
     'Cache-Control': 'public, max-age=3600',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  });
+});
+
+// ROBOTS.TXT - 100% PÚBLICO
+app.get('/make-server-0ea22bba/robots.txt', (c) => {
+  console.log('🤖 ✅ Robots.txt acessado (PÚBLICO - SEM AUTENTICAÇÃO)');
+  
+  const robots = `# VolleyPro - Rede Social de Vôlei
+User-agent: *
+Allow: /
+Sitemap: https://waibxabxlcbfyxyagaow.supabase.co/functions/v1/make-server-0ea22bba/sitemap.xml
+
+# Bloquear URLs privadas
+Disallow: /admin
+Disallow: /*?token=
+`;
+
+  return c.body(robots, 200, {
+    'Content-Type': 'text/plain; charset=utf-8',
+    'Cache-Control': 'public, max-age=3600',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
   });
 });
 
