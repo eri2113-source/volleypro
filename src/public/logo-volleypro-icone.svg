@@ -1,0 +1,18 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Círculo de fundo da bola -->
+  <circle cx="100" cy="100" r="90" fill="url(#ballGradient)"/>
+  
+  <!-- Linhas da bola de vôlei -->
+  <path d="M 40 40 Q 70 55, 100 40 T 160 40" stroke="#fff" stroke-width="6" fill="none" opacity="0.9"/>
+  <path d="M 30 85 Q 65 95, 100 85 T 170 85" stroke="#fff" stroke-width="6" fill="none" opacity="0.9"/>
+  <path d="M 40 130 Q 70 120, 100 130 T 160 130" stroke="#fff" stroke-width="6" fill="none" opacity="0.9"/>
+  <path d="M 50 50 L 70 70 M 130 70 L 150 50 M 50 150 L 70 130 M 130 130 L 150 150" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity="0.9"/>
+  
+  <!-- Gradiente da bola -->
+  <defs>
+    <linearGradient id="ballGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0052cc;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>

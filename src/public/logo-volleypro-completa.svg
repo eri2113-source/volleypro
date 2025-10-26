@@ -1,0 +1,32 @@
+<svg width="400" height="120" viewBox="0 0 400 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Círculo de fundo da bola -->
+  <circle cx="60" cy="60" r="45" fill="url(#ballGradient)"/>
+  
+  <!-- Linhas da bola de vôlei -->
+  <path d="M 30 25 Q 45 35, 60 25 T 90 25" stroke="#fff" stroke-width="3" fill="none" opacity="0.9"/>
+  <path d="M 25 50 Q 40 55, 60 50 T 95 50" stroke="#fff" stroke-width="3" fill="none" opacity="0.9"/>
+  <path d="M 30 75 Q 45 70, 60 75 T 90 75" stroke="#fff" stroke-width="3" fill="none" opacity="0.9"/>
+  <path d="M 35 35 L 45 45 M 75 45 L 85 35 M 35 85 L 45 75 M 75 75 L 85 85" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity="0.9"/>
+  
+  <!-- Texto "Volley" com gradiente azul -->
+  <defs>
+    <linearGradient id="ballGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0052cc;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="volleyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0052cc;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="proGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFC72C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6b35;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <text x="130" y="65" font-family="Arial, sans-serif" font-size="48" font-weight="900" fill="url(#volleyGradient)">Volley</text>
+  <text x="280" y="65" font-family="Arial, sans-serif" font-size="48" font-weight="900" fill="url(#proGradient)">Pro</text>
+  
+  <!-- Tagline -->
+  <text x="132" y="85" font-family="Arial, sans-serif" font-size="11" font-weight="600" letter-spacing="2" fill="#666" opacity="0.8">REDE SOCIAL DO VÔLEI</text>
+</svg>
