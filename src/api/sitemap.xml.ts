@@ -1,5 +1,6 @@
-// Vercel Function para servir sitemap.xml
-// Acesso: https://volleypro-zw96.vercel.app/api/sitemap.xml
+// ✅ VERCEL EDGE FUNCTION - Sitemap.xml 100% PÚBLICO
+// Acesso: https://volleypro-zw96.vercel.app/sitemap.xml
+// Redireciona automaticamente para /api/sitemap.xml (configurado no vercel.json)
 
 export const config = {
   runtime: 'edge',
@@ -50,7 +51,7 @@ export default function handler() {
     <priority>0.9</priority>
   </url>
   
-  <!-- Lives -->
+  <!-- Lives / Transmissões -->
   <url>
     <loc>https://volleypro-zw96.vercel.app/#lives</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
@@ -58,7 +59,7 @@ export default function handler() {
     <priority>0.9</priority>
   </url>
   
-  <!-- Planos -->
+  <!-- Planos / Monetização -->
   <url>
     <loc>https://volleypro-zw96.vercel.app/#monetization</loc>
     <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
@@ -71,8 +72,9 @@ export default function handler() {
   return new Response(sitemap, {
     status: 200,
     headers: {
-      'Content-Type': 'application/xml',
+      'Content-Type': 'application/xml; charset=utf-8',
       'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+      'Access-Control-Allow-Origin': '*',
     },
   });
 }
