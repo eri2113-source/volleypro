@@ -7,11 +7,14 @@ import { copyFileSync, existsSync, mkdirSync } from 'fs';
 function copySEOFiles() {
   return {
     name: 'copy-seo-files',
-    closeBundle() {
+    writeBundle() {
       try {
+        console.log('🔄 Copiando arquivos SEO...');
+        
         // Garantir que dist/ existe
         if (!existsSync('dist')) {
           mkdirSync('dist', { recursive: true });
+          console.log('✅ Diretório dist/ criado');
         }
         
         // Copiar sitemap.xml
@@ -29,6 +32,8 @@ function copySEOFiles() {
         } else {
           console.error('❌ public/robots.txt NÃO EXISTE!');
         }
+        
+        console.log('🎉 Arquivos SEO copiados com sucesso!');
       } catch (e) {
         console.error('❌ Erro ao copiar arquivos SEO:', e);
       }
