@@ -1,0 +1,9 @@
+# VolleyPro - Rede Social de Vôlei
+User-agent: *
+Allow: /
+Sitemap: https://volleypro-zw96.vercel.app/sitemap.xml
+
+# Bloquear URLs privadas
+Disallow: /admin
+Disallow: /api/
+Disallow: /*?clear_cache=
