@@ -50,6 +50,103 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 // ✅ Última atualização: Sistema de anúncios com aprovação administrativa
 
 export default function App() {
+  // 🎯 SITEMAP.XML - Servir diretamente sem autenticação
+  useEffect(() => {
+    if (window.location.pathname === '/sitemap.xml') {
+      const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
+  
+  <!-- Homepage -->
+  <url>
+    <loc>https://volleypro-zw96.vercel.app/</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+  
+  <!-- Feed -->
+  <url>
+    <loc>https://volleypro-zw96.vercel.app/#feed</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Atletas / Vitrine -->
+  <url>
+    <loc>https://volleypro-zw96.vercel.app/#showcase</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Times -->
+  <url>
+    <loc>https://volleypro-zw96.vercel.app/#teams</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <!-- Torneios -->
+  <url>
+    <loc>https://volleypro-zw96.vercel.app/#tournaments</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Lives -->
+  <url>
+    <loc>https://volleypro-zw96.vercel.app/#lives</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  
+  <!-- Planos -->
+  <url>
+    <loc>https://volleypro-zw96.vercel.app/#monetization</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+</urlset>`;
+      
+      // Substituir página atual pelo XML
+      document.open('text/xml', 'replace');
+      document.write(sitemap);
+      document.close();
+      
+      console.log('✅ Sitemap.xml servido via React');
+      return;
+    }
+    
+    // 🤖 ROBOTS.TXT - Servir diretamente sem autenticação
+    if (window.location.pathname === '/robots.txt') {
+      const robots = `# VolleyPro - Rede Social de Vôlei
+User-agent: *
+Allow: /
+Sitemap: https://volleypro-zw96.vercel.app/sitemap.xml
+
+# Bloquear URLs privadas
+Disallow: /admin
+Disallow: /api
+Disallow: /*?clear_cache=
+`;
+      
+      // Substituir página atual pelo TXT
+      document.open('text/plain', 'replace');
+      document.write(robots);
+      document.close();
+      
+      console.log('✅ Robots.txt servido via React');
+      return;
+    }
+  }, []);
+
   const [currentView, setCurrentView] = useState("feed");
   const [selectedAthlete, setSelectedAthlete] = useState<number | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
