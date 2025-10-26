@@ -1,6 +1,40 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { copyFileSync, existsSync, mkdirSync } from 'fs';
+
+// Plugin para copiar sitemap e robots.txt FORÇADAMENTE
+function copySEOFiles() {
+  return {
+    name: 'copy-seo-files',
+    closeBundle() {
+      try {
+        // Garantir que dist/ existe
+        if (!existsSync('dist')) {
+          mkdirSync('dist', { recursive: true });
+        }
+        
+        // Copiar sitemap.xml
+        if (existsSync('public/sitemap.xml')) {
+          copyFileSync('public/sitemap.xml', 'dist/sitemap.xml');
+          console.log('✅ sitemap.xml copiado para dist/');
+        } else {
+          console.error('❌ public/sitemap.xml NÃO EXISTE!');
+        }
+        
+        // Copiar robots.txt
+        if (existsSync('public/robots.txt')) {
+          copyFileSync('public/robots.txt', 'dist/robots.txt');
+          console.log('✅ robots.txt copiado para dist/');
+        } else {
+          console.error('❌ public/robots.txt NÃO EXISTE!');
+        }
+      } catch (e) {
+        console.error('❌ Erro ao copiar arquivos SEO:', e);
+      }
+    }
+  };
+}
 
 // Plugin para injetar Google Tag Manager no HTML
 function injectGTM() {
@@ -54,7 +88,7 @@ function injectGTM() {
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), injectGTM()],
+  plugins: [react(), injectGTM(), copySEOFiles()],
   publicDir: 'public',  // Garante que public/ seja copiado para dist/
   resolve: {
     alias: {
