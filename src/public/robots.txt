@@ -1,5 +1,5 @@
 # Robots.txt - VolleyPro
-# https://volleypro-zw96.vercel.app
+# https://voleypro.net
 
 # Permitir todos os bots
 User-agent: *
@@ -12,7 +12,7 @@ Disallow: /gtm.js
 Disallow: /test-analytics.js
 
 # Arquivos importantes para SEO
-Sitemap: https://volleypro-zw96.vercel.app/sitemap.xml
+Sitemap: https://voleypro.net/sitemap.xml
 
 # Google específico
 User-agent: Googlebot

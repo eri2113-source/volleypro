@@ -4,7 +4,7 @@ module.exports = (req, res) => {
 User-agent: *
 Allow: /
 
-Sitemap: https://volleypro-zw96.vercel.app/sitemap.xml
+Sitemap: https://voleypro.net/sitemap.xml
 
 Crawl-delay: 1`;
 
