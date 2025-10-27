@@ -333,10 +333,13 @@ export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
 
       {/* Content */}
       <div className="container mx-auto max-w-5xl p-6">
-        <Tabs defaultValue="info" className="space-y-6">
-          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${isTeam ? 3 : 2}, 1fr)` }}>
-            <TabsTrigger value="info">Informações</TabsTrigger>
+        <Tabs defaultValue={isTeam ? "roster" : "info"} className="space-y-6">
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${isTeam ? 6 : 2}, 1fr)` }}>
             {isTeam && <TabsTrigger value="roster">Elenco</TabsTrigger>}
+            {isTeam && <TabsTrigger value="lineup">Escalação</TabsTrigger>}
+            <TabsTrigger value="info">Informações</TabsTrigger>
+            {isTeam && <TabsTrigger value="tournaments">Torneios</TabsTrigger>}
+            {isTeam && <TabsTrigger value="stats">Estatísticas</TabsTrigger>}
             <TabsTrigger value="achievements">Conquistas</TabsTrigger>
           </TabsList>
 
@@ -442,6 +445,72 @@ export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
                       ))}
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
+          {/* ABA: ESCALAÇÃO */}
+          {isTeam && (
+            <TabsContent value="lineup" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <h3>Escalação Titular</h3>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground italic text-center py-8">
+                    Funcionalidade de escalação em breve. Aqui você poderá definir a formação titular do seu time.
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
+          {/* ABA: TORNEIOS */}
+          {isTeam && (
+            <TabsContent value="tournaments" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-primary" />
+                    <h3>Torneios Participados</h3>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground italic text-center py-8">
+                    Histórico de torneios será exibido aqui quando você participar de competições.
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
+
+          {/* ABA: ESTATÍSTICAS */}
+          {isTeam && (
+            <TabsContent value="stats" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <h3>Estatísticas do Time</h3>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="text-center p-4 rounded-lg bg-muted/50">
+                      <p className="text-2xl font-bold">{profile.wins || 0}</p>
+                      <p className="text-sm text-muted-foreground">Vitórias</p>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-muted/50">
+                      <p className="text-2xl font-bold">{profile.losses || 0}</p>
+                      <p className="text-sm text-muted-foreground">Derrotas</p>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-muted/50">
+                      <p className="text-2xl font-bold">{profile.totalMatches || 0}</p>
+                      <p className="text-sm text-muted-foreground">Partidas</p>
+                    </div>
+                    <div className="text-center p-4 rounded-lg bg-muted/50">
+                      <p className="text-2xl font-bold">{profile.championships || 0}</p>
+                      <p className="text-sm text-muted-foreground">Títulos</p>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
