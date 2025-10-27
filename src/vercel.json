@@ -6,14 +6,10 @@
   "ignoreCommand": "git diff --quiet HEAD^ HEAD",
   "cleanUrls": false,
   "trailingSlash": false,
-  "routes": [
+  "rewrites": [
     {
-      "src": "/sitemap.xml",
-      "dest": "/api/sitemap.js"
-    },
-    {
-      "src": "/robots.txt",
-      "dest": "/api/robots.js"
+      "source": "/robots.txt",
+      "destination": "/api/robots.js"
     }
   ],
   "headers": [

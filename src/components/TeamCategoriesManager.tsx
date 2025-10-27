@@ -70,10 +70,18 @@ export function TeamCategoriesManager({ teamId, teamName }: TeamCategoriesManage
   async function loadCategories() {
     setLoading(true);
     try {
+      console.log(`🔍 Carregando categorias para time: ${teamId}`);
       const { categories: teamCategories } = await teamCategoryApi.getCategories(teamId);
+      console.log(`✅ Categorias carregadas:`, teamCategories);
       setCategories(teamCategories || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Erro ao carregar categorias:', error);
+      // Não mostrar toast de erro em caso de 404 (time sem categorias ainda)
+      if (error.message && !error.message.includes('404')) {
+        toast.error('Erro ao carregar categorias', {
+          description: 'Tente novamente mais tarde'
+        });
+      }
       setCategories([]);
     } finally {
       setLoading(false);

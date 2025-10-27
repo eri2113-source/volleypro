@@ -3249,7 +3249,7 @@ app.delete('/make-server-0ea22bba/lives/:liveId', authMiddleware, async (c) => {
 // ============= TEAM CATEGORIES & SQUADS ROUTES =============
 
 // Get all categories and squads for a team
-app.get('/make-server-0ea22bba/teams/:teamId/categories', authMiddleware, async (c) => {
+app.get('/make-server-0ea22bba/teams/:teamId/categories', async (c) => {
   try {
     const teamId = c.req.param('teamId');
     
@@ -3385,7 +3385,7 @@ app.post('/make-server-0ea22bba/teams/:teamId/categories/:categoryId/squads', au
 });
 
 // Get specific squad with players
-app.get('/make-server-0ea22bba/teams/:teamId/squads/:squadId', authMiddleware, async (c) => {
+app.get('/make-server-0ea22bba/teams/:teamId/squads/:squadId', async (c) => {
   try {
     const teamId = c.req.param('teamId');
     const squadId = c.req.param('squadId');
@@ -3577,7 +3577,7 @@ app.delete('/make-server-0ea22bba/teams/:teamId/squads/:squadId/players/:playerI
 });
 
 // Get squads available for tournament
-app.get('/make-server-0ea22bba/teams/:teamId/squads/available', authMiddleware, async (c) => {
+app.get('/make-server-0ea22bba/teams/:teamId/squads/available', async (c) => {
   try {
     const teamId = c.req.param('teamId');
     const tournamentType = c.req.query('type');
