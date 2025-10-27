@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { userApi, masterAdminApi, teamRosterApi } from "../lib/api";
+import { userApi, masterAdminApi, teamRosterApi, invitationApi } from "../lib/api";
 import { toast } from "sonner@2.0.3";
 import { formatHeight } from "../utils/formatters";
 import { Input } from "./ui/input";
@@ -107,12 +107,12 @@ export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
   async function loadTeamPlayers() {
     try {
       // Buscar jogadores reais do banco de dados
-      // TODO: Implementar endpoint GET /teams/{teamId}/players
       const teamId = profile.id;
       const { players: teamPlayers } = await teamRosterApi.getTeamPlayers(teamId);
-      setPlayers(teamPlayers);
+      console.log('✅ Jogadores carregados do banco:', teamPlayers);
+      setPlayers(teamPlayers || []);
     } catch (error) {
-      console.error('Erro ao carregar jogadores:', error);
+      console.error('❌ Erro ao carregar jogadores:', error);
       setPlayers([]);
     }
   }
@@ -162,23 +162,27 @@ export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
   async function handleAddAthleteFromCPF() {
     if (!athleteFound) return;
 
-    const newPlayer: Player = {
-      id: Date.now().toString(),
-      name: athleteFound.name,
-      position: athleteFound.position,
-      number: players.length + 1,
-      age: athleteFound.age,
-      height: athleteFound.height,
-      photoUrl: athleteFound.photoUrl
-    };
+    try {
+      const teamId = profile.id;
+      
+      // ✅ ENVIAR CONVITE ao atleta ao invés de adicionar direto
+      await invitationApi.sendInvitation(athleteFound.id, 
+        `Convite para fazer parte do elenco de ${profile.name}. Aceite para se juntar ao time!`
+      );
 
-    setPlayers([...players, newPlayer]);
-    toast.success(`${athleteFound.name} adicionado ao elenco!`);
-    
-    setShowAddPlayerModal(false);
-    setSearchCPF("");
-    setAthleteFound(null);
-    setAddPlayerMode('cpf');
+      console.log('✅ Convite enviado para:', athleteFound.name);
+      toast.success(`Convite enviado para ${athleteFound.name}! Aguarde a resposta do atleta.`, {
+        description: "O atleta receberá o convite e poderá aceitar ou recusar."
+      });
+      
+      setShowAddPlayerModal(false);
+      setSearchCPF("");
+      setAthleteFound(null);
+      setAddPlayerMode('cpf');
+    } catch (error: any) {
+      console.error('❌ Erro ao enviar convite:', error);
+      toast.error(error.message || "Erro ao enviar convite ao atleta");
+    }
   }
 
   async function handleAddManualPlayer() {
@@ -187,38 +191,62 @@ export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
       return;
     }
 
-    const playerToAdd: Player = {
-      id: Date.now().toString(),
-      name: newPlayer.name,
-      position: newPlayer.position,
-      number: parseInt(newPlayer.number),
-      age: newPlayer.age ? parseInt(newPlayer.age) : undefined,
-      height: newPlayer.height ? parseInt(newPlayer.height) : undefined,
-      photoUrl: newPlayer.photoUrl || undefined
-    };
+    try {
+      const teamId = profile.id;
+      
+      // Salvar no banco de dados
+      const { player } = await teamRosterApi.addPlayer(teamId, '', {
+        name: newPlayer.name,
+        position: newPlayer.position,
+        number: parseInt(newPlayer.number),
+        age: newPlayer.age ? parseInt(newPlayer.age) : undefined,
+        height: newPlayer.height ? parseInt(newPlayer.height) : undefined,
+        photoUrl: newPlayer.photoUrl || undefined
+      });
 
-    setPlayers([...players, playerToAdd]);
-    toast.success(`${newPlayer.name} adicionado ao elenco!`);
-    
-    setShowAddPlayerModal(false);
-    setNewPlayer({
-      name: "",
-      position: "",
-      number: "",
-      age: "",
-      height: "",
-      photoUrl: ""
-    });
-    setAddPlayerMode('cpf');
+      console.log('✅ Jogador manual salvo no banco:', player);
+      toast.success(`${newPlayer.name} adicionado ao elenco!`);
+      
+      // Recarregar lista do banco
+      await loadTeamPlayers();
+      
+      setShowAddPlayerModal(false);
+      setNewPlayer({
+        name: "",
+        position: "",
+        number: "",
+        age: "",
+        height: "",
+        photoUrl: ""
+      });
+      setAddPlayerMode('cpf');
+    } catch (error: any) {
+      console.error('❌ Erro ao adicionar jogador manual:', error);
+      toast.error(error.message || "Erro ao adicionar jogador ao elenco");
+    }
   }
 
-  function handleDeletePlayer() {
+  async function handleDeletePlayer() {
     if (!selectedPlayer) return;
     
-    setPlayers(players.filter(p => p.id !== selectedPlayer.id));
-    toast.success("Jogador removido do elenco");
-    setShowDeletePlayerConfirm(false);
-    setSelectedPlayer(null);
+    try {
+      const teamId = profile.id;
+      
+      // Remover do banco de dados
+      await teamRosterApi.removePlayerFromRoster(teamId, selectedPlayer.id);
+      
+      console.log('✅ Jogador removido do banco:', selectedPlayer.name);
+      toast.success(`${selectedPlayer.name} removido do elenco`);
+      
+      // Recarregar lista do banco
+      await loadTeamPlayers();
+      
+      setShowDeletePlayerConfirm(false);
+      setSelectedPlayer(null);
+    } catch (error: any) {
+      console.error('❌ Erro ao remover jogador:', error);
+      toast.error(error.message || "Erro ao remover jogador");
+    }
   }
 
   if (loading) {

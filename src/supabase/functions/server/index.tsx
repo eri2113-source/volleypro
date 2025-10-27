@@ -2208,7 +2208,37 @@ app.post('/make-server-0ea22bba/invitations/:invitationId/accept', authMiddlewar
       athlete.teamHistory = newHistory;
     }
     
+    // ✅ NOVO: Remover da vitrine automaticamente
+    athlete.freeAgent = false;
+    
     await kv.set(`user:${userId}`, athlete);
+    
+    // ✅ NOVO: Adicionar ao elenco do time automaticamente
+    const teamId = invitation.teamId;
+    const teamPlayers = await kv.get(`team:${teamId}:players`) || [];
+    
+    // Verificar se atleta já não está no elenco
+    const alreadyInRoster = teamPlayers.find((p: any) => p.id === userId);
+    
+    if (!alreadyInRoster) {
+      const newPlayer = {
+        id: userId,
+        name: athlete.name,
+        position: athlete.position || 'Posição não definida',
+        number: teamPlayers.length + 1,
+        age: athlete.age,
+        height: athlete.height,
+        photoUrl: athlete.photoUrl,
+        cpf: athlete.cpf,
+        addedAt: new Date().toISOString(),
+        teamId: teamId
+      };
+      
+      teamPlayers.push(newPlayer);
+      await kv.set(`team:${teamId}:players`, teamPlayers);
+      
+      console.log(`✅ Player added to team roster: ${athlete.name} → ${invitation.teamName}`);
+    }
     
     console.log(`✅ Invitation accepted: ${userId} joined ${invitation.teamName}`);
     
@@ -2293,6 +2323,153 @@ app.post('/make-server-0ea22bba/teams/leave', authMiddleware, async (c) => {
     });
   } catch (error: any) {
     console.error('❌ Error leaving team:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// ============= TEAM ROSTER MANAGEMENT ROUTES =============
+
+// Get team roster/elenco
+app.get('/make-server-0ea22bba/teams/:teamId/players', async (c) => {
+  try {
+    const teamId = c.req.param('teamId');
+    
+    console.log(`🔍 Getting roster for team: ${teamId}`);
+    
+    // Buscar jogadores do time
+    const players = await kv.get(`team:${teamId}:players`) || [];
+    
+    console.log(`✅ Found ${players.length} players for team ${teamId}`);
+    
+    return c.json({ players });
+  } catch (error: any) {
+    console.error('❌ Error getting team roster:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Add player to roster
+app.post('/make-server-0ea22bba/teams/:teamId/players', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const teamId = c.req.param('teamId');
+    
+    // Verificar se o usuário é o dono do time
+    if (userId !== teamId) {
+      return c.json({ error: 'Only team owner can add players' }, 403);
+    }
+    
+    const { playerId, name, position, number, age, height, photoUrl, cpf } = await c.req.json();
+    
+    console.log(`➕ Adding player to team ${teamId}:`, { playerId, name, position });
+    
+    // Buscar jogadores atuais
+    const players = await kv.get(`team:${teamId}:players`) || [];
+    
+    // Criar novo jogador
+    const newPlayer = {
+      id: playerId || `player:${Date.now()}`,
+      name,
+      position,
+      number: parseInt(number) || 0,
+      age: age ? parseInt(age) : undefined,
+      height: height ? parseInt(height) : undefined,
+      photoUrl: photoUrl || undefined,
+      cpf: cpf || undefined,
+      addedAt: new Date().toISOString(),
+      teamId
+    };
+    
+    // Adicionar à lista
+    players.push(newPlayer);
+    
+    // Salvar no banco
+    await kv.set(`team:${teamId}:players`, players);
+    
+    console.log(`✅ Player added to team ${teamId}: ${newPlayer.name} (${newPlayer.position})`);
+    
+    return c.json({ player: newPlayer, players });
+  } catch (error: any) {
+    console.error('❌ Error adding player to roster:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Update player in roster
+app.put('/make-server-0ea22bba/teams/:teamId/players/:playerId', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const teamId = c.req.param('teamId');
+    const playerId = c.req.param('playerId');
+    
+    // Verificar se o usuário é o dono do time
+    if (userId !== teamId) {
+      return c.json({ error: 'Only team owner can update players' }, 403);
+    }
+    
+    const updates = await c.req.json();
+    
+    console.log(`✏️ Updating player ${playerId} in team ${teamId}`);
+    
+    // Buscar jogadores
+    let players = await kv.get(`team:${teamId}:players`) || [];
+    
+    // Encontrar e atualizar jogador
+    const playerIndex = players.findIndex((p: any) => p.id === playerId);
+    
+    if (playerIndex === -1) {
+      return c.json({ error: 'Player not found in roster' }, 404);
+    }
+    
+    players[playerIndex] = {
+      ...players[playerIndex],
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+    
+    // Salvar atualização
+    await kv.set(`team:${teamId}:players`, players);
+    
+    console.log(`✅ Player updated: ${players[playerIndex].name}`);
+    
+    return c.json({ player: players[playerIndex], players });
+  } catch (error: any) {
+    console.error('❌ Error updating player:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Remove player from roster
+app.delete('/make-server-0ea22bba/teams/:teamId/players/:playerId', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const teamId = c.req.param('teamId');
+    const playerId = c.req.param('playerId');
+    
+    // Verificar se o usuário é o dono do time
+    if (userId !== teamId) {
+      return c.json({ error: 'Only team owner can remove players' }, 403);
+    }
+    
+    console.log(`🗑️ Removing player ${playerId} from team ${teamId}`);
+    
+    // Buscar jogadores
+    let players = await kv.get(`team:${teamId}:players`) || [];
+    
+    // Encontrar jogador antes de remover (para log)
+    const playerToRemove = players.find((p: any) => p.id === playerId);
+    
+    // Filtrar jogador removido
+    players = players.filter((p: any) => p.id !== playerId);
+    
+    // Salvar atualização
+    await kv.set(`team:${teamId}:players`, players);
+    
+    console.log(`✅ Player removed: ${playerToRemove?.name || playerId}`);
+    
+    return c.json({ success: true, players });
+  } catch (error: any) {
+    console.error('❌ Error removing player:', error);
     return c.json({ error: error.message }, 500);
   }
 });
