@@ -494,7 +494,7 @@ export default function App() {
   // Menus principais que vão na barra horizontal
   // Itens principais (sempre visíveis)
   const primaryMenuItems = [
-    { id: "feed", label: "Feed", icon: Home },
+    { id: "feed", label: "Alimentar", icon: Home },
     { id: "athletes", label: "Atletas", icon: Users },
     { id: "teams", label: "Times", icon: Shield },
     { id: "tournaments", label: "Torneios", icon: Trophy },
@@ -571,7 +571,7 @@ export default function App() {
                           title={item.label}
                         >
                           <Icon className="h-4 w-4 sm:h-5 sm:w-5 shrink-0" />
-                          <span className="hidden sm:inline text-xs md:text-sm">{item.label}</span>
+                          <span className="hidden sm:inline text-xs md:text-sm" translate="no">{item.label}</span>
                         </Button>
                       );
                     })}
@@ -622,7 +622,7 @@ export default function App() {
                                 `}
                               >
                                 <Icon className="h-5 w-5 shrink-0" />
-                                <span>{item.label}</span>
+                                <span translate="no">{item.label}</span>
                               </Button>
                             );
                           })}
