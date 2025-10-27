@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, memo, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
 
 interface LEDMedia {
@@ -26,7 +26,7 @@ interface AnimatedLEDPanelProps {
   height?: number;
 }
 
-export function AnimatedLEDPanel({
+export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
   zones,
   media,
   layout = "grid-3",
@@ -37,36 +37,48 @@ export function AnimatedLEDPanel({
   height = 320,
 }: AnimatedLEDPanelProps) {
   // Determinar número de slots baseado no layout
-  const numSlots =
-    layout === "single" ? 1 : layout === "grid-2" ? 2 : layout === "grid-3" ? 3 : 4;
+  const numSlots = useMemo(
+    () => layout === "single" ? 1 : layout === "grid-2" ? 2 : layout === "grid-3" ? 3 : 4,
+    [layout]
+  );
 
-  // Determinar mídia para cada slot
-  let slotMedia: LEDMedia[][] = [];
+  // Determinar mídia para cada slot (memoizado)
+  const slotMedia = useMemo(() => {
+    let result: LEDMedia[][] = [];
 
-  if (zones) {
-    // 🆕 NOVO SISTEMA: Usar zonas separadas
-    const zoneKeys = ["zone1", "zone2", "zone3", "zone4"] as const;
-    slotMedia = zoneKeys.slice(0, numSlots).map((key) => zones[key] || []);
-  } else if (media && media.length > 0) {
-    // 🔙 RETROCOMPATIBILIDADE: Distribuir mídia única entre slots
-    slotMedia = Array.from({ length: numSlots }, (_, slotIndex) => {
-      return media.filter((_, index) => index % numSlots === slotIndex);
-    });
-  } else {
-    // Vazio
-    slotMedia = Array.from({ length: numSlots }, () => []);
-  }
+    if (zones) {
+      // 🆕 NOVO SISTEMA: Usar zonas separadas
+      const zoneKeys = ["zone1", "zone2", "zone3", "zone4"] as const;
+      result = zoneKeys.slice(0, numSlots).map((key) => zones[key] || []);
+    } else if (media && media.length > 0) {
+      // 🔙 RETROCOMPATIBILIDADE: Distribuir mídia única entre slots
+      result = Array.from({ length: numSlots }, (_, slotIndex) => {
+        return media.filter((_, index) => index % numSlots === slotIndex);
+      });
+    } else {
+      // Vazio
+      result = Array.from({ length: numSlots }, () => []);
+    }
 
-  // Classes de grid
-  const gridClasses = {
-    single: "grid-cols-1",
-    "grid-2": "grid-cols-2",
-    "grid-3": "grid-cols-3",
-    "grid-4": "grid-cols-2 lg:grid-cols-4",
-  };
+    return result;
+  }, [zones, media, numSlots]);
+
+  // Classes de grid (memoizado)
+  const gridClass = useMemo(() => {
+    const gridClasses = {
+      single: "grid-cols-1",
+      "grid-2": "grid-cols-2",
+      "grid-3": "grid-cols-3",
+      "grid-4": "grid-cols-2 lg:grid-cols-4",
+    };
+    return gridClasses[layout];
+  }, [layout]);
 
   // Verificar se há alguma mídia
-  const hasAnyMedia = slotMedia.some((slot) => slot.length > 0);
+  const hasAnyMedia = useMemo(
+    () => slotMedia.some((slot) => slot.length > 0),
+    [slotMedia]
+  );
 
   // Se não há mídia, mostra placeholder
   if (!hasAnyMedia) {
@@ -86,7 +98,7 @@ export function AnimatedLEDPanel({
 
   return (
     <div
-      className={`relative overflow-hidden grid ${gridClasses[layout]} gap-0`}
+      className={`relative overflow-hidden grid ${gridClass} gap-0`}
       style={{ height: `${height}px` }}
     >
       {slotMedia.map((slotMediaList, slotIndex) => (
@@ -101,10 +113,10 @@ export function AnimatedLEDPanel({
       ))}
     </div>
   );
-}
+});
 
-// Componente de slot individual com animação
-function AnimatedSlot({
+// ⚡ OTIMIZADO: Componente de slot individual memoizado
+const AnimatedSlot = memo(function AnimatedSlot({
   media,
   animationType,
   randomOrder,
@@ -120,8 +132,9 @@ function AnimatedSlot({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [shuffledMedia, setShuffledMedia] = useState<LEDMedia[]>(media);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const timerRef = useRef<number | null>(null);
 
-  // Embaralhar mídia se randomOrder ativo
+  // Embaralhar mídia se randomOrder ativo (otimizado)
   useEffect(() => {
     if (randomOrder && media.length > 1) {
       const shuffled = [...media].sort(() => Math.random() - 0.5);
@@ -131,7 +144,23 @@ function AnimatedSlot({
     }
   }, [media, randomOrder]);
 
-  // Auto avançar
+  // Próxima mídia (com ordem aleatória) - useCallback para evitar re-criação
+  const handleNext = useCallback(() => {
+    if (randomOrder && shuffledMedia.length > 1) {
+      // Escolher índice aleatório diferente do atual
+      setCurrentIndex((prevIndex) => {
+        let newIndex;
+        do {
+          newIndex = Math.floor(Math.random() * shuffledMedia.length);
+        } while (newIndex === prevIndex && shuffledMedia.length > 1);
+        return newIndex;
+      });
+    } else {
+      setCurrentIndex((prev) => (prev + 1) % shuffledMedia.length);
+    }
+  }, [randomOrder, shuffledMedia.length]);
+
+  // ⚡ OTIMIZADO: Auto avançar com limpeza correta
   useEffect(() => {
     if (!autoPlay || shuffledMedia.length <= 1) return;
 
@@ -142,42 +171,33 @@ function AnimatedSlot({
 
     // Para imagens, usar timer
     if (duration) {
-      const timer = setTimeout(() => {
+      timerRef.current = window.setTimeout(() => {
         handleNext();
       }, duration);
 
-      return () => clearTimeout(timer);
+      return () => {
+        if (timerRef.current !== null) {
+          clearTimeout(timerRef.current);
+          timerRef.current = null;
+        }
+      };
     }
-  }, [currentIndex, autoPlay, shuffledMedia]);
-
-  // Próxima mídia (com ordem aleatória)
-  const handleNext = () => {
-    if (randomOrder && shuffledMedia.length > 1) {
-      // Escolher índice aleatório diferente do atual
-      let newIndex;
-      do {
-        newIndex = Math.floor(Math.random() * shuffledMedia.length);
-      } while (newIndex === currentIndex && shuffledMedia.length > 1);
-      setCurrentIndex(newIndex);
-    } else {
-      setCurrentIndex((prev) => (prev + 1) % shuffledMedia.length);
-    }
-  };
+  }, [currentIndex, autoPlay, shuffledMedia, handleNext]);
 
   // Callback quando vídeo terminar
-  const handleVideoEnded = () => {
+  const handleVideoEnded = useCallback(() => {
     if (autoPlay) {
       handleNext();
     }
-  };
+  }, [autoPlay, handleNext]);
 
   // Handle click
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     const currentMedia = shuffledMedia[currentIndex];
     if (currentMedia.link) {
       window.open(currentMedia.link, "_blank", "noopener,noreferrer");
     }
-  };
+  }, [shuffledMedia, currentIndex]);
 
   // Se não há mídia neste slot
   if (!shuffledMedia || shuffledMedia.length === 0) {
@@ -188,6 +208,7 @@ function AnimatedSlot({
           src="/logo-volleypro-icone.svg" 
           alt="VolleyPro" 
           className="w-24 h-24 opacity-20"
+          loading="lazy"
           style={{ objectFit: 'contain' }}
         />
       </div>
@@ -196,101 +217,75 @@ function AnimatedSlot({
 
   const currentMedia = shuffledMedia[currentIndex];
 
-  // Variantes de animação
-  const getAnimationVariants = () => {
+  // ⚡ OTIMIZADO: Variantes de animação memoizadas
+  const variants = useMemo(() => {
     const speed = transitionSpeed;
 
     switch (animationType) {
-      case "horizontal":
-        return {
-          enter: (direction: number) => ({
-            x: direction > 0 ? 1000 : -1000,
-            opacity: 0,
-          }),
-          center: {
-            x: 0,
-            opacity: 1,
-          },
-          exit: (direction: number) => ({
-            x: direction < 0 ? 1000 : -1000,
-            opacity: 0,
-          }),
-          transition: {
-            x: { type: "spring", stiffness: 300, damping: 30 },
-            opacity: { duration: speed * 0.2 },
-          },
-        };
-
       case "fade":
-        return {
-          enter: { opacity: 0, scale: 1 },
-          center: { opacity: 1, scale: 1 },
-          exit: { opacity: 0, scale: 1 },
-          transition: { duration: speed * 0.3 },
-        };
-
-      case "zoom":
-        return {
-          enter: { opacity: 0, scale: 0.8 },
-          center: { opacity: 1, scale: 1 },
-          exit: { opacity: 0, scale: 1.2 },
-          transition: { duration: speed * 0.3 },
-        };
-
-      case "slide":
-        return {
-          enter: { y: 1000, opacity: 0 },
-          center: { y: 0, opacity: 1 },
-          exit: { y: -1000, opacity: 0 },
-          transition: {
-            y: { type: "spring", stiffness: 300, damping: 30 },
-            opacity: { duration: speed * 0.2 },
-          },
-        };
-
-      default:
+        // Fade é a animação mais leve
         return {
           enter: { opacity: 0 },
           center: { opacity: 1 },
           exit: { opacity: 0 },
-          transition: { duration: speed * 0.3 },
+          transition: { duration: 0.5 }, // Mais rápido
+        };
+
+      case "zoom":
+        return {
+          enter: { opacity: 0, scale: 0.95 },
+          center: { opacity: 1, scale: 1 },
+          exit: { opacity: 0, scale: 1.05 },
+          transition: { duration: 0.6, ease: "easeInOut" },
+        };
+
+      case "slide":
+        return {
+          enter: { y: 50, opacity: 0 },
+          center: { y: 0, opacity: 1 },
+          exit: { y: -50, opacity: 0 },
+          transition: { duration: 0.5, ease: "easeOut" },
+        };
+
+      case "horizontal":
+      default:
+        return {
+          enter: { x: 100, opacity: 0 },
+          center: { x: 0, opacity: 1 },
+          exit: { x: -100, opacity: 0 },
+          transition: { duration: 0.5, ease: "easeInOut" },
         };
     }
-  };
-
-  const variants = getAnimationVariants();
+  }, [animationType, transitionSpeed]);
 
   return (
     <div className="relative overflow-hidden bg-black">
-      <AnimatePresence mode="wait" custom={1}>
+      <AnimatePresence mode="wait">
         <motion.div
           key={currentMedia.id}
-          custom={1}
           variants={variants}
           initial="enter"
           animate="center"
           exit="exit"
-          transition={variants.transition}
           className="absolute inset-0"
           onClick={handleClick}
-          style={{ cursor: currentMedia.link ? "pointer" : "default" }}
+          style={{ 
+            cursor: currentMedia.link ? "pointer" : "default",
+            willChange: "transform, opacity" // ⚡ GPU acceleration
+          }}
         >
           {currentMedia.type === "image" ? (
-            <motion.div
-              className="w-full h-full bg-cover bg-center"
-              style={{ backgroundImage: `url(${currentMedia.url})` }}
-              animate={
-                animationType === "horizontal"
-                  ? {
-                      x: [0, -30, 30, 0],
-                      transition: {
-                        duration: transitionSpeed * 2,
-                        repeat: Infinity,
-                        ease: "easeInOut",
-                      },
-                    }
-                  : {}
-              }
+            // ⚡ OTIMIZADO: Usar img tag ao invés de background-image
+            <img
+              src={currentMedia.url}
+              alt={currentMedia.name || "LED Media"}
+              className="w-full h-full object-cover"
+              loading="lazy" // ⚡ Lazy loading
+              decoding="async" // ⚡ Decodificação assíncrona
+              style={{ 
+                willChange: "transform",
+                backfaceVisibility: "hidden", // ⚡ Performance
+              }}
             />
           ) : (
             <video
@@ -301,7 +296,12 @@ function AnimatedSlot({
               autoPlay={autoPlay}
               muted
               playsInline
+              preload="metadata" // ⚡ Só carrega metadados
               onEnded={handleVideoEnded}
+              style={{ 
+                willChange: "transform",
+                backfaceVisibility: "hidden",
+              }}
             />
           )}
         </motion.div>
@@ -320,4 +320,6 @@ function AnimatedSlot({
       )}
     </div>
   );
-}
+});
+
+export default AnimatedLEDPanel;
