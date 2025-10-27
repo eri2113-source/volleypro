@@ -26,6 +26,7 @@ import { LoadingScreen } from "./components/LoadingScreen";
 import { LandingPage } from "./components/LandingPage";
 import { Logo } from "./components/Logo";
 import { CacheBuster } from "./components/CacheBuster";
+import DownloadLogos from "./components/DownloadLogos";
 
 import { PWAManager } from "./components/PWAManager";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
@@ -111,6 +112,7 @@ export default function App() {
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.substring(1);
+      console.log('🔍 Hash detectado:', hash); // DEBUG
       
       // Detectar se é um reset de senha (vem do email do Supabase)
       if (hash.includes('reset-password') || hash.includes('type=recovery')) {
@@ -131,12 +133,19 @@ export default function App() {
         // Limpar o hash
         window.history.replaceState(null, '', window.location.pathname);
       } else if (hash === 'icon-generator') {
+        console.log('✅ Abrindo gerador de ícones');
         setCurrentView('icon-generator');
         setSelectedAthlete(null);
         setSelectedTeam(null);
         setShowMyProfile(false);
       } else if (hash === 'pwa-test') {
         setCurrentView('pwa-test');
+        setSelectedAthlete(null);
+        setSelectedTeam(null);
+        setShowMyProfile(false);
+      } else if (hash === 'download-logos') {
+        console.log('✅ Abrindo página de logos!'); // DEBUG
+        setCurrentView('download-logos');
         setSelectedAthlete(null);
         setSelectedTeam(null);
         setShowMyProfile(false);
@@ -313,6 +322,11 @@ export default function App() {
       );
     }
     
+    // Download de Logos
+    if (currentView === "download-logos") {
+      return <DownloadLogos />;
+    }
+    
     // Painel de Testes PWA
     if (currentView === "pwa-test") {
       return <PWATestPanel />;
@@ -396,6 +410,16 @@ export default function App() {
         <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/10 py-12">
           <IconGenerator />
         </div>
+        <Toaster />
+      </ErrorBoundary>
+    );
+  }
+
+  // DOWNLOAD DE LOGOS - Funciona sem login
+  if (currentView === "download-logos") {
+    return (
+      <ErrorBoundary>
+        <DownloadLogos />
         <Toaster />
       </ErrorBoundary>
     );

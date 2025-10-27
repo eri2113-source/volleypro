@@ -31,7 +31,7 @@ export function Logo({ variant = 'full', className, withShadow = false }: LogoPr
     } : {};
 
     return (
-      <div className={cn("flex items-center gap-3", className)}>
+      <div className={cn("flex items-center gap-3", className)} translate="no">
         <div className="relative flex-shrink-0" style={{ width: '40px', height: '40px' }}>
           <img 
             src={ballImage} 
@@ -70,7 +70,7 @@ export function Logo({ variant = 'full', className, withShadow = false }: LogoPr
 
   // Full logo
   return (
-    <div className={cn("flex items-center gap-3", className)}>
+    <div className={cn("flex items-center gap-3", className)} translate="no">
       {/* VolleyPro Logo - Bola de Vôlei */}
       <div className="relative flex-shrink-0" style={{ width: '56px', height: '56px' }}>
         <img 
@@ -104,7 +104,7 @@ export function Logo({ variant = 'full', className, withShadow = false }: LogoPr
             Pro
           </span>
         </div>
-        <span className="text-[11px] tracking-widest uppercase text-muted-foreground ml-0.5">
+        <span className="text-[11px] tracking-widest uppercase text-muted-foreground ml-0.5" translate="yes">
           Rede Social do Vôlei
         </span>
       </div>

@@ -348,18 +348,17 @@ export function LandingPage({ onLoginClick }: LandingPageProps) {
             <div className="flex items-center gap-3">
               <Logo variant="compact" className="[&_img]:w-8 [&_img]:h-8" />
               <span className="text-muted-foreground">
-                © 2025 VolleyPro. Todos os direitos reservados.
+                © 2024 VolleyPro. Todos os direitos reservados.
               </span>
             </div>
-            <div className="flex items-center gap-4 text-muted-foreground">
-              <Button variant="ghost" size="sm" onClick={onLoginClick}>
-                Sobre
-              </Button>
-              <Button variant="ghost" size="sm" onClick={onLoginClick}>
-                Contato
-              </Button>
-              <Button variant="ghost" size="sm" onClick={onLoginClick}>
-                Privacidade
+            <div className="flex gap-4">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => window.location.hash = 'download-logos'}
+                className="text-muted-foreground hover:text-primary"
+              >
+                🎨 Baixar Logos
               </Button>
             </div>
           </div>

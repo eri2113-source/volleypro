@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏐 Baixar Logos VolleyPro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 20px;
+            opacity: 0.9;
+        }
+        
+        .alert {
+            background: rgba(255,255,255,0.95);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        
+        .alert h3 {
+            color: #0066ff;
+            margin-bottom: 16px;
+            font-size: 24px;
+        }
+        
+        .alert p {
+            margin-bottom: 12px;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .alert strong {
+            color: #0066ff;
+        }
+        
+        .logos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .logo-card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .logo-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 48px rgba(0,0,0,0.3);
+        }
+        
+        .logo-card h3 {
+            color: #0066ff;
+            margin-bottom: 8px;
+            font-size: 24px;
+        }
+        
+        .logo-card .subtitle {
+            color: #FFC72C;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .preview {
+            background: #f5f5f5;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 150px;
+        }
+        
+        .specs {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border-left: 4px solid #0066ff;
+        }
+        
+        .specs p {
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-download {
+            background: linear-gradient(135deg, #0066ff, #0052cc);
+            color: white;
+        }
+        
+        .btn-download:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 16px rgba(0,102,255,0.4);
+        }
+        
+        .btn-copy {
+            background: white;
+            color: #0066ff;
+            border: 2px solid #0066ff;
+        }
+        
+        .btn-copy:hover {
+            background: #f0f7ff;
+        }
+        
+        .btn-copy.copied {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+        
+        .guide {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        }
+        
+        .guide h3 {
+            color: #0066ff;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        
+        .guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        
+        .guide-section h4 {
+            color: #333;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+        
+        .guide-section ol {
+            margin-left: 20px;
+            color: #666;
+            line-height: 1.8;
+        }
+        
+        .guide-section code {
+            background: #f5f5f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            color: #0066ff;
+        }
+        
+        .tip {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 24px;
+        }
+        
+        .tip h4 {
+            margin-bottom: 12px;
+        }
+        
+        .tip ul {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 32px;
+            }
+            
+            .logos-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏐 Logos VolleyPro</h1>
+            <p>Baixe ou copie o código SVG das logos profissionais</p>
+        </div>
+        
+        <div class="alert">
+            <h3>💡 Como Usar</h3>
+            <p>✅ <strong>Download SVG:</strong> Clique em "Baixar SVG" para salvar o arquivo automaticamente</p>
+            <p>✅ <strong>Copiar Código:</strong> Clique em "Copiar Código" e cole em um arquivo .svg</p>
+            <p>✅ <strong>Para Google Ads:</strong> Use a Logo Horizontal (melhor proporção)</p>
+            <p>✅ <strong>Converter para PNG:</strong> Use cloudconvert.com/svg-to-png</p>
+        </div>
+        
+        <div class="logos-grid">
+            <!-- Logo Horizontal -->
+            <div class="logo-card">
+                <h3>➡️ Logo Horizontal</h3>
+                <p class="subtitle">⭐ IDEAL PARA GOOGLE ADS</p>
+                
+                <div class="preview">
+                    <svg width="300" height="80" viewBox="0 0 300 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="40" cy="40" r="35" fill="url(#ballGradient)"/>
+                        <path d="M 20 18 Q 30 25, 40 18 T 60 18" stroke="#fff" stroke-width="2.5" fill="none" opacity="0.9"/>
+                        <path d="M 15 35 Q 27 38, 40 35 T 65 35" stroke="#fff" stroke-width="2.5" fill="none" opacity="0.9"/>
+                        <path d="M 20 52 Q 30 48, 40 52 T 60 52" stroke="#fff" stroke-width="2.5" fill="none" opacity="0.9"/>
+                        <path d="M 23 23 L 30 30 M 50 30 L 57 23 M 23 57 L 30 50 M 50 50 L 57 57" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+                        <defs>
+                            <linearGradient id="ballGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0052cc;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="volleyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0052cc;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="proGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#FFC72C;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#ff6b35;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <text x="90" y="50" font-family="Arial, sans-serif" font-size="36" font-weight="900" fill="url(#volleyGradient)">Volley</text>
+                        <text x="205" y="50" font-family="Arial, sans-serif" font-size="36" font-weight="900" fill="url(#proGradient)">Pro</text>
+                    </svg>
+                </div>
+                
+                <div class="specs">
+                    <p>📏 Dimensão: 300x80px</p>
+                    <p>📦 Formato: SVG (vetorial)</p>
+                    <p>✨ Uso: Anúncios, email, redes sociais</p>
+                </div>
+                
+                <div class="buttons">
+                    <button class="btn btn-download" onclick="downloadLogo('horizontal')">
+                        📥 Baixar SVG
+                    </button>
+                    <button class="btn btn-copy" id="copy-horizontal" onclick="copyLogo('horizontal')">
+                        📋 Copiar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Logo Completa -->
+            <div class="logo-card">
+                <h3>📄 Logo Completa</h3>
+                <p class="subtitle">Com tagline "Rede Social do Vôlei"</p>
+                
+                <div class="preview">
+                    <svg width="140" height="160" viewBox="0 0 280 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="140" cy="80" r="70" fill="url(#ballGradient2)"/>
+                        <path d="M 105 45 Q 122 55, 140 45 T 175 45" stroke="#fff" stroke-width="5" fill="none" opacity="0.9"/>
+                        <path d="M 95 80 Q 117 86, 140 80 T 185 80" stroke="#fff" stroke-width="5" fill="none" opacity="0.9"/>
+                        <path d="M 105 115 Q 122 108, 140 115 T 175 115" stroke="#fff" stroke-width="5" fill="none" opacity="0.9"/>
+                        <path d="M 110 50 L 125 65 M 155 65 L 170 50 M 110 110 L 125 95 M 155 95 L 170 110" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+                        <defs>
+                            <linearGradient id="ballGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0052cc;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="volleyGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0052cc;stop-opacity:1" />
+                            </linearGradient>
+                            <linearGradient id="proGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#FFC72C;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#ff6b35;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <text x="140" y="200" font-family="Arial, sans-serif" font-size="48" font-weight="900" fill="url(#volleyGradient2)" text-anchor="middle">Volley</text>
+                        <text x="140" y="245" font-family="Arial, sans-serif" font-size="48" font-weight="900" fill="url(#proGradient2)" text-anchor="middle">Pro</text>
+                        <text x="140" y="280" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#666" text-anchor="middle">REDE SOCIAL DO VÔLEI</text>
+                    </svg>
+                </div>
+                
+                <div class="specs">
+                    <p>📏 Dimensão: 280x320px</p>
+                    <p>📦 Formato: SVG (vetorial)</p>
+                    <p>✨ Uso: Site, apresentações, capas</p>
+                </div>
+                
+                <div class="buttons">
+                    <button class="btn btn-download" onclick="downloadLogo('completa')">
+                        📥 Baixar SVG
+                    </button>
+                    <button class="btn btn-copy" id="copy-completa" onclick="copyLogo('completa')">
+                        📋 Copiar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Ícone -->
+            <div class="logo-card">
+                <h3>⚪ Ícone / Avatar</h3>
+                <p class="subtitle">Apenas a bola de vôlei</p>
+                
+                <div class="preview">
+                    <svg width="100" height="100" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="80" cy="80" r="70" fill="url(#ballGradient3)"/>
+                        <path d="M 45 48 Q 62 58, 80 48 T 115 48" stroke="#fff" stroke-width="5" fill="none" opacity="0.9"/>
+                        <path d="M 35 80 Q 57 86, 80 80 T 125 80" stroke="#fff" stroke-width="5" fill="none" opacity="0.9"/>
+                        <path d="M 45 112 Q 62 105, 80 112 T 115 112" stroke="#fff" stroke-width="5" fill="none" opacity="0.9"/>
+                        <path d="M 50 53 L 65 68 M 95 68 L 110 53 M 50 107 L 65 92 M 95 92 L 110 107" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+                        <defs>
+                            <linearGradient id="ballGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#0052cc;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                </div>
+                
+                <div class="specs">
+                    <p>📏 Dimensão: 160x160px</p>
+                    <p>📦 Formato: SVG (vetorial)</p>
+                    <p>✨ Uso: Avatar, favicon, ícone app</p>
+                </div>
+                
+                <div class="buttons">
+                    <button class="btn btn-download" onclick="downloadLogo('icone')">
+                        📥 Baixar SVG
+                    </button>
+                    <button class="btn btn-copy" id="copy-icone" onclick="copyLogo('icone')">
+                        📋 Copiar
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="guide">
+            <h3>🔄 Como Converter SVG para PNG</h3>
+            <div class="guide-grid">
+                <div class="guide-section">
+                    <h4>🌐 Método 1: Online (Grátis)</h4>
+                    <ol>
+                        <li>Ir em <code>cloudconvert.com/svg-to-png</code></li>
+                        <li>Upload do arquivo SVG baixado</li>
+                        <li>Configurar: 1200x400px (Google Ads)</li>
+                        <li>Clicar em "Converter"</li>
+                        <li>Baixar PNG pronto!</li>
+                    </ol>
+                </div>
+                
+                <div class="guide-section">
+                    <h4>🎨 Método 2: Canva (Grátis)</h4>
+                    <ol>
+                        <li>Ir em <code>canva.com</code></li>
+                        <li>Criar design: 1200x400px</li>
+                        <li>Upload do SVG</li>
+                        <li>Ajustar e redimensionar</li>
+                        <li>Baixar como PNG!</li>
+                    </ol>
+                </div>
+            </div>
+            
+            <div class="tip">
+                <h4>💡 Dica para Google Ads:</h4>
+                <ul>
+                    <li>✅ Use a <strong>Logo Horizontal</strong> (melhor proporção)</li>
+                    <li>✅ Tamanho ideal: <strong>1200x400px</strong> (PNG)</li>
+                    <li>✅ Tamanho máximo: <strong>150KB</strong></li>
+                    <li>✅ Fundo: <strong>Transparente</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const logos = {
+            horizontal: `<svg width="300" height="80" viewBox="0 0 300 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="40" cy="40" r="35" fill="url(#ballGradient)"/>
+  <path d="M 20 18 Q 30 25, 40 18 T 60 18" stroke="#fff" stroke-width="2.5" fill="none" opacity="0.9"/>
+  <path d="M 15 35 Q 27 38, 40 35 T 65 35" stroke="#fff" stroke-width="2.5" fill="none" opacity="0.9"/>
+  <path d="M 20 52 Q 30 48, 40 52 T 60 52" stroke="#fff" stroke-width="2.5" fill="none" opacity="0.9"/>
+  <path d="M 23 23 L 30 30 M 50 30 L 57 23 M 23 57 L 30 50 M 50 50 L 57 57" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+  <defs>
+    <linearGradient id="ballGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0052cc;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="volleyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0052cc;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="proGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFC72C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6b35;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <text x="90" y="50" font-family="Arial, sans-serif" font-size="36" font-weight="900" fill="url(#volleyGradient)">Volley</text>
+  <text x="205" y="50" font-family="Arial, sans-serif" font-size="36" font-weight="900" fill="url(#proGradient)">Pro</text>
+</svg>`,
+            completa: `<svg width="280" height="320" viewBox="0 0 280 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="140" cy="80" r="70" fill="url(#ballGradient2)"/>
+  <path d="M 105 45 Q 122 55, 140 45 T 175 45" stroke="#fff" stroke-width="5" fill="none" opacity="0.9"/>
+  <path d="M 95 80 Q 117 86, 140 80 T 185 80" stroke="#fff" stroke-width="5" fill="none" opacity="0.9"/>
+  <path d="M 105 115 Q 122 108, 140 115 T 175 115" stroke="#fff" stroke-width="5" fill="none" opacity="0.9"/>
+  <path d="M 110 50 L 125 65 M 155 65 L 170 50 M 110 110 L 125 95 M 155 95 L 170 110" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+  <defs>
+    <linearGradient id="ballGradient2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0052cc;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="volleyGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0052cc;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="proGradient2" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFC72C;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ff6b35;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <text x="140" y="200" font-family="Arial, sans-serif" font-size="48" font-weight="900" fill="url(#volleyGradient2)" text-anchor="middle">Volley</text>
+  <text x="140" y="245" font-family="Arial, sans-serif" font-size="48" font-weight="900" fill="url(#proGradient2)" text-anchor="middle">Pro</text>
+  <text x="140" y="280" font-family="Arial, sans-serif" font-size="16" font-weight="600" fill="#666" text-anchor="middle">REDE SOCIAL DO VÔLEI</text>
+</svg>`,
+            icone: `<svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <circle cx="80" cy="80" r="70" fill="url(#ballGradient3)"/>
+  <path d="M 45 48 Q 62 58, 80 48 T 115 48" stroke="#fff" stroke-width="5" fill="none" opacity="0.9"/>
+  <path d="M 35 80 Q 57 86, 80 80 T 125 80" stroke="#fff" stroke-width="5" fill="none" opacity="0.9"/>
+  <path d="M 45 112 Q 62 105, 80 112 T 115 112" stroke="#fff" stroke-width="5" fill="none" opacity="0.9"/>
+  <path d="M 50 53 L 65 68 M 95 68 L 110 53 M 50 107 L 65 92 M 95 92 L 110 107" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity="0.9"/>
+  <defs>
+    <linearGradient id="ballGradient3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0066ff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#0052cc;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>`
+        };
+        
+        function downloadLogo(type) {
+            const filenames = {
+                horizontal: 'logo-volleypro-horizontal.svg',
+                completa: 'logo-volleypro-completa.svg',
+                icone: 'logo-volleypro-icone.svg'
+            };
+            
+            const blob = new Blob([logos[type]], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filenames[type];
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            alert('✅ ' + filenames[type] + ' baixado com sucesso!');
+        }
+        
+        function copyLogo(type) {
+            const button = document.getElementById('copy-' + type);
+            
+            navigator.clipboard.writeText(logos[type]).then(() => {
+                button.textContent = '✅ Copiado!';
+                button.classList.add('copied');
+                
+                setTimeout(() => {
+                    button.textContent = '📋 Copiar';
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(() => {
+                alert('❌ Erro ao copiar. Tente novamente.');
+            });
+        }
+    </script>
+</body>
+</html>
