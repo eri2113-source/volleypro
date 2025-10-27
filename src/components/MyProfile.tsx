@@ -31,6 +31,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./ui/alert-dialog";
+import { TeamCategoriesManager } from "./TeamCategoriesManager";
 
 interface MyProfileProps {
   onBack: () => void;
@@ -363,8 +364,9 @@ export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
 
       {/* Content */}
       <div className="container mx-auto max-w-5xl p-6">
-        <Tabs defaultValue={isTeam ? "roster" : "info"} className="space-y-6">
-          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${isTeam ? 6 : 2}, 1fr)` }}>
+        <Tabs defaultValue={isTeam ? "categories" : "info"} className="space-y-6">
+          <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${isTeam ? 7 : 2}, 1fr)` }}>
+            {isTeam && <TabsTrigger value="categories">Categorias</TabsTrigger>}
             {isTeam && <TabsTrigger value="roster">Elenco</TabsTrigger>}
             {isTeam && <TabsTrigger value="lineup">Escalação</TabsTrigger>}
             <TabsTrigger value="info">Informações</TabsTrigger>
@@ -372,6 +374,16 @@ export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
             {isTeam && <TabsTrigger value="stats">Estatísticas</TabsTrigger>}
             <TabsTrigger value="achievements">Conquistas</TabsTrigger>
           </TabsList>
+
+          {/* ABA: CATEGORIAS E EQUIPES */}
+          {isTeam && (
+            <TabsContent value="categories" className="space-y-6">
+              <TeamCategoriesManager 
+                teamId={profile.id}
+                teamName={profile.name}
+              />
+            </TabsContent>
+          )}
 
           <TabsContent value="info" className="space-y-6">
             <Card>

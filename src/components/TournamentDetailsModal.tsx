@@ -43,6 +43,7 @@ import { TournamentStandings } from "./TournamentStandings";
 import { BeachTournamentBracket } from "./BeachTournamentBracket";
 import { BeachTournamentStandings } from "./BeachTournamentStandings";
 import { AnimatedLEDPanel } from "./AnimatedLEDPanel";
+import { TournamentSquadSelectionModal } from "./TournamentSquadSelectionModal";
 
 interface TournamentDetailsModalProps {
   open: boolean;
@@ -87,6 +88,9 @@ export function TournamentDetailsModal({
   // Beach Tournament Registration
   const [showBeachRegistration, setShowBeachRegistration] = useState(false);
   const [showIndividualRegistration, setShowIndividualRegistration] = useState(false);
+  
+  // Squad Selection Modal (for teams with multiple squads)
+  const [showSquadSelection, setShowSquadSelection] = useState(false);
 
   useEffect(() => {
     if (open && tournamentId && tournamentId !== '') {
@@ -436,13 +440,13 @@ export function TournamentDetailsModal({
             {canRegister && (
               <Button 
                 onClick={() => {
-                  console.log('🎯 Inscrever button clicked:', {
+                  console.log('🎯 Inscrever button clicked - Opening squad selection:', {
                     tournamentId,
                     currentUserId,
                     userType,
                     isRegistered
                   });
-                  handleRegister();
+                  setShowSquadSelection(true);
                 }} 
                 disabled={loading}
                 className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
@@ -933,6 +937,27 @@ export function TournamentDetailsModal({
           }}
           tournamentId={tournamentId}
           tournamentName={tournament.name}
+        />
+      )}
+
+      {/* Squad Selection Modal - For teams with multiple squads */}
+      {showSquadSelection && currentUserId && tournament && (
+        <TournamentSquadSelectionModal
+          open={showSquadSelection}
+          onClose={() => setShowSquadSelection(false)}
+          tournamentId={tournamentId}
+          tournamentName={tournament.name}
+          teamId={currentUserId}
+          teamName={currentUserTeamName || 'Seu Time'}
+          modalityType={tournament.modalityType || 'indoor'}
+          onSquadSelected={(squad) => {
+            console.log('✅ Squad selected:', squad);
+            // Recarregar detalhes do torneio após inscrição
+            loadTournamentDetails();
+            if (onRegistrationSuccess) {
+              onRegistrationSuccess();
+            }
+          }}
         />
       )}
 

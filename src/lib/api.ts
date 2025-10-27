@@ -629,6 +629,32 @@ export const tournamentApi = {
     return apiCall(`/tournaments/${tournamentId}/standings`);
   },
 
+  // Squad-based registration (multiple squads from same team)
+  async registerSquad(tournamentId: string, teamId: string, squadId: string) {
+    return apiCall(`/tournaments/${tournamentId}/register-squad`, {
+      method: 'POST',
+      body: JSON.stringify({ teamId, squadId }),
+    });
+  },
+
+  async getTeamRegistrations(tournamentId: string, teamId: string) {
+    return apiCall(`/tournaments/${tournamentId}/registrations/${teamId}`);
+  },
+
+  async validateSquadPlayers(tournamentId: string, teamId: string, squadId: string, playerIds: string[]) {
+    return apiCall(`/tournaments/${tournamentId}/validate-players`, {
+      method: 'POST',
+      body: JSON.stringify({ teamId, squadId, playerIds }),
+    });
+  },
+
+  async unregisterSquad(tournamentId: string, teamId: string, squadId: string) {
+    return apiCall(`/tournaments/${tournamentId}/register-squad`, {
+      method: 'DELETE',
+      body: JSON.stringify({ teamId, squadId }),
+    });
+  },
+
   async voteForMVP(tournamentId: string, athleteId: string, points?: number) {
     return apiCall(`/tournaments/${tournamentId}/mvp/vote`, {
       method: 'POST',
@@ -922,6 +948,63 @@ export const teamRosterApi = {
     if (filters?.minRating) params.append('minRating', filters.minRating.toString());
     
     return apiCall(`/players/available?${params.toString()}`);
+  },
+};
+
+// Team Categories Management APIs
+export const teamCategoryApi = {
+  // Get all categories and squads for a team
+  async getCategories(teamId: string) {
+    return apiCall(`/teams/${teamId}/categories`);
+  },
+
+  // Create new category (Feminino/Masculino)
+  async createCategory(teamId: string, categoryName: string) {
+    return apiCall(`/teams/${teamId}/categories`, {
+      method: 'POST',
+      body: JSON.stringify({ categoryName }),
+    });
+  },
+
+  // Create new squad within a category
+  async createSquad(teamId: string, categoryId: string, squadName: string) {
+    return apiCall(`/teams/${teamId}/categories/${categoryId}/squads`, {
+      method: 'POST',
+      body: JSON.stringify({ squadName }),
+    });
+  },
+
+  // Get specific squad with players
+  async getSquad(teamId: string, squadId: string) {
+    return apiCall(`/teams/${teamId}/squads/${squadId}`);
+  },
+
+  // Delete squad
+  async deleteSquad(teamId: string, squadId: string) {
+    return apiCall(`/teams/${teamId}/squads/${squadId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Add player to squad
+  async addPlayerToSquad(teamId: string, squadId: string, playerData: any) {
+    return apiCall(`/teams/${teamId}/squads/${squadId}/players`, {
+      method: 'POST',
+      body: JSON.stringify(playerData),
+    });
+  },
+
+  // Remove player from squad
+  async removePlayerFromSquad(teamId: string, squadId: string, playerId: string) {
+    return apiCall(`/teams/${teamId}/squads/${squadId}/players/${playerId}`, {
+      method: 'DELETE',
+    });
+  },
+
+  // Get squads for tournament registration
+  async getSquadsForTournament(teamId: string, tournamentType?: 'indoor' | 'beach') {
+    const params = tournamentType ? `?type=${tournamentType}` : '';
+    return apiCall(`/teams/${teamId}/squads/available${params}`);
   },
 };
 

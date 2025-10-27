@@ -3246,6 +3246,563 @@ app.delete('/make-server-0ea22bba/lives/:liveId', authMiddleware, async (c) => {
   }
 });
 
+// ============= TEAM CATEGORIES & SQUADS ROUTES =============
+
+// Get all categories and squads for a team
+app.get('/make-server-0ea22bba/teams/:teamId/categories', authMiddleware, async (c) => {
+  try {
+    const teamId = c.req.param('teamId');
+    
+    console.log(`📂 Buscando categorias do time: ${teamId}`);
+    
+    // Buscar categorias do time
+    const categories = await kv.get(`team:${teamId}:categories`) || [];
+    
+    console.log(`✅ Encontradas ${categories.length} categorias`);
+    
+    return c.json({ categories });
+  } catch (error: any) {
+    console.error('❌ Erro ao buscar categorias:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Create new category (Feminino/Masculino)
+app.post('/make-server-0ea22bba/teams/:teamId/categories', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const teamId = c.req.param('teamId');
+    const { categoryName } = await c.req.json();
+    
+    console.log(`➕ Criando categoria "${categoryName}" para time ${teamId}`);
+    
+    // Verificar se é o próprio time
+    const user = await kv.get(`user:${userId}`);
+    if (!user || user.id !== teamId) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    // Validar nome da categoria
+    if (categoryName !== 'Feminino' && categoryName !== 'Masculino') {
+      return c.json({ error: 'Categoria inválida. Use "Feminino" ou "Masculino"' }, 400);
+    }
+    
+    // Buscar categorias existentes
+    const categories = await kv.get(`team:${teamId}:categories`) || [];
+    
+    // Verificar se já existe
+    const exists = categories.find((cat: any) => cat.name === categoryName);
+    if (exists) {
+      return c.json({ error: `Categoria ${categoryName} já existe` }, 400);
+    }
+    
+    // Criar nova categoria
+    const newCategory = {
+      id: `category:${teamId}:${categoryName.toLowerCase()}`,
+      name: categoryName,
+      squads: [],
+      createdAt: new Date().toISOString()
+    };
+    
+    categories.push(newCategory);
+    await kv.set(`team:${teamId}:categories`, categories);
+    
+    console.log(`✅ Categoria "${categoryName}" criada com sucesso`);
+    
+    return c.json({ category: newCategory });
+  } catch (error: any) {
+    console.error('❌ Erro ao criar categoria:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Create new squad within a category
+app.post('/make-server-0ea22bba/teams/:teamId/categories/:categoryId/squads', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const teamId = c.req.param('teamId');
+    const categoryId = c.req.param('categoryId');
+    const { squadName } = await c.req.json();
+    
+    console.log(`➕ Criando equipe "${squadName}" na categoria ${categoryId}`);
+    
+    // Verificar se é o próprio time
+    const user = await kv.get(`user:${userId}`);
+    if (!user || user.id !== teamId) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    if (!squadName || squadName.trim().length === 0) {
+      return c.json({ error: 'Nome da equipe é obrigatório' }, 400);
+    }
+    
+    // Buscar categorias
+    const categories = await kv.get(`team:${teamId}:categories`) || [];
+    
+    // Encontrar categoria
+    const categoryIndex = categories.findIndex((cat: any) => cat.id === categoryId);
+    if (categoryIndex === -1) {
+      return c.json({ error: 'Categoria não encontrada' }, 404);
+    }
+    
+    const category = categories[categoryIndex];
+    
+    // Verificar se equipe já existe
+    const squadExists = category.squads?.find((s: any) => s.name === squadName);
+    if (squadExists) {
+      return c.json({ error: `Equipe ${squadName} já existe nesta categoria` }, 400);
+    }
+    
+    // Criar nova equipe
+    const timestamp = Date.now();
+    const newSquad = {
+      id: `squad:${categoryId}:${squadName.replace(/\s+/g, '-').toLowerCase()}:${timestamp}`,
+      name: squadName,
+      categoryId: category.id,
+      categoryName: category.name,
+      players: [],
+      createdAt: new Date().toISOString(),
+      active: true
+    };
+    
+    // Adicionar equipe à categoria
+    if (!category.squads) {
+      category.squads = [];
+    }
+    category.squads.push(newSquad);
+    
+    // Salvar
+    categories[categoryIndex] = category;
+    await kv.set(`team:${teamId}:categories`, categories);
+    
+    console.log(`✅ Equipe "${squadName}" criada com sucesso`);
+    
+    return c.json({ squad: newSquad });
+  } catch (error: any) {
+    console.error('❌ Erro ao criar equipe:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get specific squad with players
+app.get('/make-server-0ea22bba/teams/:teamId/squads/:squadId', authMiddleware, async (c) => {
+  try {
+    const teamId = c.req.param('teamId');
+    const squadId = c.req.param('squadId');
+    
+    console.log(`📂 Buscando equipe ${squadId}`);
+    
+    const categories = await kv.get(`team:${teamId}:categories`) || [];
+    
+    let foundSquad = null;
+    for (const category of categories) {
+      const squad = category.squads?.find((s: any) => s.id === squadId);
+      if (squad) {
+        foundSquad = squad;
+        break;
+      }
+    }
+    
+    if (!foundSquad) {
+      return c.json({ error: 'Equipe não encontrada' }, 404);
+    }
+    
+    return c.json({ squad: foundSquad });
+  } catch (error: any) {
+    console.error('❌ Erro ao buscar equipe:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Delete squad
+app.delete('/make-server-0ea22bba/teams/:teamId/squads/:squadId', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const teamId = c.req.param('teamId');
+    const squadId = c.req.param('squadId');
+    
+    const user = await kv.get(`user:${userId}`);
+    if (!user || user.id !== teamId) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    const categories = await kv.get(`team:${teamId}:categories`) || [];
+    
+    let removed = false;
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      if (category.squads) {
+        const squadIndex = category.squads.findIndex((s: any) => s.id === squadId);
+        if (squadIndex !== -1) {
+          category.squads.splice(squadIndex, 1);
+          categories[i] = category;
+          removed = true;
+          break;
+        }
+      }
+    }
+    
+    if (!removed) {
+      return c.json({ error: 'Equipe não encontrada' }, 404);
+    }
+    
+    await kv.set(`team:${teamId}:categories`, categories);
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('❌ Erro ao remover equipe:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Add player to squad
+app.post('/make-server-0ea22bba/teams/:teamId/squads/:squadId/players', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const teamId = c.req.param('teamId');
+    const squadId = c.req.param('squadId');
+    const playerData = await c.req.json();
+    
+    const user = await kv.get(`user:${userId}`);
+    if (!user || user.id !== teamId) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    if (!playerData.name || !playerData.position || !playerData.number) {
+      return c.json({ error: 'Nome, posição e número são obrigatórios' }, 400);
+    }
+    
+    const categories = await kv.get(`team:${teamId}:categories`) || [];
+    
+    let foundCategory = null;
+    let foundSquad = null;
+    let categoryIndex = -1;
+    let squadIndex = -1;
+    
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      if (category.squads) {
+        for (let j = 0; j < category.squads.length; j++) {
+          if (category.squads[j].id === squadId) {
+            foundCategory = category;
+            foundSquad = category.squads[j];
+            categoryIndex = i;
+            squadIndex = j;
+            break;
+          }
+        }
+      }
+      if (foundSquad) break;
+    }
+    
+    if (!foundSquad) {
+      return c.json({ error: 'Equipe não encontrada' }, 404);
+    }
+    
+    const newPlayer = {
+      id: playerData.id || `player:${Date.now()}`,
+      name: playerData.name,
+      position: playerData.position,
+      number: parseInt(playerData.number),
+      age: playerData.age ? parseInt(playerData.age) : undefined,
+      height: playerData.height ? parseInt(playerData.height) : undefined,
+      photoUrl: playerData.photoUrl || undefined,
+      cpf: playerData.cpf || undefined,
+      addedAt: new Date().toISOString()
+    };
+    
+    if (!foundSquad.players) {
+      foundSquad.players = [];
+    }
+    foundSquad.players.push(newPlayer);
+    
+    categories[categoryIndex].squads[squadIndex] = foundSquad;
+    await kv.set(`team:${teamId}:categories`, categories);
+    
+    console.log(`✅ Jogador ${newPlayer.name} adicionado`);
+    
+    return c.json({ player: newPlayer });
+  } catch (error: any) {
+    console.error('❌ Erro ao adicionar jogador:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Remove player from squad
+app.delete('/make-server-0ea22bba/teams/:teamId/squads/:squadId/players/:playerId', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const teamId = c.req.param('teamId');
+    const squadId = c.req.param('squadId');
+    const playerId = c.req.param('playerId');
+    
+    const user = await kv.get(`user:${userId}`);
+    if (!user || user.id !== teamId) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    const categories = await kv.get(`team:${teamId}:categories`) || [];
+    
+    let removed = false;
+    for (let i = 0; i < categories.length; i++) {
+      const category = categories[i];
+      if (category.squads) {
+        for (let j = 0; j < category.squads.length; j++) {
+          const squad = category.squads[j];
+          if (squad.id === squadId && squad.players) {
+            const playerIndex = squad.players.findIndex((p: any) => p.id === playerId);
+            if (playerIndex !== -1) {
+              squad.players.splice(playerIndex, 1);
+              categories[i].squads[j] = squad;
+              removed = true;
+              break;
+            }
+          }
+        }
+      }
+      if (removed) break;
+    }
+    
+    if (!removed) {
+      return c.json({ error: 'Jogador não encontrado' }, 404);
+    }
+    
+    await kv.set(`team:${teamId}:categories`, categories);
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('❌ Erro ao remover jogador:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get squads available for tournament
+app.get('/make-server-0ea22bba/teams/:teamId/squads/available', authMiddleware, async (c) => {
+  try {
+    const teamId = c.req.param('teamId');
+    const tournamentType = c.req.query('type');
+    
+    const categories = await kv.get(`team:${teamId}:categories`) || [];
+    
+    const allSquads: any[] = [];
+    for (const category of categories) {
+      if (category.squads) {
+        for (const squad of category.squads) {
+          if (squad.active) {
+            allSquads.push(squad);
+          }
+        }
+      }
+    }
+    
+    return c.json({ squads: allSquads });
+  } catch (error: any) {
+    console.error('❌ Erro ao buscar equipes:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// ============= TOURNAMENT SQUAD REGISTRATION ROUTES =============
+
+// Register squad in tournament
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const { teamId, squadId } = await c.req.json();
+    
+    console.log(`🏆 Inscrevendo equipe ${squadId} do time ${teamId} no torneio ${tournamentId}`);
+    
+    const user = await kv.get(`user:${userId}`);
+    if (!user || user.id !== teamId) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    const tournament = await kv.get(fullTournamentId);
+    if (!tournament) {
+      return c.json({ error: 'Torneio não encontrado' }, 404);
+    }
+    
+    // Buscar dados da equipe
+    const categories = await kv.get(`team:${teamId}:categories`) || [];
+    let foundSquad = null;
+    for (const category of categories) {
+      if (category.squads) {
+        const squad = category.squads.find((s: any) => s.id === squadId);
+        if (squad) {
+          foundSquad = squad;
+          break;
+        }
+      }
+    }
+    
+    if (!foundSquad) {
+      return c.json({ error: 'Equipe não encontrada' }, 404);
+    }
+    
+    // Inicializar registrations se não existir
+    if (!tournament.squadRegistrations) {
+      tournament.squadRegistrations = [];
+    }
+    
+    // Verificar se já está inscrita
+    const alreadyRegistered = tournament.squadRegistrations.find(
+      (reg: any) => reg.teamId === teamId && reg.squadId === squadId
+    );
+    if (alreadyRegistered) {
+      return c.json({ error: 'Esta equipe já está inscrita' }, 400);
+    }
+    
+    // Criar registro
+    const registration = {
+      id: `registration:${Date.now()}`,
+      tournamentId: fullTournamentId,
+      teamId,
+      teamName: user.name,
+      squadId,
+      squadName: foundSquad.name,
+      categoryName: foundSquad.categoryName,
+      players: foundSquad.players || [],
+      registeredAt: new Date().toISOString()
+    };
+    
+    tournament.squadRegistrations.push(registration);
+    await kv.set(fullTournamentId, tournament);
+    
+    console.log(`✅ Equipe ${foundSquad.name} inscrita com sucesso`);
+    
+    return c.json({ registration });
+  } catch (error: any) {
+    console.error('❌ Erro ao inscrever equipe:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get team registrations in tournament
+app.get('/make-server-0ea22bba/tournaments/:tournamentId/registrations/:teamId', authMiddleware, async (c) => {
+  try {
+    const tournamentId = c.req.param('tournamentId');
+    const teamId = c.req.param('teamId');
+    
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    const tournament = await kv.get(fullTournamentId);
+    
+    if (!tournament) {
+      return c.json({ error: 'Torneio não encontrado' }, 404);
+    }
+    
+    const registrations = tournament.squadRegistrations?.filter(
+      (reg: any) => reg.teamId === teamId
+    ) || [];
+    
+    return c.json({ registrations });
+  } catch (error: any) {
+    console.error('❌ Erro ao buscar inscrições:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Validate squad players (check for duplicates)
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/validate-players', authMiddleware, async (c) => {
+  try {
+    const tournamentId = c.req.param('tournamentId');
+    const { teamId, squadId, playerIds } = await c.req.json();
+    
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    const tournament = await kv.get(fullTournamentId);
+    
+    if (!tournament) {
+      return c.json({ error: 'Torneio não encontrado' }, 404);
+    }
+    
+    // Buscar todos os jogadores já inscritos deste time
+    const existingRegistrations = tournament.squadRegistrations?.filter(
+      (reg: any) => reg.teamId === teamId
+    ) || [];
+    
+    const registeredPlayerIds = new Set<string>();
+    const conflicts: any[] = [];
+    
+    // Coletar IDs de todos os jogadores já registrados
+    for (const reg of existingRegistrations) {
+      if (reg.players) {
+        for (const player of reg.players) {
+          registeredPlayerIds.add(player.id);
+        }
+      }
+    }
+    
+    // Verificar se algum jogador da nova equipe já está registrado
+    for (const playerId of playerIds) {
+      if (registeredPlayerIds.has(playerId)) {
+        // Encontrar em qual equipe está
+        for (const reg of existingRegistrations) {
+          const player = reg.players?.find((p: any) => p.id === playerId);
+          if (player) {
+            conflicts.push({
+              playerId: player.id,
+              playerName: player.name,
+              existingSquad: reg.squadName
+            });
+            break;
+          }
+        }
+      }
+    }
+    
+    const valid = conflicts.length === 0;
+    
+    return c.json({ valid, conflicts });
+  } catch (error: any) {
+    console.error('❌ Erro ao validar jogadores:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Unregister squad from tournament
+app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const { teamId, squadId } = await c.req.json();
+    
+    const user = await kv.get(`user:${userId}`);
+    if (!user || user.id !== teamId) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    const tournament = await kv.get(fullTournamentId);
+    
+    if (!tournament) {
+      return c.json({ error: 'Torneio não encontrado' }, 404);
+    }
+    
+    if (!tournament.squadRegistrations) {
+      return c.json({ error: 'Nenhuma inscrição encontrada' }, 404);
+    }
+    
+    const initialLength = tournament.squadRegistrations.length;
+    tournament.squadRegistrations = tournament.squadRegistrations.filter(
+      (reg: any) => !(reg.teamId === teamId && reg.squadId === squadId)
+    );
+    
+    if (tournament.squadRegistrations.length === initialLength) {
+      return c.json({ error: 'Inscrição não encontrada' }, 404);
+    }
+    
+    await kv.set(fullTournamentId, tournament);
+    
+    console.log(`✅ Equipe removida do torneio`);
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('❌ Erro ao remover inscrição:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // ============= TOURNAMENTS ROUTES =============
 
 // 🔍 DEBUG: Log ALL incoming requests

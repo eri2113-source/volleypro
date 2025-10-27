@@ -1470,6 +1470,10 @@
     max-height: calc(var(--spacing) * 32);
   }
 
+  .max-h-40 {
+    max-height: calc(var(--spacing) * 40);
+  }
+
   .max-h-64 {
     max-height: calc(var(--spacing) * 64);
   }
@@ -4310,6 +4314,10 @@
 
   .text-amber-500 {
     color: var(--color-amber-500);
+  }
+
+  .text-amber-600 {
+    color: var(--color-amber-600);
   }
 
   .text-amber-800 {
@@ -7350,6 +7358,10 @@
 
   .dark\:text-amber-200:is(.dark *) {
     color: var(--color-amber-200);
+  }
+
+  .dark\:text-amber-500:is(.dark *) {
+    color: var(--color-amber-500);
   }
 
   .dark\:text-blue-100:is(.dark *) {
