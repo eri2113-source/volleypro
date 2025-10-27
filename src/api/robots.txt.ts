@@ -1,29 +1,15 @@
-// ✅ VERCEL EDGE FUNCTION - Robots.txt 100% PÚBLICO
-// Acesso: https://volleypro-zw96.vercel.app/robots.txt
-// Redireciona automaticamente para /api/robots.txt (configurado no vercel.json)
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-export const config = {
-  runtime: 'edge',
-};
-
-export default function handler() {
-  const robots = `# VolleyPro - Rede Social de Vôlei
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  const robots = `# VolleyPro - Robots.txt
 User-agent: *
 Allow: /
-Sitemap: https://volleypro-zw96.vercel.app/sitemap.xml
 
-# Bloquear URLs privadas
-Disallow: /admin
-Disallow: /api/
-Disallow: /*?clear_cache=
-`;
+Sitemap: https://voleypro.net/sitemap.xml
 
-  return new Response(robots, {
-    status: 200,
-    headers: {
-      'Content-Type': 'text/plain; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
-      'Access-Control-Allow-Origin': '*',
-    },
-  });
+Crawl-delay: 1`;
+
+  res.setHeader('Content-Type', 'text/plain');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.status(200).send(robots);
 }
