@@ -10,17 +10,16 @@ interface LogoProps {
 export function Logo({ variant = 'full', className, withShadow = false }: LogoProps) {
   if (variant === 'icon') {
     return (
-      <div className={cn("relative", className)} style={{ width: '48px', height: '48px' }}>
-        <img 
-          src={ballImage} 
-          alt="VolleyPro" 
-          className="w-full h-full object-cover"
-          style={{ 
-            clipPath: 'circle(50% at 50% 50%)',
-            objectPosition: 'center'
-          }}
-        />
-      </div>
+      <div 
+        className={cn("relative rounded-full bg-gradient-to-br from-blue-50 to-orange-50", className)} 
+        style={{ 
+          width: '48px', 
+          height: '48px',
+          backgroundImage: `url(${ballImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center'
+        }}
+      />
     );
   }
 
@@ -32,18 +31,17 @@ export function Logo({ variant = 'full', className, withShadow = false }: LogoPr
 
     return (
       <div className={cn("flex items-center gap-3", className)} translate="no">
-        <div className="relative flex-shrink-0" style={{ width: '40px', height: '40px' }}>
-          <img 
-            src={ballImage} 
-            alt="VolleyPro" 
-            className="w-full h-full object-cover"
-            style={{ 
-              clipPath: 'circle(50% at 50% 50%)',
-              objectPosition: 'center',
-              filter: withShadow ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' : 'none'
-            }}
-          />
-        </div>
+        <div 
+          className="relative flex-shrink-0 rounded-full bg-gradient-to-br from-blue-50 to-orange-50" 
+          style={{ 
+            width: '40px', 
+            height: '40px',
+            backgroundImage: `url(${ballImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center center',
+            filter: withShadow ? 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))' : 'none'
+          }}
+        />
         <div className="flex items-baseline gap-0.5">
           <span className="text-2xl font-black tracking-tight" style={{ 
             background: 'linear-gradient(135deg, #0066ff 0%, #0052cc 100%)',
@@ -72,17 +70,16 @@ export function Logo({ variant = 'full', className, withShadow = false }: LogoPr
   return (
     <div className={cn("flex items-center gap-3", className)} translate="no">
       {/* VolleyPro Logo - Bola de Vôlei */}
-      <div className="relative flex-shrink-0" style={{ width: '56px', height: '56px' }}>
-        <img 
-          src={ballImage} 
-          alt="VolleyPro - Rede Social do Vôlei" 
-          className="w-full h-full object-cover"
-          style={{ 
-            clipPath: 'circle(50% at 50% 50%)',
-            objectPosition: 'center'
-          }}
-        />
-      </div>
+      <div 
+        className="relative flex-shrink-0 rounded-full bg-gradient-to-br from-blue-50 to-orange-50" 
+        style={{ 
+          width: '56px', 
+          height: '56px',
+          backgroundImage: `url(${ballImage})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center'
+        }}
+      />
       
       {/* Texto VolleyPro */}
       <div className="flex flex-col leading-none">

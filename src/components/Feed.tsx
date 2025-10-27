@@ -856,10 +856,12 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
       )}
 
       {isAuthenticated && (
-        <Card className="border-t-4 border-t-primary rounded-2xl animate-fade-in shadow-lg transition-all duration-300 hover:shadow-xl hover:-translate-y-1 relative overflow-hidden">
+        <Card className="border-t-4 border-t-primary rounded-2xl animate-fade-in shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 relative overflow-hidden bg-gradient-to-br from-card via-card to-primary/5 backdrop-blur-sm">
+        {/* Decorative gradient overlay */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>
         <CardHeader>
           <div className="flex items-start gap-4">
-            <Avatar className="h-12 w-12 ring-2 ring-primary/30 shadow-lg">
+            <Avatar className="h-12 w-12 ring-2 ring-primary/40 shadow-lg hover:ring-primary/60 transition-all">
               {currentUser?.photoUrl ? (
                 <AvatarImage 
                   src={currentUser.photoUrl} 
@@ -867,7 +869,7 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
                   className="object-cover"
                 />
               ) : null}
-              <AvatarFallback className="gradient-primary text-white text-lg font-semibold">
+              <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white text-lg font-semibold">
                 {currentUser?.name?.[0]?.toUpperCase() || 'VP'}
               </AvatarFallback>
             </Avatar>
@@ -940,7 +942,7 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
               size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={!!selectedMedia || loading}
-              className="gap-2 hover:bg-primary/10 hover:text-primary rounded-xl"
+              className="gap-2 hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-cyan-500/10 hover:text-blue-600 rounded-xl transition-all hover:scale-105"
             >
               <ImageIcon className="h-5 w-5" />
               <span className="hidden sm:inline">Foto</span>
@@ -950,7 +952,7 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
               size="sm"
               onClick={() => fileInputRef.current?.click()}
               disabled={!!selectedMedia || loading}
-              className="gap-2 hover:bg-accent/10 hover:text-accent rounded-xl"
+              className="gap-2 hover:bg-gradient-to-r hover:from-purple-500/10 hover:to-pink-500/10 hover:text-purple-600 rounded-xl transition-all hover:scale-105"
             >
               <VideoIcon className="h-5 w-5" />
               <span className="hidden sm:inline">Vídeo</span>
@@ -960,7 +962,7 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
               size="sm"
               onClick={() => setShowInspirationModal(true)}
               disabled={loading}
-              className="gap-2 hover:bg-secondary/10 hover:text-secondary rounded-xl"
+              className="gap-2 hover:bg-gradient-to-r hover:from-amber-500/10 hover:to-orange-500/10 hover:text-amber-600 rounded-xl transition-all hover:scale-105"
             >
               <Sparkles className="h-5 w-5" />
               <span className="hidden sm:inline">Inspiração</span>
@@ -969,9 +971,9 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
           <Button 
             disabled={(!newPost.trim() && !selectedMedia) || loading}
             onClick={handleCreatePost}
-            className="gradient-primary text-white shrink-0 rounded-xl font-semibold shadow-md hover:shadow-xl transition-all active:scale-95"
+            className="bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white shrink-0 rounded-xl font-semibold shadow-lg hover:shadow-2xl hover:shadow-primary/30 transition-all active:scale-95 hover:scale-105"
           >
-            {loading ? "Publicando..." : "Publicar"}
+            {loading ? "Publicando..." : "Publicar 🚀"}
           </Button>
         </CardFooter>
       </Card>
@@ -1029,8 +1031,10 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
               {index === 5 && <AdDisplay type="card" className="mb-6" />}
               {index === 8 && <AdDisplay type="card" className="mb-6" />}
               
-              <Card className={`rounded-2xl shadow-md border border-border transition-all duration-300 hover:shadow-xl hover:-translate-y-1 animate-fade-in ${
-          isOfficialPost ? 'bg-gradient-to-br from-secondary/5 via-primary/5 to-transparent shadow-lg' : ''
+              <Card className={`rounded-2xl shadow-md border-2 transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 animate-fade-in backdrop-blur-sm ${
+          isOfficialPost 
+            ? 'bg-gradient-to-br from-secondary/10 via-primary/5 to-transparent border-secondary/30 shadow-lg shadow-secondary/10' 
+            : 'bg-card/95 border-border/50 hover:border-primary/30'
         }`}>
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
@@ -1160,14 +1164,14 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
               <div className="relative flex-1">
                 <Button 
                   variant="ghost" 
-                  className={`w-full rounded-xl gap-2 hover:bg-primary/10 hover:text-primary transition-all ${
-                    userReactions[post.id] ? 'text-primary bg-primary/5 font-semibold' : ''
+                  className={`w-full rounded-xl gap-2 hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 hover:text-primary transition-all hover:scale-105 ${
+                    userReactions[post.id] ? 'text-primary bg-gradient-to-r from-primary/10 to-secondary/5 font-semibold shadow-sm' : ''
                   }`}
                   onClick={() => handleLike(post.id)}
                 >
                   {userReactions[post.id] ? (
                     <>
-                      <span className="text-lg">{userReactions[post.id]}</span>
+                      <span className="text-lg animate-bounce">{userReactions[post.id]}</span>
                       <span className="hidden sm:inline">
                         {VOLLEYBALL_REACTIONS.find(r => r.emoji === userReactions[post.id])?.label || 'Reagir'}
                       </span>

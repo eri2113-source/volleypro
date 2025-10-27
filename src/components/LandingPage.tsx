@@ -1,6 +1,7 @@
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Logo } from "./Logo";
+import { motion } from "motion/react";
 import { 
   Users, 
   Trophy, 
@@ -13,7 +14,11 @@ import {
   Heart,
   Award,
   Zap,
-  Target
+  Target,
+  Sparkles,
+  Rocket,
+  Play,
+  ArrowRight
 } from "lucide-react";
 
 interface LandingPageProps {
@@ -25,51 +30,64 @@ export function LandingPage({ onLoginClick }: LandingPageProps) {
     {
       icon: Users,
       title: "Conecte-se com Atletas",
-      description: "Siga seus jogadores favoritos, acompanhe suas carreiras e interaja com a comunidade do vôlei."
+      description: "Siga seus jogadores favoritos, acompanhe suas carreiras e interaja com a comunidade do vôlei.",
+      gradient: "from-blue-500 to-cyan-500"
     },
     {
       icon: Shield,
       title: "Times e Equipes",
-      description: "Crie perfis de times, gerencie elencos e mantenha sua equipe sempre atualizada."
+      description: "Crie perfis de times, gerencie elencos e mantenha sua equipe sempre atualizada.",
+      gradient: "from-purple-500 to-pink-500"
     },
     {
       icon: Trophy,
       title: "Torneios e Competições",
-      description: "Organize torneios, acompanhe tabelas, classificações e rankings MVP em tempo real."
+      description: "Organize torneios, acompanhe tabelas, classificações e rankings MVP em tempo real.",
+      gradient: "from-amber-500 to-orange-500"
     },
     {
       icon: Radio,
       title: "Transmissões ao Vivo",
-      description: "Assista e transmita jogos ao vivo, compartilhe momentos especiais com a comunidade."
+      description: "Assista e transmita jogos ao vivo, compartilhe momentos especiais com a comunidade.",
+      gradient: "from-red-500 to-rose-500"
     },
     {
       icon: Target,
       title: "Vitrine de Jogadores",
-      description: "Atletas livres no mercado podem se destacar e receber convites de times interessados."
+      description: "Atletas livres no mercado podem se destacar e receber convites de times interessados.",
+      gradient: "from-green-500 to-emerald-500"
     },
     {
       icon: MessageSquare,
       title: "Feed Social Completo",
-      description: "Publique fotos, vídeos, enquetes e interaja com curtidas, comentários e compartilhamentos."
+      description: "Publique fotos, vídeos, enquetes e interaja com curtidas, comentários e compartilhamentos.",
+      gradient: "from-indigo-500 to-blue-500"
     }
   ];
 
   const stats = [
-    { value: "1000+", label: "Atletas" },
-    { value: "200+", label: "Times" },
-    { value: "50+", label: "Torneios" },
-    { value: "10k+", label: "Torcedores" }
+    { value: "1000+", label: "Atletas", icon: Users },
+    { value: "200+", label: "Times", icon: Shield },
+    { value: "50+", label: "Torneios", icon: Trophy },
+    { value: "10k+", label: "Torcedores", icon: Heart }
+  ];
+
+  const benefits = [
+    { text: "100% Gratuito na Beta", icon: CheckCircle2 },
+    { text: "Sem Anúncios Intrusivos", icon: CheckCircle2 },
+    { text: "Dados Seguros e Protegidos", icon: CheckCircle2 },
+    { text: "Todas as Funcionalidades Liberadas", icon: Sparkles }
   ];
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-background via-background to-primary/5">
-      {/* Header/Navbar */}
-      <header className="border-b bg-gradient-to-r from-primary via-[#0052cc] to-primary shadow-lg fixed top-0 left-0 right-0 z-50 backdrop-blur-sm">
+    <div className="min-h-screen w-full overflow-x-hidden bg-background">
+      {/* Header/Navbar com Glassmorphism */}
+      <header className="fixed top-0 left-0 right-0 z-50 border-b backdrop-blur-xl bg-background/80 shadow-lg">
         <div className="container mx-auto flex h-16 items-center justify-between px-6">
-          <Logo variant="compact" className="[&_img]:w-9 [&_img]:h-9 [&_span]:text-white" withShadow />
+          <Logo variant="compact" />
           <Button 
             onClick={onLoginClick} 
-            className="bg-white text-primary hover:bg-white/90 shadow-lg font-semibold"
+            className="bg-gradient-to-r from-primary to-[#0052cc] hover:from-primary/90 hover:to-[#0052cc]/90 text-white shadow-lg font-semibold"
             size="lg"
           >
             Entrar / Cadastrar
@@ -80,287 +98,253 @@ export function LandingPage({ onLoginClick }: LandingPageProps) {
       {/* Spacer para compensar o header fixo */}
       <div className="h-16"></div>
 
-      {/* Hero Section */}
+      {/* Hero Section com Gradiente Animado */}
       <section className="relative overflow-hidden py-20 md:py-32">
-        {/* Background Pattern */}
+        {/* Background Gradient Animado */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-secondary/10 to-primary/5">
+          <div className="absolute inset-0 opacity-30" style={{
+            backgroundImage: 'radial-gradient(circle at 20% 50%, rgba(0, 102, 255, 0.2) 0%, transparent 50%), radial-gradient(circle at 80% 50%, rgba(255, 199, 44, 0.2) 0%, transparent 50%)'
+          }}></div>
+        </div>
+
+        {/* Padrão de Bolas de Vôlei */}
         <div className="absolute inset-0 opacity-5" style={{
           backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%230066ff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
         }}></div>
 
         <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-4xl mx-auto text-center">
+          <div className="max-w-5xl mx-auto">
+            {/* Badge de Lançamento */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex justify-center mb-8"
+            >
+              <div className="inline-flex items-center gap-2 bg-gradient-to-r from-primary/20 to-secondary/20 border border-primary/30 rounded-full px-6 py-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <span className="font-semibold text-sm">🎉 Agora em BETA - Cadastre-se GRÁTIS!</span>
+                <Sparkles className="h-4 w-4 text-secondary" />
+              </div>
+            </motion.div>
+
             {/* Logo grande */}
-            <div className="flex justify-center mb-8">
-              <Logo className="[&_img]:w-20 [&_img]:h-20" />
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="flex justify-center mb-8"
+            >
+              <Logo className="[&_img]:w-24 [&_img]:h-24" />
+            </motion.div>
 
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-[#0052cc] to-secondary bg-clip-text text-transparent">
-              A Rede Social do Vôlei
-            </h1>
-            
-            <p className="text-xl md:text-2xl text-muted-foreground mb-6 max-w-2xl mx-auto">
-              Conecte-se com atletas, times e torcedores. Organize torneios, transmita jogos ao vivo e faça parte da maior comunidade de vôlei do Brasil!
-            </p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="text-center"
+            >
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-black mb-6 leading-tight">
+                <span className="bg-gradient-to-r from-primary via-[#0052cc] to-secondary bg-clip-text text-transparent">
+                  A Primeira Rede Social
+                </span>
+                <br />
+                <span className="bg-gradient-to-r from-secondary via-[#ff8800] to-primary bg-clip-text text-transparent">
+                  100% Vôlei
+                </span>
+              </h1>
 
-            {/* Banner Beta */}
-            <div className="bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 border-2 border-primary/20 rounded-xl p-6 max-w-2xl mx-auto mb-8">
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Zap className="h-5 w-5 text-primary" />
-                <span className="font-bold text-primary text-lg">VERSÃO BETA - TESTE GRÁTIS!</span>
-                <Zap className="h-5 w-5 text-secondary" />
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Seja um dos primeiros testadores do VolleyPro! Crie sua conta gratuitamente, 
-                complete seu perfil e ajude-nos a construir a melhor rede social do vôlei. 
-                <strong className="text-foreground"> Todas as funcionalidades estão liberadas!</strong>
+              <p className="text-xl md:text-2xl lg:text-3xl text-muted-foreground mb-8 max-w-3xl mx-auto font-medium">
+                Conecte-se com <span className="text-primary font-bold">atletas</span>, 
+                crie seu <span className="text-secondary font-bold">time</span>, 
+                organize <span className="text-primary font-bold">torneios</span> e 
+                transmita <span className="text-secondary font-bold">lives</span>!
               </p>
-            </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button 
-                onClick={onLoginClick}
-                size="lg"
-                className="bg-gradient-to-r from-primary to-[#0052cc] hover:from-primary/90 hover:to-[#0052cc]/90 text-white shadow-2xl shadow-primary/50 text-lg px-8 py-6 h-auto"
-              >
-                <Star className="mr-2 h-5 w-5" />
-                Criar Conta Grátis!
-              </Button>
-              
-              <Button 
-                onClick={onLoginClick}
-                size="lg"
-                variant="outline"
-                className="border-2 border-primary text-primary hover:bg-primary/10 text-lg px-8 py-6 h-auto"
-              >
-                Já tenho conta
-              </Button>
-            </div>
+              {/* CTAs Principais */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button 
+                    onClick={onLoginClick}
+                    size="lg"
+                    className="bg-gradient-to-r from-primary to-[#0052cc] hover:from-primary/90 hover:to-[#0052cc]/90 text-white shadow-2xl shadow-primary/50 text-xl px-10 py-7 h-auto font-bold"
+                  >
+                    <Rocket className="mr-2 h-6 w-6" />
+                    Criar Conta GRÁTIS
+                    <ArrowRight className="ml-2 h-6 w-6" />
+                  </Button>
+                </motion.div>
+                
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button 
+                    onClick={onLoginClick}
+                    size="lg"
+                    variant="outline"
+                    className="border-2 border-primary text-primary hover:bg-primary hover:text-white text-xl px-10 py-7 h-auto font-bold transition-all duration-300"
+                  >
+                    Já tenho conta
+                  </Button>
+                </motion.div>
+              </div>
 
-            {/* Trust badges */}
-            <div className="mt-12 flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-primary" />
-                <span>100% Gratuito</span>
+              {/* Trust badges */}
+              <div className="flex flex-wrap justify-center gap-6 text-sm">
+                {benefits.map((benefit, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.5 + index * 0.1 }}
+                    className="flex items-center gap-2 bg-background/50 backdrop-blur-sm border rounded-full px-4 py-2"
+                  >
+                    <benefit.icon className="h-5 w-5 text-primary" />
+                    <span className="font-medium">{benefit.text}</span>
+                  </motion.div>
+                ))}
               </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-primary" />
-                <span>Sem Anúncios</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-5 w-5 text-primary" />
-                <span>Dados Seguros</span>
-              </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-12 bg-gradient-to-r from-primary via-[#0052cc] to-secondary">
-        <div className="container mx-auto px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      {/* Stats Section com Cards Flutuantes */}
+      <section className="py-16 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-primary via-[#0052cc] to-secondary opacity-95"></div>
+        <div className="container mx-auto px-6 relative z-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="text-4xl md:text-5xl font-bold text-white mb-2">
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ scale: 1.05, y: -5 }}
+                className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl p-6 text-center hover:bg-white/20 transition-all duration-300"
+              >
+                <stat.icon className="h-8 w-8 text-white mx-auto mb-3" />
+                <div className="text-4xl md:text-5xl font-black text-white mb-2">
                   {stat.value}
                 </div>
-                <div className="text-white/80 text-sm md:text-base">
+                <div className="text-white/90 font-semibold">
                   {stat.label}
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 md:py-32">
+      {/* Features Section com Cards Modernos */}
+      <section className="py-20 md:py-32 bg-gradient-to-b from-background to-primary/5">
         <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Tudo que você precisa em um só lugar
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-6xl font-black mb-4 bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+              Tudo que você precisa
             </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Uma plataforma completa para atletas, times e fãs do vôlei profissional
+            <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
+              Uma plataforma completa para atletas, times e fãs do vôlei brasileiro
             </p>
-          </div>
+          </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {features.map((feature, index) => (
-              <Card 
+              <motion.div
                 key={index}
-                className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ scale: 1.03, y: -8 }}
               >
-                <CardContent className="p-6">
-                  <div className="bg-gradient-to-br from-primary to-secondary rounded-xl p-3 w-fit mb-4">
-                    <feature.icon className="h-6 w-6 text-white" />
-                  </div>
-                  <h3 className="text-xl font-semibold mb-2">
-                    {feature.title}
-                  </h3>
-                  <p className="text-muted-foreground">
-                    {feature.description}
-                  </p>
-                </CardContent>
-              </Card>
+                <Card className="border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-2xl h-full bg-gradient-to-br from-background to-primary/5">
+                  <CardContent className="p-8">
+                    <div className={`bg-gradient-to-br ${feature.gradient} rounded-2xl p-4 w-fit mb-6 shadow-lg`}>
+                      <feature.icon className="h-8 w-8 text-white" />
+                    </div>
+                    <h3 className="text-2xl font-bold mb-3">
+                      {feature.title}
+                    </h3>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {feature.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* User Types Section */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Para quem é o VolleyPro?
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Três tipos de perfis para atender toda a comunidade do vôlei
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {/* Atleta */}
-            <Card className="border-2 border-primary/20 hover:border-primary transition-all duration-300 hover:shadow-2xl">
-              <CardContent className="p-8 text-center">
-                <div className="bg-gradient-to-br from-primary to-[#0052cc] rounded-full p-4 w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-                  <Users className="h-10 w-10 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4">🏐 Atletas</h3>
-                <ul className="space-y-3 text-left">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Crie seu perfil profissional</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Entre na vitrine de jogadores</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Receba convites de times</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Compartilhe sua jornada</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Time */}
-            <Card className="border-2 border-secondary/20 hover:border-secondary transition-all duration-300 hover:shadow-2xl">
-              <CardContent className="p-8 text-center">
-                <div className="bg-gradient-to-br from-secondary to-[#ff8555] rounded-full p-4 w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-                  <Shield className="h-10 w-10 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4">⚡ Times</h3>
-                <ul className="space-y-3 text-left">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
-                    <span>Gerencie seu elenco</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
-                    <span>Convide jogadores</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
-                    <span>Organize torneios</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-secondary mt-0.5 flex-shrink-0" />
-                    <span>Cresça sua torcida</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Fã/Torcedor */}
-            <Card className="border-2 border-primary/20 hover:border-primary transition-all duration-300 hover:shadow-2xl">
-              <CardContent className="p-8 text-center">
-                <div className="bg-gradient-to-br from-primary to-secondary rounded-full p-4 w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-                  <Heart className="h-10 w-10 text-white" />
-                </div>
-                <h3 className="text-2xl font-bold mb-4">🎉 Fãs/Torcedores</h3>
-                <ul className="space-y-3 text-left">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Siga seus ídolos</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Acompanhe times</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Assista lives</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <span>Interaja com a comunidade</span>
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 md:py-32 bg-gradient-to-br from-primary via-[#0052cc] to-secondary relative overflow-hidden">
-        {/* Pattern overlay */}
+      {/* CTA Final Section */}
+      <section className="py-20 md:py-32 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-[#0052cc] to-secondary"></div>
         <div className="absolute inset-0 opacity-10" style={{
           backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")'
         }}></div>
 
         <div className="container mx-auto px-6 relative z-10">
-          <div className="max-w-3xl mx-auto text-center text-white">
-            <Star className="h-16 w-16 mx-auto mb-6 animate-pulse" />
-            <h2 className="text-4xl md:text-6xl font-bold mb-6">
-              Pronto para fazer parte?
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="max-w-4xl mx-auto text-center"
+          >
+            <div className="mb-6">
+              <Zap className="h-16 w-16 text-white mx-auto mb-4" />
+            </div>
+            <h2 className="text-4xl md:text-6xl font-black text-white mb-6">
+              Pronto para começar?
             </h2>
-            <p className="text-xl md:text-2xl mb-10 text-white/90">
-              Junte-se a milhares de atletas, times e torcedores na maior rede social do vôlei brasileiro!
+            <p className="text-xl md:text-2xl text-white/90 mb-10 max-w-2xl mx-auto">
+              Junte-se à maior comunidade de vôlei do Brasil e leve sua paixão pelo esporte a um novo nível!
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
               <Button 
                 onClick={onLoginClick}
                 size="lg"
-                className="bg-white text-primary hover:bg-white/90 shadow-2xl text-lg px-10 py-7 h-auto font-bold"
+                className="bg-white text-primary hover:bg-white/90 shadow-2xl text-2xl px-12 py-8 h-auto font-black"
               >
-                <Award className="mr-2 h-6 w-6" />
-                Criar Minha Conta Grátis
+                <Star className="mr-3 h-7 w-7" />
+                Criar Minha Conta Agora
+                <ArrowRight className="ml-3 h-7 w-7" />
               </Button>
-            </div>
-            <p className="mt-8 text-white/70 text-sm">
-              Não é necessário cartão de crédito • Comece em menos de 2 minutos
+            </motion.div>
+
+            <p className="text-white/70 mt-6 text-sm">
+              Sem cartão de crédito • Cadastro em 30 segundos • Todas as funcionalidades liberadas
             </p>
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t bg-card py-12">
+      {/* Footer Minimalista */}
+      <footer className="bg-background border-t py-8">
         <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-3">
-              <Logo variant="compact" className="[&_img]:w-8 [&_img]:h-8" />
-              <span className="text-muted-foreground">
-                © 2024 VolleyPro. Todos os direitos reservados.
-              </span>
-            </div>
-            <div className="flex gap-4">
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => window.location.hash = 'download-logos'}
-                className="text-muted-foreground hover:text-primary"
-              >
-                🎨 Baixar Logos
-              </Button>
-            </div>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <Logo variant="compact" />
+            <p className="text-sm text-muted-foreground text-center md:text-right">
+              © 2025 VolleyPro. A rede social do vôlei brasileiro.
+              <br />
+              Feito com <Heart className="inline h-4 w-4 text-red-500" /> para a comunidade do vôlei.
+            </p>
           </div>
         </div>
       </footer>
