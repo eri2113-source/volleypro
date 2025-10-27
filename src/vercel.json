@@ -6,18 +6,6 @@
   "ignoreCommand": "git diff --quiet HEAD^ HEAD",
   "cleanUrls": false,
   "trailingSlash": false,
-  "redirects": [
-    {
-      "source": "/sitemap.xml",
-      "destination": "/api/sitemap",
-      "permanent": false
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "/api/robots",
-      "permanent": false
-    }
-  ],
   "headers": [
     {
       "source": "/service-worker.js",
