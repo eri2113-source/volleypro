@@ -1,11 +1,27 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": "vite",
   "installCommand": "npm install --legacy-peer-deps",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD",
   "cleanUrls": false,
   "trailingSlash": false,
+  "routes": [
+    {
+      "src": "/sitemap.xml",
+      "dest": "/sitemap.xml"
+    },
+    {
+      "src": "/robots.txt",
+      "dest": "/robots.txt"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/service-worker.js",
