@@ -9,11 +9,15 @@
   "rewrites": [
     {
       "source": "/sitemap.xml",
-      "destination": "/api/sitemap.js"
+      "destination": "/api/sitemap"
     },
     {
       "source": "/robots.txt",
-      "destination": "/api/robots.js"
+      "destination": "/api/robots"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [
