@@ -182,7 +182,15 @@ function AnimatedSlot({
   // Se não há mídia neste slot
   if (!shuffledMedia || shuffledMedia.length === 0) {
     return (
-      <div className="relative overflow-hidden bg-gradient-to-br from-muted via-muted/50 to-muted" />
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-primary/10 to-primary/20 flex items-center justify-center">
+        {/* Logo VolleyPro como placeholder */}
+        <img 
+          src="/logo-volleypro-icone.svg" 
+          alt="VolleyPro" 
+          className="w-24 h-24 opacity-20"
+          style={{ objectFit: 'contain' }}
+        />
+      </div>
     );
   }
 

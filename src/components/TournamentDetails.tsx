@@ -55,6 +55,20 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
     loadTournamentData();
   }, [tournamentId]);
 
+  // Carregar configuração do LED do localStorage ao montar
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(`volleypro_led_config_${tournamentId}`);
+      if (saved) {
+        const config = JSON.parse(saved);
+        console.log("📂 [LED] Configuração carregada do localStorage:", config);
+        setLedPanelConfig(config);
+      }
+    } catch (error) {
+      console.error("❌ [LED] Erro ao carregar config do localStorage:", error);
+    }
+  }, [tournamentId]);
+
   // Notificar quando categoria/divisão mudar
   useEffect(() => {
     if (tournament) {
@@ -661,9 +675,28 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
         tournamentId={tournamentId.toString()}
         currentConfig={ledPanelConfig}
         onSave={(config) => {
+          console.log("💾 [LED] Salvando configuração:", config);
           setLedPanelConfig(config);
+          
+          // Salvar no localStorage como backup
+          try {
+            localStorage.setItem(
+              `volleypro_led_config_${tournamentId}`,
+              JSON.stringify(config)
+            );
+            console.log("✅ [LED] Config salva no localStorage");
+          } catch (error) {
+            console.error("❌ [LED] Erro ao salvar no localStorage:", error);
+          }
+          
+          // Contar total de mídias nas zonas
+          const totalMedia = Object.values(config.zones).reduce(
+            (sum, zone) => sum + zone.length,
+            0
+          );
+          
           toast.success("Painel LED configurado!", {
-            description: `${config.media.length} mídias adicionadas com animação ${config.animationType}`
+            description: `${totalMedia} mídia(s) adicionada(s) com layout ${config.layout}`
           });
         }}
       />
