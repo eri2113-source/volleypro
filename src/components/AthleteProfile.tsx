@@ -284,7 +284,7 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
                   )}
                   {athlete.currentTeam && (
                     <div>
-                      <p className="text-sm text-muted-foreground">Time Atual</p>
+                      <p className="text-sm text-muted-foreground">Equipe Atual</p>
                       <p>{athlete.currentTeam}</p>
                     </div>
                   )}

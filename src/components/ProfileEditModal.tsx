@@ -224,15 +224,37 @@ function ProfileFormContent({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="currentTeam">Time Atual</Label>
+              <Label htmlFor="currentTeam">Equipe Atual</Label>
               <Input
                 id="currentTeam"
                 value={profile.currentTeam || ""}
                 onChange={(e) =>
                   setProfile({ ...profile, currentTeam: e.target.value })
                 }
-                placeholder="Nome do seu time"
+                placeholder="Nome da sua equipe"
               />
+            </div>
+
+            {/* Campo CPF - Importante para convocações */}
+            <div className="space-y-2">
+              <Label htmlFor="cpf">
+                CPF
+                <span className="text-amber-500 ml-2 text-xs">(Necessário para convocações)</span>
+              </Label>
+              <Input
+                id="cpf"
+                value={profile.cpf || ""}
+                onChange={(e) => {
+                  // Permitir apenas números e limitar a 11 dígitos
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  setProfile({ ...profile, cpf: value });
+                }}
+                placeholder="000.000.000-00"
+                maxLength={14}
+              />
+              <p className="text-xs text-muted-foreground">
+                💡 Necessário para times te convocarem para torneios
+              </p>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
