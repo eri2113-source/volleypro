@@ -3,8 +3,12 @@
   "outputDirectory": "dist",
   "installCommand": "npm install --legacy-peer-deps",
   "ignoreCommand": "git diff --quiet HEAD^ HEAD",
-  "cleanUrls": false,
-  "trailingSlash": false,
+  "rewrites": [
+    {
+      "source": "/((?!sitemap\\.xml|robots\\.txt|manifest\\.json|service-worker\\.js|icon-.*|screenshot-.*|google.*\\.html|.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|webp|avif)).*)",
+      "destination": "/index.html"
+    }
+  ],
   "headers": [
     {
       "source": "/service-worker.js",
