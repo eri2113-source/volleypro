@@ -92,16 +92,16 @@ export function Teams({ onSelectTeam }: TeamsProps) {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Times</h1>
+          <h1 className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">Equipes</h1>
           <p className="text-muted-foreground text-sm">Descubra equipes de todo o Brasil</p>
         </div>
-        <Badge className="bg-gradient-to-r from-secondary to-primary text-white">{teams.length} times</Badge>
+        <Badge className="bg-gradient-to-r from-secondary to-primary text-white">{teams.length} equipes</Badge>
       </div>
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar times por nome ou cidade..."
+          placeholder="Buscar equipes por nome ou cidade..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="pl-9"
@@ -120,11 +120,11 @@ export function Teams({ onSelectTeam }: TeamsProps) {
           <CardContent className="flex flex-col items-center justify-center py-12 space-y-4">
             <div className="text-6xl">🏐</div>
             <div className="text-center space-y-2">
-              <h3 className="text-xl font-semibold">Nenhum time encontrado</h3>
+              <h3 className="text-xl font-semibold">Nenhuma equipe encontrada</h3>
               <p className="text-muted-foreground">
                 {searchQuery 
                   ? 'Tente ajustar os filtros de busca' 
-                  : 'Seja o primeiro time a se cadastrar no VolleyPro!'}
+                  : 'Seja a primeira equipe a se cadastrar no VolleyPro!'}
               </p>
             </div>
           </CardContent>

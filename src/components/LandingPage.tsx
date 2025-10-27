@@ -67,7 +67,7 @@ export function LandingPage({ onLoginClick }: LandingPageProps) {
 
   const stats = [
     { value: "1000+", label: "Atletas", icon: Users },
-    { value: "200+", label: "Times", icon: Shield },
+    { value: "200+", label: "Equipes", icon: Shield },
     { value: "50+", label: "Torneios", icon: Trophy },
     { value: "10k+", label: "Torcedores", icon: Heart }
   ];

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { userApi, masterAdminApi } from "../lib/api";
+import { userApi, masterAdminApi, teamRosterApi } from "../lib/api";
 import { toast } from "sonner@2.0.3";
 import { formatHeight } from "../utils/formatters";
 import { Input } from "./ui/input";
@@ -108,7 +108,9 @@ export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
     try {
       // Buscar jogadores reais do banco de dados
       // TODO: Implementar endpoint GET /teams/{teamId}/players
-      setPlayers([]);
+      const teamId = profile.id;
+      const { players: teamPlayers } = await teamRosterApi.getTeamPlayers(teamId);
+      setPlayers(teamPlayers);
     } catch (error) {
       console.error('Erro ao carregar jogadores:', error);
       setPlayers([]);

@@ -877,12 +877,22 @@ export const teamRosterApi = {
     return apiCall(`/teams/${teamId}/players`);
   },
 
+  // Alias para getTeamRoster
+  async getTeamPlayers(teamId: string) {
+    return this.getTeamRoster(teamId);
+  },
+
   // Add player to roster
   async addPlayerToRoster(teamId: string, playerId: string, playerData: any) {
     return apiCall(`/teams/${teamId}/players`, {
       method: 'POST',
       body: JSON.stringify({ playerId, ...playerData }),
     });
+  },
+
+  // Alias mais amigável
+  async addPlayer(teamId: string, playerId: string, playerData: any) {
+    return this.addPlayerToRoster(teamId, playerId, playerData);
   },
 
   // Update player in roster

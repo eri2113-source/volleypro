@@ -496,7 +496,7 @@ export default function App() {
   const primaryMenuItems = [
     { id: "feed", label: "Alimentar", icon: Home },
     { id: "athletes", label: "Atletas", icon: Users },
-    { id: "teams", label: "Times", icon: Shield },
+    { id: "teams", label: "Equipes", icon: Shield },
     { id: "tournaments", label: "Torneios", icon: Trophy },
   ];
 
