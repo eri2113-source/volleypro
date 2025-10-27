@@ -225,18 +225,27 @@ export function TeamCategoriesManager({ teamId, teamName }: TeamCategoriesManage
     if (!selectedSquad) return;
 
     try {
+      // Atualizar estado local PRIMEIRO para evitar erro de removeChild
+      const updatedPlayers = selectedSquad.players?.filter(p => p.id !== playerId) || [];
+      setSelectedSquad({
+        ...selectedSquad,
+        players: updatedPlayers
+      });
+
+      // Depois chamar API
       await teamCategoryApi.removePlayerFromSquad(teamId, selectedSquad.id, playerId);
       toast.success("Jogador removido");
       
+      // Recarregar dados completos em background
       await loadCategories();
-      
-      // Atualizar squad selecionada
-      const updated = await teamCategoryApi.getSquad(teamId, selectedSquad.id);
-      setSelectedSquad(updated.squad);
       
     } catch (error: any) {
       console.error('❌ Erro ao remover jogador:', error);
       toast.error(error.message || "Erro ao remover jogador");
+      // Reverter estado em caso de erro
+      await loadCategories();
+      const updated = await teamCategoryApi.getSquad(teamId, selectedSquad.id);
+      setSelectedSquad(updated.squad);
     }
   }
 
