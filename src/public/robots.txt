@@ -1,29 +1,7 @@
-# Robots.txt - VolleyPro
-# https://voleypro.net
-
-# Permitir todos os bots
+# VolleyPro - Robots.txt
 User-agent: *
 Allow: /
 
-# Bloquear apenas arquivos técnicos
-Disallow: /service-worker.js
-Disallow: /figma-blocker.js
-Disallow: /gtm.js
-Disallow: /test-analytics.js
-
-# Arquivos importantes para SEO
 Sitemap: https://voleypro.net/sitemap.xml
 
-# Google específico
-User-agent: Googlebot
-Allow: /
-
-User-agent: Googlebot-Image
-Allow: /
-
-# Bing
-User-agent: Bingbot
-Allow: /
-
-# Crawl-delay para evitar sobrecarga
 Crawl-delay: 1

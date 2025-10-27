@@ -53,83 +53,12 @@ function injectGTM() {
   };
 }
 
-// Plugin para gerar sitemap.xml e robots.txt durante o build
-function generateSEOFiles() {
-  return {
-    name: 'generate-seo-files',
-    closeBundle() {
-      const distDir = path.resolve(__dirname, 'dist');
-      
-      // Gerar sitemap.xml
-      const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://voleypro.net/</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>1.0</priority>
-  </url>
-  <url>
-    <loc>https://voleypro.net/#feed</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://voleypro.net/#showcase</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://voleypro.net/#teams</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://voleypro.net/#tournaments</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://voleypro.net/#lives</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>hourly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
-    <loc>https://voleypro.net/#monetization</loc>
-    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-</urlset>`;
-
-      // Gerar robots.txt
-      const robots = `# VolleyPro - Robots.txt
-User-agent: *
-Allow: /
-
-Sitemap: https://voleypro.net/sitemap.xml
-
-Crawl-delay: 1`;
-
-      // Escrever arquivos no dist
-      fs.writeFileSync(path.join(distDir, 'sitemap.xml'), sitemap);
-      fs.writeFileSync(path.join(distDir, 'robots.txt'), robots);
-      
-      console.log('✅ sitemap.xml gerado em /dist');
-      console.log('✅ robots.txt gerado em /dist');
-    }
-  };
-}
+// REMOVIDO: Arquivos agora estão em /public e são copiados automaticamente pelo Vite
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), injectGTM(), generateSEOFiles()],
-  publicDir: 'public',  // Garante que public/ seja copiado para dist/
+  plugins: [react(), injectGTM()],
+  publicDir: 'public',  // Garante que public/ (incluindo sitemap.xml e robots.txt) seja copiado para dist/
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
