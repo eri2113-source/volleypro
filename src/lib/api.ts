@@ -414,6 +414,12 @@ export const userApi = {
     return apiCall(`/users?${params.toString()}`);
   },
 
+  async searchByCPF(cpf: string) {
+    // Limpar CPF (remover pontos e traços)
+    const cleanCPF = cpf.replace(/\D/g, '');
+    return apiCall(`/users/search/cpf/${cleanCPF}`);
+  },
+
   async toggleFreeAgent(status: boolean) {
     const userId = authApi.getCurrentUserId();
     if (!userId) throw new Error('Not authenticated');

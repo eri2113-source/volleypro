@@ -122,16 +122,35 @@ export function MyProfile({ onBack, onEditProfile }: MyProfileProps) {
     }
 
     setSearchingCPF(true);
+    setAthleteFound(null);
+    
     try {
+      console.log('🔍 Buscando atleta por CPF:', searchCPF);
+      
       // Buscar atleta real por CPF no banco de dados
-      // TODO: Implementar endpoint GET /athletes/search?cpf={cpf}
+      const athleteData = await userApi.searchByCPF(searchCPF);
       
-      // Por enquanto, retorna erro até implementar backend
-      throw new Error("Funcionalidade requer implementação backend");
+      console.log('✅ Atleta encontrado:', athleteData);
       
-    } catch (error) {
-      console.error('Erro ao buscar atleta por CPF:', error);
-      toast.error("Atleta não encontrado no sistema. Adicione manualmente.");
+      // Verificar se é um atleta
+      if (athleteData.userType !== 'athlete') {
+        toast.error("CPF encontrado, mas não é de um atleta. Apenas atletas podem ser adicionados ao elenco.");
+        setAthleteFound(null);
+        return;
+      }
+      
+      setAthleteFound(athleteData);
+      toast.success(`✅ Atleta encontrado: ${athleteData.name}!`);
+      
+    } catch (error: any) {
+      console.error('❌ Erro ao buscar atleta por CPF:', error);
+      
+      if (error.message?.includes('não encontrado') || error.message?.includes('404')) {
+        toast.error("Atleta não encontrado. Certifique-se de que o atleta adicionou o CPF no perfil.");
+      } else {
+        toast.error("Erro ao buscar atleta. Tente novamente ou adicione manualmente.");
+      }
+      
       setAthleteFound(null);
     } finally {
       setSearchingCPF(false);

@@ -593,6 +593,57 @@ app.get('/make-server-0ea22bba/users/:userId', async (c) => {
   }
 });
 
+// 🆕 BUSCAR ATLETA POR CPF (para convocações de times)
+app.get('/make-server-0ea22bba/users/search/cpf/:cpf', authMiddleware, async (c) => {
+  try {
+    const cpf = c.req.param('cpf');
+    console.log('🔍 [SEARCH CPF] Buscando atleta por CPF:', cpf);
+    
+    if (!cpf || cpf.length !== 11) {
+      console.log('❌ [SEARCH CPF] CPF inválido:', cpf);
+      return c.json({ error: 'CPF inválido. Deve conter 11 dígitos.' }, 400);
+    }
+    
+    // Buscar todos os usuários e filtrar por CPF
+    const kvStore = await initializeKV();
+    const allUsers = await kvStore.getByPrefix('user:');
+    
+    console.log(`🔍 [SEARCH CPF] Total de usuários no sistema: ${allUsers.length}`);
+    
+    // Filtrar por CPF
+    const userWithCPF = allUsers.find((user: any) => {
+      return user.cpf === cpf;
+    });
+    
+    if (!userWithCPF) {
+      console.log('❌ [SEARCH CPF] Nenhum atleta encontrado com CPF:', cpf);
+      return c.json({ 
+        error: 'Atleta não encontrado',
+        message: 'Nenhum atleta cadastrado com este CPF. Certifique-se de que o atleta adicionou o CPF no perfil.'
+      }, 404);
+    }
+    
+    console.log('✅ [SEARCH CPF] Atleta encontrado:', userWithCPF.name);
+    
+    // Retornar dados públicos do atleta
+    return c.json({
+      id: userWithCPF.id,
+      name: userWithCPF.name,
+      nickname: userWithCPF.nickname,
+      userType: userWithCPF.userType,
+      position: userWithCPF.position,
+      height: userWithCPF.height,
+      age: userWithCPF.age,
+      photoUrl: userWithCPF.photoUrl,
+      currentTeam: userWithCPF.currentTeam,
+      verified: userWithCPF.verified || false
+    });
+  } catch (error: any) {
+    console.error('❌ [SEARCH CPF] Erro ao buscar atleta:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 app.put('/make-server-0ea22bba/users/:userId', authMiddleware, async (c) => {
   try {
     const userId = c.req.param('userId');
