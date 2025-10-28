@@ -1,13 +1,30 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
-import { Trophy, ChevronRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Trophy, ChevronRight, Edit2, Clock, MapPin } from "lucide-react";
+import { toast } from "sonner@2.0.3";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
 
 interface TournamentBracketProps {
   tournament: any;
+  tournamentId: number;
+  canEdit?: boolean;
 }
 
-export function TournamentBracket({ tournament }: TournamentBracketProps) {
+export function TournamentBracket({ tournament, tournamentId, canEdit = false }: TournamentBracketProps) {
+  const [editingMatch, setEditingMatch] = useState<any | null>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editForm, setEditForm] = useState({
+    date: '',
+    time: '',
+    court: '',
+    location: ''
+  });
   // Simulando chaveamento
   const bracket = {
     quarterfinals: [
@@ -56,6 +73,55 @@ export function TournamentBracket({ tournament }: TournamentBracketProps) {
     }
   };
 
+  function handleEditMatch(match: any) {
+    setEditingMatch(match);
+    setEditForm({
+      date: match.date || '',
+      time: match.time || '',
+      court: match.court || '',
+      location: match.location || ''
+    });
+    setShowEditDialog(true);
+  }
+
+  async function handleSaveMatchTime() {
+    try {
+      const token = localStorage.getItem('volleypro_token');
+      if (!token) {
+        toast.error('Você precisa estar autenticado');
+        return;
+      }
+
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/matches/${editingMatch.id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(editForm)
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Failed to update match');
+      }
+
+      toast.success('Horário atualizado!', {
+        description: `${editForm.date} às ${editForm.time}`
+      });
+
+      setShowEditDialog(false);
+      setEditingMatch(null);
+      
+      // TODO: Recarregar dados do chaveamento
+    } catch (error) {
+      console.error('❌ Erro ao salvar horário:', error);
+      toast.error('Erro ao salvar horário');
+    }
+  }
+
   function renderMatch(match: any, roundName: string) {
     if (match.status === "pending") {
       return (
@@ -73,10 +139,22 @@ export function TournamentBracket({ tournament }: TournamentBracketProps) {
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
               <span>{roundName}</span>
-              <Badge variant={match.status === "finished" ? "secondary" : "default"}>
-                {match.status === "finished" ? "Encerrado" : 
-                 match.status === "live" ? "Ao Vivo" : "Agendado"}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant={match.status === "finished" ? "secondary" : "default"}>
+                  {match.status === "finished" ? "Encerrado" : 
+                   match.status === "live" ? "Ao Vivo" : "Agendado"}
+                </Badge>
+                {canEdit && match.status !== "finished" && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 w-6 p-0"
+                    onClick={() => handleEditMatch(match)}
+                  >
+                    <Edit2 className="h-3 w-3" />
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* Time 1 */}
@@ -225,6 +303,78 @@ export function TournamentBracket({ tournament }: TournamentBracketProps) {
           </div>
         </CardContent>
       </Card>
+
+      {/* Modal de Edição de Horário */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Horário do Jogo</DialogTitle>
+            <DialogDescription>
+              {editingMatch?.team1?.name} vs {editingMatch?.team2?.name}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>
+                  <Clock className="h-4 w-4 inline mr-1" />
+                  Data
+                </Label>
+                <Input
+                  type="date"
+                  value={editForm.date}
+                  onChange={(e) => setEditForm({ ...editForm, date: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Horário</Label>
+                <Input
+                  type="time"
+                  value={editForm.time}
+                  onChange={(e) => setEditForm({ ...editForm, time: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Quadra</Label>
+              <Input
+                placeholder="Ex: Quadra Central"
+                value={editForm.court}
+                onChange={(e) => setEditForm({ ...editForm, court: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>
+                <MapPin className="h-4 w-4 inline mr-1" />
+                Local
+              </Label>
+              <Input
+                placeholder="Ex: Ginásio Municipal"
+                value={editForm.location}
+                onChange={(e) => setEditForm({ ...editForm, location: e.target.value })}
+              />
+            </div>
+
+            <div className="p-3 bg-muted rounded-lg text-sm">
+              <p className="font-medium mb-1">Resumo:</p>
+              <p>{editForm.date || 'Sem data'} às {editForm.time || 'Sem horário'}</p>
+              <p>{editForm.court || 'Quadra não definida'} - {editForm.location || 'Local não definido'}</p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveMatchTime}>
+              Salvar Horário
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

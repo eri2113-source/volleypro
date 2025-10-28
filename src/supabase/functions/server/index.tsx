@@ -2908,6 +2908,127 @@ app.delete('/make-server-0ea22bba/admin/users/:userId', authMiddleware, async (c
   }
 });
 
+// ============= TOURNAMENT DRAW & SCHEDULE EDITING ROUTES =============
+
+// Get registered teams for tournament draw
+app.get('/make-server-0ea22bba/tournaments/:tournamentId/registered-teams', async (c) => {
+  try {
+    const tournamentId = c.req.param('tournamentId');
+    
+    // Buscar times inscritos
+    const registrations = await kv.getByPrefix(`tournament:${tournamentId}:registration:`);
+    
+    const teams = registrations
+      .filter((reg: any) => reg.status === 'confirmed')
+      .map((reg: any) => ({
+        id: reg.teamId,
+        name: reg.teamName,
+        logo: reg.teamLogo || `https://ui-avatars.com/api/?name=${encodeURIComponent(reg.teamName)}&background=random`,
+        registrationDate: reg.createdAt
+      }));
+    
+    console.log(`✅ Found ${teams.length} registered teams for tournament ${tournamentId}`);
+    
+    return c.json({ teams });
+  } catch (error: any) {
+    console.error('❌ Error getting registered teams:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Save tournament draw results
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/draw', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const { groups } = await c.req.json();
+    
+    // Verificar permissão
+    const tournament = await kv.get(`tournament:${tournamentId}`);
+    const isCreator = tournament?.createdBy === userId;
+    const isOrganizer = !!(await kv.get(`tournament:${tournamentId}:organizer:${userId}`));
+    
+    if (!isCreator && !isOrganizer) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    // Salvar resultado do sorteio
+    const drawKey = `tournament:${tournamentId}:draw`;
+    const drawData = {
+      groups,
+      drawnBy: userId,
+      drawnAt: new Date().toISOString()
+    };
+    
+    await kv.set(drawKey, drawData);
+    
+    console.log(`✅ Draw saved for tournament ${tournamentId} by ${userId}`);
+    
+    return c.json({ success: true, draw: drawData });
+  } catch (error: any) {
+    console.error('❌ Error saving draw:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get tournament draw
+app.get('/make-server-0ea22bba/tournaments/:tournamentId/draw', async (c) => {
+  try {
+    const tournamentId = c.req.param('tournamentId');
+    const draw = await kv.get(`tournament:${tournamentId}:draw`);
+    
+    return c.json({ draw: draw || null });
+  } catch (error: any) {
+    console.error('❌ Error getting draw:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Update match time/schedule
+app.patch('/make-server-0ea22bba/tournaments/:tournamentId/matches/:matchId', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const matchId = c.req.param('matchId');
+    const { date, time, court, location } = await c.req.json();
+    
+    // Verificar permissão
+    const tournament = await kv.get(`tournament:${tournamentId}`);
+    const isCreator = tournament?.createdBy === userId;
+    const isOrganizer = !!(await kv.get(`tournament:${tournamentId}:organizer:${userId}`));
+    
+    if (!isCreator && !isOrganizer) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    // Buscar partida existente
+    const matchKey = `tournament:${tournamentId}:match:${matchId}`;
+    const match = await kv.get(matchKey) || {};
+    
+    // Atualizar dados
+    const updatedMatch = {
+      ...match,
+      id: matchId,
+      tournamentId,
+      date: date || match.date,
+      time: time || match.time,
+      court: court || match.court,
+      location: location || match.location,
+      updatedBy: userId,
+      updatedAt: new Date().toISOString()
+    };
+    
+    await kv.set(matchKey, updatedMatch);
+    
+    console.log(`✅ Match ${matchId} updated by ${userId}`);
+    
+    return c.json({ success: true, match: updatedMatch });
+  } catch (error: any) {
+    console.error('❌ Error updating match:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // Health check
 app.get('/make-server-0ea22bba/health', (c) => {
   return c.json({ status: 'ok' });
@@ -5854,20 +5975,5 @@ app.get('/make-server-0ea22bba/tournaments/:id/can-edit', async (c) => {
     return c.json({ canEdit: false, isCreator: false });
   }
 });
-
-// ============= LIVEKIT ROUTES =============
-// Register LiveKit routes after initialization
-setTimeout(() => {
-  if (livekitRoutes && typeof livekitRoutes === 'function') {
-    try {
-      livekitRoutes(app);
-      console.log('✅ LiveKit routes registered');
-    } catch (error: any) {
-      console.error('❌ Error registering LiveKit routes:', error.message);
-    }
-  } else {
-    console.log('⚠️ LiveKit routes not available');
-  }
-}, 100);
 
 Deno.serve(app.fetch);

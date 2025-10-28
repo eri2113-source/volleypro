@@ -46,8 +46,8 @@ import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, M
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
 
-// 🚀 VERSÃO: 2.3.1 - Correção Crítica removeChild - Build: 20241028-2315
-// ✅ Última atualização: Removido ErrorBoundary e try-catch problemáticos
+// 🚀 VERSÃO: 2.3.2 - Correção Sistema Fechando + Sorteio Infinito - Build: 20241028-2330
+// ✅ Última atualização: Corrigido loop infinito sorteio + handler global de erros
 
 export default function App() {
   const [currentView, setCurrentView] = useState("feed");
@@ -105,6 +105,43 @@ export default function App() {
         window.location.href = window.location.pathname;
       }, 1000);
     }
+  }, []);
+
+  // Handler global de erros não capturados
+  useEffect(() => {
+    const handleError = (event: ErrorEvent) => {
+      console.error("❌ Erro global capturado:", event.error);
+      event.preventDefault();
+      
+      // Não mostrar toast para todos os erros, apenas logar
+      if (event.error?.message?.includes('removeChild') || 
+          event.error?.message?.includes('Failed to execute')) {
+        console.warn("⚠️ Erro conhecido ignorado:", event.error.message);
+        return;
+      }
+      
+      toast.error("Algo deu errado. Tente novamente.");
+    };
+
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error("❌ Promise rejeitada não tratada:", event.reason);
+      event.preventDefault();
+      
+      // Não mostrar toast para rejeições comuns
+      if (event.reason?.message?.includes('removeChild') || 
+          event.reason?.message?.includes('Failed to execute')) {
+        console.warn("⚠️ Rejeição conhecida ignorada:", event.reason.message);
+        return;
+      }
+    };
+
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
   }, []);
 
   // Listener para navegação via hash e detecção de reset de senha
@@ -312,47 +349,70 @@ export default function App() {
   }
 
   const renderView = () => {
-    // Gerador de Ícones PWA (temporário para gerar os ícones)
-    if (currentView === "icon-generator") {
+    try {
+      // Gerador de Ícones PWA (temporário para gerar os ícones)
+      if (currentView === "icon-generator") {
+        return (
+          <div className="container mx-auto py-6">
+            <IconGenerator />
+          </div>
+        );
+      }
+      
+      // Download de Logos
+      if (currentView === "download-logos") {
+        return <DownloadLogos />;
+      }
+      
+      // Painel de Testes PWA
+      if (currentView === "pwa-test") {
+        return <PWATestPanel />;
+      }
+      
+      if (showMyProfile) {
+        return (
+          <MyProfile 
+            onBack={() => setShowMyProfile(false)} 
+            onEditProfile={() => {
+              setShowMyProfile(false);
+              setShowProfileEditModal(true);
+            }} 
+          />
+        );
+      }
+      
+      if (selectedAthlete !== null) {
+        return <AthleteProfile athleteId={selectedAthlete} onBack={() => setSelectedAthlete(null)} />;
+      }
+      
+      if (selectedTeam !== null) {
+        return <TeamProfile teamId={selectedTeam} onBack={() => setSelectedTeam(null)} />;
+      }
+      
+      if (selectedTournament !== null) {
+        return <TournamentDetails tournamentId={selectedTournament} onBack={() => setSelectedTournament(null)} />;
+      }
+    } catch (error) {
+      console.error("❌ Erro ao renderizar view:", error);
+      toast.error("Erro ao carregar página. Recarregando...");
+      
+      // Resetar estados para evitar loop de erro
+      setTimeout(() => {
+        setCurrentView("feed");
+        setSelectedAthlete(null);
+        setSelectedTeam(null);
+        setSelectedTournament(null);
+        setShowMyProfile(false);
+      }, 1000);
+      
       return (
-        <div className="container mx-auto py-6">
-          <IconGenerator />
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <p className="text-lg mb-4">⚠️ Erro ao carregar página</p>
+            <Button onClick={() => window.location.reload()}>Recarregar</Button>
+          </div>
         </div>
       );
-    }
-    
-    // Download de Logos
-    if (currentView === "download-logos") {
-      return <DownloadLogos />;
-    }
-    
-    // Painel de Testes PWA
-    if (currentView === "pwa-test") {
-      return <PWATestPanel />;
-    }
-    
-    if (showMyProfile) {
-      return (
-        <MyProfile 
-          onBack={() => setShowMyProfile(false)} 
-          onEditProfile={() => {
-            setShowMyProfile(false);
-            setShowProfileEditModal(true);
-          }} 
-        />
-      );
-    }
-    
-    if (selectedAthlete !== null) {
-      return <AthleteProfile athleteId={selectedAthlete} onBack={() => setSelectedAthlete(null)} />;
-    }
-    
-    if (selectedTeam !== null) {
-      return <TeamProfile teamId={selectedTeam} onBack={() => setSelectedTeam(null)} />;
-    }
-    
-    if (selectedTournament !== null) {
-      return <TournamentDetails tournamentId={selectedTournament} onBack={() => setSelectedTournament(null)} />;
     }
 
     // Passar props de autenticação para todos os componentes
