@@ -407,7 +407,20 @@ export function TournamentSchedule({ tournamentId, canEdit = false }: Tournament
                     </div>
 
                     {/* Ações */}
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
+                      {/* Botão de Editar (apenas organizadores) */}
+                      {canEdit && match.status !== "finished" && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => toast.info('Função de edição será implementada em breve')}
+                          className="border-primary text-primary hover:bg-primary hover:text-white"
+                        >
+                          <Edit2 className="h-4 w-4 mr-2" />
+                          Editar Horário
+                        </Button>
+                      )}
+                      
                       {match.status === "live" && match.hasLiveStream && (
                         <Button className="flex-1 bg-red-500 hover:bg-red-600">
                           <Radio className="h-4 w-4 mr-2" />

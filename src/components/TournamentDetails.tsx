@@ -107,9 +107,12 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
           
           if (response.ok) {
             const data = await response.json();
+            console.log('✅ Permissões do torneio:', data);
             setCanEdit(data.canEdit);
             setIsCreator(data.isCreator);
             setIsOrganizer(data.canEdit);
+          } else {
+            console.log('⚠️ Falha ao verificar permissões:', response.status);
           }
         } catch (error) {
           console.error('Erro ao verificar permissões:', error);
@@ -197,13 +200,18 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
   }
 
   function handleFollow() {
-    setIsFollowing(!isFollowing);
-    if (!isFollowing) {
-      toast.success("Seguindo torneio!", {
-        description: "Você receberá notificações sobre este torneio"
-      });
-    } else {
-      toast.info("Deixou de seguir o torneio");
+    try {
+      setIsFollowing(!isFollowing);
+      if (!isFollowing) {
+        toast.success("Seguindo torneio!", {
+          description: "Você receberá notificações sobre este torneio"
+        });
+      } else {
+        toast.info("Deixou de seguir o torneio");
+      }
+    } catch (error) {
+      console.error('Erro ao seguir torneio:', error);
+      toast.error('Erro ao processar ação');
     }
   }
 
@@ -283,22 +291,34 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
         
         {/* Botões de Gerenciamento (apenas para organizadores) */}
-        {canEdit && (
+        {canEdit ? (
           <div className="absolute top-4 right-4 z-20 pointer-events-auto flex gap-2">
             <Button
-              onClick={() => setShowOrganizerTeam(true)}
+              onClick={() => {
+                console.log('🔘 Clicou em Equipe de Organização');
+                setShowOrganizerTeam(true);
+              }}
               className="bg-blue-600/90 hover:bg-blue-700 text-white border border-white/30 backdrop-blur-sm"
             >
               <Shield className="h-4 w-4 mr-2" />
               Equipe de Organização
             </Button>
             <Button
-              onClick={() => setShowLEDConfig(true)}
+              onClick={() => {
+                console.log('🔘 Clicou em Configurar LED');
+                setShowLEDConfig(true);
+              }}
               className="bg-white/10 hover:bg-white/20 text-white border border-white/30 backdrop-blur-sm"
             >
               <Settings className="h-4 w-4 mr-2" />
               Configurar Painel LED
             </Button>
+          </div>
+        ) : (
+          <div className="absolute top-4 right-4 z-20 pointer-events-auto">
+            <p className="text-xs text-white/60 bg-black/30 px-2 py-1 rounded">
+              {currentUserId ? 'Apenas organizador' : 'Faça login'}
+            </p>
           </div>
         )}
         
@@ -683,8 +703,8 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
           <TabsContent value="bracket">
             <TournamentBracket 
               tournament={tournament}
-              category={selectedCategory}
-              division={selectedDivision}
+              tournamentId={tournamentId}
+              canEdit={canEdit}
             />
           </TabsContent>
 
