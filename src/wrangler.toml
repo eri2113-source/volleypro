@@ -1,0 +1,10 @@
+name = "volleypro"
+compatibility_date = "2025-10-28"
+
+[build]
+command = "rm -f package-lock.json && npm install --legacy-peer-deps && npm run build"
+cwd = "/"
+
+[build.upload]
+format = "service-worker"
+dir = "dist"
