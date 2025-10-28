@@ -12,15 +12,17 @@ import {
   Bell,
   BellOff,
   Eye,
-  Trophy
+  Trophy,
+  Edit2
 } from "lucide-react";
 import { toast } from "sonner@2.0.3";
 
 interface TournamentScheduleProps {
   tournamentId: number;
+  canEdit?: boolean;
 }
 
-export function TournamentSchedule({ tournamentId }: TournamentScheduleProps) {
+export function TournamentSchedule({ tournamentId, canEdit = false }: TournamentScheduleProps) {
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");

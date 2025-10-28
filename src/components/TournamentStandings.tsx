@@ -2,17 +2,33 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "./ui/table";
 import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { Trophy, TrendingUp, TrendingDown, Minus, Crown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Trophy, TrendingUp, TrendingDown, Minus, Crown, Edit2 } from "lucide-react";
+import { toast } from "sonner@2.0.3";
 
 interface TournamentStandingsProps {
   tournamentId: number;
+  canEdit?: boolean;
 }
 
-export function TournamentStandings({ tournamentId }: TournamentStandingsProps) {
+export function TournamentStandings({ tournamentId, canEdit = false }: TournamentStandingsProps) {
   const [groups, setGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingTeam, setEditingTeam] = useState<any>(null);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editForm, setEditForm] = useState({
+    wins: 0,
+    losses: 0,
+    setsWon: 0,
+    setsLost: 0,
+    pointsWon: 0,
+    pointsLost: 0
+  });
 
   useEffect(() => {
     loadStandings();
@@ -179,6 +195,50 @@ export function TournamentStandings({ tournamentId }: TournamentStandingsProps) 
     return null;
   }
 
+  function handleEditTeam(team: any) {
+    setEditingTeam(team);
+    setEditForm({
+      wins: team.wins,
+      losses: team.losses,
+      setsWon: team.setsWon,
+      setsLost: team.setsLost,
+      pointsWon: team.pointsWon,
+      pointsLost: team.pointsLost
+    });
+    setShowEditDialog(true);
+  }
+
+  async function handleSaveEdit() {
+    try {
+      // TODO: Salvar no backend
+      toast.success("Estatísticas atualizadas!", {
+        description: `${editingTeam.name} - Dados salvos com sucesso`
+      });
+      
+      // Atualizar localmente
+      const updatedGroups = groups.map(group => ({
+        ...group,
+        teams: group.teams.map((t: any) => 
+          t.id === editingTeam.id 
+            ? {
+                ...t,
+                ...editForm,
+                matches: editForm.wins + editForm.losses,
+                points: (editForm.wins * 3) // 3 pontos por vitória
+              }
+            : t
+        )
+      }));
+      
+      setGroups(updatedGroups);
+      setShowEditDialog(false);
+      setEditingTeam(null);
+    } catch (error) {
+      console.error('Erro ao salvar:', error);
+      toast.error('Erro ao salvar estatísticas');
+    }
+  }
+
   if (loading) {
     return (
       <Card>
@@ -255,6 +315,7 @@ export function TournamentStandings({ tournamentId }: TournamentStandingsProps) 
                         <TableHead className="text-center hidden lg:table-cell">PL</TableHead>
                         <TableHead className="text-center hidden sm:table-cell">Saldo</TableHead>
                         <TableHead className="text-center">Status</TableHead>
+                        {canEdit && <TableHead className="text-center">Editar</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -317,6 +378,17 @@ export function TournamentStandings({ tournamentId }: TournamentStandingsProps) 
                             <TableCell className="text-center">
                               {getTrendIcon(team.trend)}
                             </TableCell>
+                            {canEdit && (
+                              <TableCell className="text-center">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => handleEditTeam(team)}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                              </TableCell>
+                            )}
                           </TableRow>
                         );
                       })}
@@ -354,6 +426,100 @@ export function TournamentStandings({ tournamentId }: TournamentStandingsProps) 
           </ol>
         </CardContent>
       </Card>
+
+      {/* Modal de Edição */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Editar Estatísticas</DialogTitle>
+            <DialogDescription>
+              {editingTeam?.name} - Atualize os dados do time
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Vitórias</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={editForm.wins}
+                  onChange={(e) => setEditForm({ ...editForm, wins: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Derrotas</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={editForm.losses}
+                  onChange={(e) => setEditForm({ ...editForm, losses: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Sets Vencidos</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={editForm.setsWon}
+                  onChange={(e) => setEditForm({ ...editForm, setsWon: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Sets Perdidos</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={editForm.setsLost}
+                  onChange={(e) => setEditForm({ ...editForm, setsLost: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Pontos Vencidos</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={editForm.pointsWon}
+                  onChange={(e) => setEditForm({ ...editForm, pointsWon: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Pontos Perdidos</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={editForm.pointsLost}
+                  onChange={(e) => setEditForm({ ...editForm, pointsLost: parseInt(e.target.value) || 0 })}
+                />
+              </div>
+            </div>
+
+            <div className="p-3 bg-muted rounded-lg text-sm">
+              <p className="font-medium mb-1">Resumo:</p>
+              <p>Jogos: {editForm.wins + editForm.losses}</p>
+              <p>Pontos: {editForm.wins * 3}</p>
+              <p>Saldo Sets: {editForm.setsWon - editForm.setsLost}</p>
+              <p>Saldo Pontos: {editForm.pointsWon - editForm.pointsLost}</p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDialog(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSaveEdit}>
+              Salvar Alterações
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

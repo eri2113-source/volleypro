@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { TournamentOrganizerPanel } from "./TournamentOrganizerPanel";
+import { TournamentOrganizerTeamModal } from "./TournamentOrganizerTeamModal";
 import { TournamentNotifications } from "./TournamentNotifications";
 import { TournamentSponsorsPanel } from "./TournamentSponsorsPanel";
 import { TournamentStandings } from "./TournamentStandings";
@@ -31,7 +32,8 @@ import {
   Bell,
   BellOff,
   Filter,
-  Settings
+  Settings,
+  Shield
 } from "lucide-react";
 
 interface TournamentDetailsProps {
@@ -50,6 +52,9 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [showLEDConfig, setShowLEDConfig] = useState(false);
   const [ledPanelConfig, setLedPanelConfig] = useState<any>(null);
+  const [showOrganizerTeam, setShowOrganizerTeam] = useState(false);
+  const [canEdit, setCanEdit] = useState(false);
+  const [isCreator, setIsCreator] = useState(false);
 
   useEffect(() => {
     loadTournamentData();
@@ -83,12 +88,37 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
   async function loadTournamentData() {
     setLoading(true);
     try {
+      // Pegar usuário autenticado
+      const userId = localStorage.getItem('volleypro_user_id');
+      setCurrentUserId(userId);
+      
+      // Verificar permissões de edição
+      if (userId) {
+        try {
+          const token = localStorage.getItem('volleypro_token');
+          const response = await fetch(
+            `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/can-edit`,
+            {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
+          
+          if (response.ok) {
+            const data = await response.json();
+            setCanEdit(data.canEdit);
+            setIsCreator(data.isCreator);
+            setIsOrganizer(data.canEdit);
+          }
+        } catch (error) {
+          console.error('Erro ao verificar permissões:', error);
+        }
+      }
+      
       // TODO: Carregar dados reais do backend
       // Simulando dados do torneio
-      
-      // Verificar se usuário é organizador
-      const mockUserId = "user123"; // TODO: Pegar do contexto de autenticação
-      setCurrentUserId(mockUserId);
+      const mockUserId = userId || "user123";
       
       const mockTournament = {
         id: tournamentId,
@@ -252,9 +282,16 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
         
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
         
-        {/* Botão Configurar Painel LED (apenas para organizadores) */}
-        {isOrganizer && (
-          <div className="absolute top-4 right-4 z-20 pointer-events-auto">
+        {/* Botões de Gerenciamento (apenas para organizadores) */}
+        {canEdit && (
+          <div className="absolute top-4 right-4 z-20 pointer-events-auto flex gap-2">
+            <Button
+              onClick={() => setShowOrganizerTeam(true)}
+              className="bg-blue-600/90 hover:bg-blue-700 text-white border border-white/30 backdrop-blur-sm"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Equipe de Organização
+            </Button>
             <Button
               onClick={() => setShowLEDConfig(true)}
               className="bg-white/10 hover:bg-white/20 text-white border border-white/30 backdrop-blur-sm"
@@ -630,6 +667,7 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
               tournamentId={tournamentId} 
               category={selectedCategory}
               division={selectedDivision}
+              canEdit={canEdit}
             />
           </TabsContent>
 
@@ -638,6 +676,7 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
               tournamentId={tournamentId}
               category={selectedCategory}
               division={selectedDivision}
+              canEdit={canEdit}
             />
           </TabsContent>
 
@@ -699,6 +738,14 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
             description: `${totalMedia} mídia(s) adicionada(s) com layout ${config.layout}`
           });
         }}
+      />
+
+      {/* Modal de Equipe Organizadora */}
+      <TournamentOrganizerTeamModal
+        open={showOrganizerTeam}
+        onClose={() => setShowOrganizerTeam(false)}
+        tournamentId={tournamentId}
+        isCreator={isCreator}
       />
     </div>
   );

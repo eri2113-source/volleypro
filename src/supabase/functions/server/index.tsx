@@ -5669,6 +5669,192 @@ app.post('/make-server-0ea22bba/upload', authMiddleware, async (c) => {
   }
 });
 
+// ============= TOURNAMENT ORGANIZERS ROUTES =============
+
+// GET /tournaments/:id/organizers - Listar equipe organizadora
+app.get('/make-server-0ea22bba/tournaments/:id/organizers', async (c) => {
+  try {
+    const tournamentId = c.req.param('id');
+    const authHeader = c.req.header('Authorization');
+    
+    if (!authHeader) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseClient = await initializeSupabase();
+    const { data: { user } } = await supabaseClient.auth.getUser(token);
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const kvStore = await initializeKV();
+    
+    // Buscar organizadores do torneio
+    const organizers = await kvStore.getByPrefix(`tournament:${tournamentId}:organizer:`);
+    
+    return c.json({ 
+      organizers: organizers.map((org: any) => ({
+        id: org.userId,
+        email: org.email,
+        name: org.name,
+        role: org.role,
+        addedAt: org.addedAt
+      }))
+    });
+  } catch (error: any) {
+    console.error('Error loading organizers:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// POST /tournaments/:id/organizers - Adicionar organizador
+app.post('/make-server-0ea22bba/tournaments/:id/organizers', async (c) => {
+  try {
+    const tournamentId = c.req.param('id');
+    const authHeader = c.req.header('Authorization');
+    
+    if (!authHeader) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseClient = await initializeSupabase();
+    const { data: { user } } = await supabaseClient.auth.getUser(token);
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const kvStore = await initializeKV();
+    
+    // Verificar se é o criador do torneio
+    const tournament = await kvStore.get(`tournament:${tournamentId}`);
+    if (!tournament || tournament.createdBy !== user.id) {
+      return c.json({ error: 'Only the creator can add organizers' }, 403);
+    }
+    
+    const { email } = await c.req.json();
+    
+    // Buscar usuário pelo email
+    const allUsers = await kvStore.getByPrefix('user:');
+    const targetUser = allUsers.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+    
+    if (!targetUser) {
+      return c.json({ error: 'User not found. They need to create an account first.' }, 404);
+    }
+    
+    // Verificar se já não é organizador
+    const existingOrg = await kvStore.get(`tournament:${tournamentId}:organizer:${targetUser.id}`);
+    if (existingOrg) {
+      return c.json({ error: 'User is already an organizer' }, 400);
+    }
+    
+    // Adicionar como organizador
+    await kvStore.set(`tournament:${tournamentId}:organizer:${targetUser.id}`, {
+      userId: targetUser.id,
+      email: targetUser.email,
+      name: targetUser.name,
+      role: 'organizer',
+      addedAt: new Date().toISOString(),
+      addedBy: user.id
+    });
+    
+    console.log(`✅ Organizer added to tournament ${tournamentId}: ${targetUser.email}`);
+    
+    return c.json({ 
+      success: true,
+      organizer: {
+        id: targetUser.id,
+        email: targetUser.email,
+        name: targetUser.name,
+        role: 'organizer'
+      }
+    });
+  } catch (error: any) {
+    console.error('Error adding organizer:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// DELETE /tournaments/:id/organizers/:userId - Remover organizador
+app.delete('/make-server-0ea22bba/tournaments/:id/organizers/:userId', async (c) => {
+  try {
+    const tournamentId = c.req.param('id');
+    const userIdToRemove = c.req.param('userId');
+    const authHeader = c.req.header('Authorization');
+    
+    if (!authHeader) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseClient = await initializeSupabase();
+    const { data: { user } } = await supabaseClient.auth.getUser(token);
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const kvStore = await initializeKV();
+    
+    // Verificar se é o criador do torneio
+    const tournament = await kvStore.get(`tournament:${tournamentId}`);
+    if (!tournament || tournament.createdBy !== user.id) {
+      return c.json({ error: 'Only the creator can remove organizers' }, 403);
+    }
+    
+    // Remover organizador
+    await kvStore.del(`tournament:${tournamentId}:organizer:${userIdToRemove}`);
+    
+    console.log(`✅ Organizer removed from tournament ${tournamentId}: ${userIdToRemove}`);
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error removing organizer:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// GET /tournaments/:id/can-edit - Verificar se usuário pode editar torneio
+app.get('/make-server-0ea22bba/tournaments/:id/can-edit', async (c) => {
+  try {
+    const tournamentId = c.req.param('id');
+    const authHeader = c.req.header('Authorization');
+    
+    if (!authHeader) {
+      return c.json({ canEdit: false, isCreator: false });
+    }
+    
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseClient = await initializeSupabase();
+    const { data: { user } } = await supabaseClient.auth.getUser(token);
+    
+    if (!user) {
+      return c.json({ canEdit: false, isCreator: false });
+    }
+    
+    const kvStore = await initializeKV();
+    
+    // Verificar se é o criador
+    const tournament = await kvStore.get(`tournament:${tournamentId}`);
+    const isCreator = tournament?.createdBy === user.id;
+    
+    // Verificar se é organizador
+    const isOrganizer = !!(await kvStore.get(`tournament:${tournamentId}:organizer:${user.id}`));
+    
+    return c.json({ 
+      canEdit: isCreator || isOrganizer,
+      isCreator,
+      isOrganizer
+    });
+  } catch (error: any) {
+    console.error('Error checking edit permission:', error);
+    return c.json({ canEdit: false, isCreator: false });
+  }
+});
+
 // ============= LIVEKIT ROUTES =============
 // Register LiveKit routes after initialization
 setTimeout(() => {

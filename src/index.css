@@ -2762,6 +2762,16 @@
     background-color: var(--color-blue-600);
   }
 
+  .bg-blue-600\/90 {
+    background-color: color-mix(in srgb, oklch(.546 .245 262.881) 90%, transparent);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-blue-600\/90 {
+      background-color: color-mix(in oklab, var(--color-blue-600) 90%, transparent);
+    }
+  }
+
   .bg-border {
     background-color: var(--border);
   }
@@ -3419,6 +3429,11 @@
 
   .from-yellow-50 {
     --tw-gradient-from: var(--color-yellow-50);
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
+
+  .from-yellow-400 {
+    --tw-gradient-from: var(--color-yellow-400);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
 
