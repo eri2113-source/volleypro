@@ -66,8 +66,10 @@
   // 📊 IMPORTANTE: Preservar dataLayer mesmo durante bloqueio
   window.dataLayer = preservedDataLayer;
   
-  // Bloquear interface IMEDIATAMENTE
-  document.body.innerHTML = `
+  // Bloquear interface criando overlay (NÃO usar innerHTML para evitar conflito com React!)
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999999;';
+  overlay.innerHTML = `
     <div style="
       position: fixed;
       top: 0;
@@ -235,9 +237,12 @@
     </style>
   `;
   
+  // Adicionar overlay ao body sem destruir conteúdo existente
+  document.body.appendChild(overlay);
+  
   // Countdown de 3 segundos
   let seconds = 3;
-  const countdownEl = document.getElementById('countdown');
+  const countdownEl = overlay.querySelector('#countdown');
   
   const timer = setInterval(() => {
     seconds--;

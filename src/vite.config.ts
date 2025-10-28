@@ -15,9 +15,14 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: false,
     chunkSizeWarningLimit: 1000,
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         manualChunks: undefined, // Remove chunking manual que causa conflitos
+        // Garantir nomes consistentes de assets
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
   },

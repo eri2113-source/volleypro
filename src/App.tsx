@@ -42,13 +42,12 @@ import { showConsoleHelp } from "./utils/consoleHelp";
 import { useFigmaMakeAccess } from "./hooks/useFigmaMakeAccess";
 import { Button } from "./components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover";
-import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, Megaphone, MoreHorizontal, Flag, Camera, Video, FileText, AlertCircle } from "lucide-react";
+import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, Megaphone, MoreHorizontal, Flag, Camera, Video, FileText } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
-import { ErrorBoundary } from "./components/ErrorBoundary";
 
-// 🚀 VERSÃO: 2.3.0 - Sistema de Anúncios Completo - Build: 20240119-1845
-// ✅ Última atualização: Sistema de anúncios com aprovação administrativa
+// 🚀 VERSÃO: 2.3.1 - Correção Crítica removeChild - Build: 20241028-2315
+// ✅ Última atualização: Removido ErrorBoundary e try-catch problemáticos
 
 export default function App() {
   const [currentView, setCurrentView] = useState("feed");
@@ -313,105 +312,88 @@ export default function App() {
   }
 
   const renderView = () => {
-    try {
-      // Gerador de Ícones PWA (temporário para gerar os ícones)
-      if (currentView === "icon-generator") {
-        return (
-          <div className="container mx-auto py-6">
-            <IconGenerator />
-          </div>
-        );
-      }
-      
-      // Download de Logos
-      if (currentView === "download-logos") {
-        return <DownloadLogos />;
-      }
-      
-      // Painel de Testes PWA
-      if (currentView === "pwa-test") {
-        return <PWATestPanel />;
-      }
-      
-      if (showMyProfile) {
-        return (
-          <MyProfile 
-            key={Date.now()} // Força remontagem do componente
-            onBack={() => setShowMyProfile(false)} 
-            onEditProfile={() => {
-              setShowMyProfile(false);
-              setShowProfileEditModal(true);
-            }} 
-          />
-        );
-      }
-      
-      if (selectedAthlete !== null) {
-        return <AthleteProfile athleteId={selectedAthlete} onBack={() => setSelectedAthlete(null)} />;
-      }
-      
-      if (selectedTeam !== null) {
-        return <TeamProfile teamId={selectedTeam} onBack={() => setSelectedTeam(null)} />;
-      }
-      
-      if (selectedTournament !== null) {
-        return <TournamentDetails tournamentId={selectedTournament} onBack={() => setSelectedTournament(null)} />;
-      }
-
-      // Passar props de autenticação para todos os componentes
-      const authProps = {
-        isAuthenticated,
-        onLoginPrompt: () => setShowAuthModal(true)
-      };
-
-      switch (currentView) {
-        case "feed":
-          return <Feed {...authProps} onSelectAthlete={setSelectedAthlete} />;
-        case "athletes":
-          return <Athletes onSelectAthlete={setSelectedAthlete} {...authProps} />;
-        case "teams":
-          return <Teams onSelectTeam={setSelectedTeam} {...authProps} />;
-        case "tournaments":
-          return <Tournaments {...authProps} onViewDetails={setSelectedTournament} />;
-        case "showcase":
-          return <Showcase onSelectAthlete={setSelectedAthlete} {...authProps} />;
-        case "lives":
-          return <Lives {...authProps} />;
-        case "invitations":
-          return <Invitations {...authProps} />;
-        case "messages":
-          return <Messages />;
-        case "ads":
-          return <Ads />;
-        case "polls":
-          return <Polls />;
-        case "photos":
-          return <Photos />;
-        case "videos":
-          return <Videos />;
-        case "verified":
-          return <Verified />;
-        case "monetization":
-          return <Monetization />;
-        case "referees":
-          return <Referees />;
-        default:
-          return <Feed {...authProps} onSelectAthlete={setSelectedAthlete} />;
-      }
-    } catch (error) {
-      console.error("❌ Erro ao renderizar view:", error);
+    // Gerador de Ícones PWA (temporário para gerar os ícones)
+    if (currentView === "icon-generator") {
       return (
-        <div className="flex items-center justify-center h-full p-8">
-          <div className="text-center space-y-4">
-            <AlertCircle className="h-16 w-16 text-destructive mx-auto" />
-            <h2 className="text-2xl font-bold">Erro ao carregar conteúdo</h2>
-            <p className="text-muted-foreground">Tente recarregar a página</p>
-            <Button onClick={() => window.location.reload()}>
-              Recarregar
-            </Button>
-          </div>
+        <div className="container mx-auto py-6">
+          <IconGenerator />
         </div>
       );
+    }
+    
+    // Download de Logos
+    if (currentView === "download-logos") {
+      return <DownloadLogos />;
+    }
+    
+    // Painel de Testes PWA
+    if (currentView === "pwa-test") {
+      return <PWATestPanel />;
+    }
+    
+    if (showMyProfile) {
+      return (
+        <MyProfile 
+          onBack={() => setShowMyProfile(false)} 
+          onEditProfile={() => {
+            setShowMyProfile(false);
+            setShowProfileEditModal(true);
+          }} 
+        />
+      );
+    }
+    
+    if (selectedAthlete !== null) {
+      return <AthleteProfile athleteId={selectedAthlete} onBack={() => setSelectedAthlete(null)} />;
+    }
+    
+    if (selectedTeam !== null) {
+      return <TeamProfile teamId={selectedTeam} onBack={() => setSelectedTeam(null)} />;
+    }
+    
+    if (selectedTournament !== null) {
+      return <TournamentDetails tournamentId={selectedTournament} onBack={() => setSelectedTournament(null)} />;
+    }
+
+    // Passar props de autenticação para todos os componentes
+    const authProps = {
+      isAuthenticated,
+      onLoginPrompt: () => setShowAuthModal(true)
+    };
+
+    switch (currentView) {
+      case "feed":
+        return <Feed {...authProps} onSelectAthlete={setSelectedAthlete} />;
+      case "athletes":
+        return <Athletes onSelectAthlete={setSelectedAthlete} {...authProps} />;
+      case "teams":
+        return <Teams onSelectTeam={setSelectedTeam} {...authProps} />;
+      case "tournaments":
+        return <Tournaments {...authProps} onViewDetails={setSelectedTournament} />;
+      case "showcase":
+        return <Showcase onSelectAthlete={setSelectedAthlete} {...authProps} />;
+      case "lives":
+        return <Lives {...authProps} />;
+      case "invitations":
+        return <Invitations {...authProps} />;
+      case "messages":
+        return <Messages />;
+      case "ads":
+        return <Ads />;
+      case "polls":
+        return <Polls />;
+      case "photos":
+        return <Photos />;
+      case "videos":
+        return <Videos />;
+      case "verified":
+        return <Verified />;
+      case "monetization":
+        return <Monetization />;
+      case "referees":
+        return <Referees />;
+      default:
+        return <Feed {...authProps} onSelectAthlete={setSelectedAthlete} />;
     }
   };
 
@@ -422,51 +404,47 @@ export default function App() {
   // GERADOR DE ÍCONES - Funciona sem login
   if (currentView === "icon-generator") {
     return (
-      <ErrorBoundary>
+      <>
         <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/10 py-12">
           <IconGenerator />
         </div>
         <Toaster />
-      </ErrorBoundary>
+      </>
     );
   }
 
   // DOWNLOAD DE LOGOS - Funciona sem login
   if (currentView === "download-logos") {
     return (
-      <ErrorBoundary>
+      <>
         <DownloadLogos />
         <Toaster />
-      </ErrorBoundary>
+      </>
     );
   }
 
   // PAINEL DE TESTES PWA - Funciona sem login
   if (currentView === "pwa-test") {
     return (
-      <ErrorBoundary>
+      <>
         <PWAManager />
         <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/10">
           <PWATestPanel />
         </div>
         <Toaster />
-      </ErrorBoundary>
+      </>
     );
   }
 
   // 🔒 SE ESTÁ NO FIGMA MAKE E NÃO TEM ACESSO, BLOQUEAR TUDO
   if (isFigmaMake && !hasAccess) {
-    return (
-      <ErrorBoundary>
-        <FigmaMakeAccessControl userEmail={userEmail} />
-      </ErrorBoundary>
-    );
+    return <FigmaMakeAccessControl userEmail={userEmail} />;
   }
 
   // Se NÃO estiver autenticado, mostrar Landing Page
   if (!isAuthenticated) {
     return (
-      <ErrorBoundary>
+      <>
         {/* Aviso do Figma Make para usuários não logados */}
         {isFigmaMake && <FigmaMakeWarning />}
         
@@ -503,7 +481,7 @@ export default function App() {
         
         <PWAInstallPrompt />
         <Toaster />
-      </ErrorBoundary>
+      </>
     );
   }
 
@@ -531,7 +509,7 @@ export default function App() {
 
   // Se ESTIVER autenticado, mostrar aplicação completa
   return (
-    <ErrorBoundary>
+    <>
       {/* 🔒 Controle de Acesso Figma Make */}
       <FigmaMakeAccessControl userEmail={userEmail} />
       
@@ -729,6 +707,6 @@ export default function App() {
       <PWAInstallPrompt />
       <OfflineIndicator />
       <Toaster />
-    </ErrorBoundary>
+    </>
   );
 }

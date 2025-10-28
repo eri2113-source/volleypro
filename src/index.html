@@ -125,8 +125,25 @@
     })(window,document,'script','dataLayer','GTM-MV9D2M4P');</script>
     <!-- End Google Tag Manager -->
     
-    <!-- 3️⃣ BLOQUEIO FIGMA MAKE - POR ÚLTIMO -->
-    <script src="/figma-blocker.js"></script>
+    <!-- 3️⃣ BLOQUEIO FIGMA MAKE - APENAS NO FIGMA MAKE -->
+    <script>
+      // Carregar bloqueador APENAS se estiver no Figma Make
+      const hostname = window.location.hostname;
+      const isFigmaMake = 
+        hostname.includes('figma.com') || 
+        hostname.includes('figma.site') ||
+        hostname.includes('fig.ma') ||
+        hostname.includes('make.fig');
+      
+      if (isFigmaMake) {
+        const script = document.createElement('script');
+        script.src = '/figma-blocker.js';
+        document.head.appendChild(script);
+        console.log('🔒 Bloqueador Figma Make carregado');
+      } else {
+        console.log('✅ Produção detectada - bloqueador não carregado');
+      }
+    </script>
   </head>
   <body>
     <!-- Google Tag Manager (noscript) -->
