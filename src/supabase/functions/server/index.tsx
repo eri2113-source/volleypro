@@ -5976,4 +5976,27 @@ app.get('/make-server-0ea22bba/tournaments/:id/can-edit', async (c) => {
   }
 });
 
-Deno.serve(app.fetch);
+// ============= START SERVER =============
+// Initialize server asynchronously to register LiveKit routes
+(async () => {
+  try {
+    // Wait for modules to load
+    await new Promise(resolve => setTimeout(resolve, 200));
+    
+    // Try to register LiveKit routes
+    const livekitApp = await initializeLiveKit();
+    if (livekitApp && typeof livekitApp !== 'function') {
+      // livekitApp is a Hono instance, merge its routes
+      app.route('/', livekitApp);
+      console.log('✅ LiveKit routes registered');
+    } else {
+      console.log('⚠️ LiveKit routes not available (mock mode)');
+    }
+  } catch (error: any) {
+    console.log('⚠️ LiveKit initialization warning:', error.message);
+  } finally {
+    // Start server regardless of LiveKit status
+    Deno.serve(app.fetch);
+    console.log('🚀 Server started successfully');
+  }
+})();

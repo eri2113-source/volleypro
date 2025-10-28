@@ -1040,7 +1040,12 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3 flex-1">
                 <Avatar 
-                  className={`h-11 w-11 ${isOfficialPost ? 'ring-2 ring-secondary/50 shadow-lg' : 'ring-1 ring-border'}`}
+                  className={`h-11 w-11 ${isOfficialPost ? 'ring-2 ring-secondary/50 shadow-lg' : 'ring-1 ring-border'} ${!isOfficialPost && onSelectAthlete && post.authorId ? 'cursor-pointer hover:ring-primary/50 transition-all' : ''}`}
+                  onClick={() => {
+                    if (!isOfficialPost && onSelectAthlete && post.authorId) {
+                      onSelectAthlete(post.authorId);
+                    }
+                  }}
                 >
                   {post.authorPhotoUrl ? (
                     <AvatarImage src={post.authorPhotoUrl} alt={authorName} />
@@ -1053,7 +1058,12 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
                 <div className="flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span 
-                      className={`${isOfficialPost ? 'font-semibold text-gradient-secondary' : 'font-medium'}`}
+                      className={`${isOfficialPost ? 'font-semibold text-gradient-secondary' : 'font-medium'} ${!isOfficialPost && onSelectAthlete && post.authorId ? 'cursor-pointer hover:text-primary transition-colors' : ''}`}
+                      onClick={() => {
+                        if (!isOfficialPost && onSelectAthlete && post.authorId) {
+                          onSelectAthlete(post.authorId);
+                        }
+                      }}
                     >{authorName}</span>
                     {post.verified && (
                       <Badge variant="secondary" className="h-5 px-2 rounded-full bg-primary/10 text-primary">

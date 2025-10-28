@@ -46,8 +46,8 @@ import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, M
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
 
-// 🚀 VERSÃO: 2.3.2 - Correção Sistema Fechando + Sorteio Infinito - Build: 20241028-2330
-// ✅ Última atualização: Corrigido loop infinito sorteio + handler global de erros
+// 🚀 VERSÃO: 2.3.3 - Correção Crítica LiveKit Routes (Tela Branca) - Build: 20241028-2345
+// ✅ Última atualização: Corrigido erro crítico de registro de rotas LiveKit que causava tela branca
 
 export default function App() {
   const [currentView, setCurrentView] = useState("feed");

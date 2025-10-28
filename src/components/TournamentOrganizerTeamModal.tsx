@@ -149,13 +149,13 @@ export function TournamentOrganizerTeamModal({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto" aria-describedby="organizer-team-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Shield className="h-5 w-5 text-primary" />
             Equipe de Organização do Torneio
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="organizer-team-description">
             Adicione membros para ajudar a gerenciar e atualizar os dados do torneio em tempo real
           </DialogDescription>
         </DialogHeader>

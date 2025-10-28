@@ -6035,6 +6035,18 @@
   }
 
   @media (hover: hover) {
+    .hover\:ring-primary\/50:hover {
+      --tw-ring-color: var(--primary);
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:ring-primary\/50:hover {
+        --tw-ring-color: color-mix(in oklab, var(--primary) 50%, transparent);
+      }
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:ring-primary\/60:hover {
       --tw-ring-color: var(--primary);
     }
