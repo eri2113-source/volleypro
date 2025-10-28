@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Users, Heart, MessageCircle, Share2, Trophy, BarChart3, Camera } from "lucide-react";
+import { ArrowLeft, MapPin, Users, Heart, MessageCircle, Share2, Trophy, BarChart3, Camera, MessageSquare } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { userApi } from "../lib/api";
+import { userApi, postApi } from "../lib/api";
 import { toast } from "sonner@2.0.3";
 import { Loader2 } from "lucide-react";
+import { ReactionDisplay } from "./ReactionPicker";
 
 interface AthleteProfileProps {
   athleteId: number;
@@ -37,6 +38,9 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
   const [athlete, setAthlete] = useState<AthleteData | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [userPosts, setUserPosts] = useState<any[]>([]);
+  const [loadingPosts, setLoadingPosts] = useState(false);
+  const [postReactions, setPostReactions] = useState<{ [postId: string]: { [emoji: string]: number } }>({});
 
   useEffect(() => {
     loadAthleteData();
@@ -128,6 +132,47 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
     } catch (error) {
       console.error('Erro ao seguir/deixar de seguir:', error);
       toast.error('Erro ao processar ação');
+    }
+  }
+
+  async function loadUserPosts() {
+    if (loadingPosts) return; // Evitar chamadas duplicadas
+    
+    setLoadingPosts(true);
+    try {
+      let filteredPosts = [];
+      
+      try {
+        // Tentar buscar todos os posts primeiro (mais confiável)
+        const response = await postApi.getPosts();
+        
+        if (response && response.posts && Array.isArray(response.posts)) {
+          filteredPosts = response.posts.filter((post: any) => 
+            post && post.authorId === athleteId.toString()
+          );
+        }
+      } catch (error) {
+        console.log('Erro ao buscar posts, usando array vazio');
+        filteredPosts = [];
+      }
+      
+      setUserPosts(filteredPosts);
+      
+      // Carregar reações salvas do localStorage (com proteção)
+      try {
+        const savedReactions = localStorage.getItem('volleypro_post_reactions');
+        if (savedReactions) {
+          const parsed = JSON.parse(savedReactions);
+          setPostReactions(parsed || {});
+        }
+      } catch (error) {
+        // Ignorar erro silenciosamente
+      }
+    } catch (error) {
+      console.error('Erro ao carregar posts do usuário:', error);
+      setUserPosts([]);
+    } finally {
+      setLoadingPosts(false);
     }
   }
 
@@ -237,9 +282,14 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
 
       {/* Conteúdo */}
       <div className="container mx-auto max-w-5xl p-6">
-        <Tabs defaultValue="about" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="about" className="space-y-6" onValueChange={(value) => {
+          if (value === "posts" && userPosts.length === 0 && !loadingPosts) {
+            loadUserPosts();
+          }
+        }}>
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="about">Sobre</TabsTrigger>
+            <TabsTrigger value="posts">Posts</TabsTrigger>
             <TabsTrigger value="stats">Estatísticas</TabsTrigger>
             <TabsTrigger value="achievements">Conquistas</TabsTrigger>
           </TabsList>
@@ -309,6 +359,92 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
                 </div>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="posts" className="space-y-4">
+            {loadingPosts ? (
+              <div className="flex justify-center p-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            ) : userPosts.length > 0 ? (
+              <div className="space-y-4">
+                {userPosts.map((post) => (
+                  <Card key={post.id} className="overflow-hidden">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={athlete?.photoUrl} alt={athlete?.name} />
+                          <AvatarFallback>{athlete?.name?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium">{athlete?.name}</p>
+                            {athlete?.verified && (
+                              <Badge variant="default" className="h-5 px-1.5 text-xs">
+                                ✓
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {new Date(post.timestamp).toLocaleDateString('pt-BR', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {post.content && (
+                        <p className="whitespace-pre-wrap">{post.content}</p>
+                      )}
+                      {post.imageUrl && (
+                        <img 
+                          src={post.imageUrl} 
+                          alt="Post" 
+                          className="w-full rounded-lg object-cover max-h-96"
+                        />
+                      )}
+                      {post.videoUrl && (
+                        <video 
+                          src={post.videoUrl} 
+                          controls 
+                          className="w-full rounded-lg max-h-96"
+                        />
+                      )}
+                      
+                      {/* Reações */}
+                      <div className="flex items-center gap-4 pt-2 border-t">
+                        <div className="flex items-center gap-2">
+                          <Heart className="h-5 w-5 text-muted-foreground" />
+                          {postReactions[post.id] && (
+                            <ReactionDisplay reactions={postReactions[post.id]} />
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <MessageSquare className="h-5 w-5" />
+                          <span className="text-sm">{post.commentsCount || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Share2 className="h-5 w-5" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center p-12 text-center">
+                  <MessageCircle className="h-12 w-12 text-muted-foreground mb-4" />
+                  <p className="text-lg font-medium mb-2">Nenhuma publicação ainda</p>
+                  <p className="text-muted-foreground">
+                    {athlete?.name} ainda não fez nenhuma publicação.
+                  </p>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           <TabsContent value="stats">

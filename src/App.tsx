@@ -27,6 +27,7 @@ import { LandingPage } from "./components/LandingPage";
 import { Logo } from "./components/Logo";
 import { CacheBuster } from "./components/CacheBuster";
 import DownloadLogos from "./components/DownloadLogos";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 import { PWAManager } from "./components/PWAManager";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
@@ -46,8 +47,8 @@ import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, M
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
 
-// 🚀 VERSÃO: 2.3.3 - Correção Crítica LiveKit Routes (Tela Branca) - Build: 20241028-2345
-// ✅ Última atualização: Corrigido erro crítico de registro de rotas LiveKit que causava tela branca
+// 🚀 VERSÃO: 2.3.4 - Correção Crítica Performance e Tela Branca - Build: 20241028-2359
+// ✅ Última atualização: ErrorBoundary, lazy loading de posts, proteções contra crashes
 
 export default function App() {
   const [currentView, setCurrentView] = useState("feed");
@@ -421,39 +422,56 @@ export default function App() {
       onLoginPrompt: () => setShowAuthModal(true)
     };
 
-    switch (currentView) {
-      case "feed":
-        return <Feed {...authProps} onSelectAthlete={setSelectedAthlete} />;
-      case "athletes":
-        return <Athletes onSelectAthlete={setSelectedAthlete} {...authProps} />;
-      case "teams":
-        return <Teams onSelectTeam={setSelectedTeam} {...authProps} />;
-      case "tournaments":
-        return <Tournaments {...authProps} onViewDetails={setSelectedTournament} />;
-      case "showcase":
-        return <Showcase onSelectAthlete={setSelectedAthlete} {...authProps} />;
-      case "lives":
-        return <Lives {...authProps} />;
-      case "invitations":
-        return <Invitations {...authProps} />;
-      case "messages":
-        return <Messages />;
-      case "ads":
-        return <Ads />;
-      case "polls":
-        return <Polls />;
-      case "photos":
-        return <Photos />;
-      case "videos":
-        return <Videos />;
-      case "verified":
-        return <Verified />;
-      case "monetization":
-        return <Monetization />;
-      case "referees":
-        return <Referees />;
-      default:
-        return <Feed {...authProps} onSelectAthlete={setSelectedAthlete} />;
+    try {
+      switch (currentView) {
+        case "feed":
+          return <Feed {...authProps} onSelectAthlete={setSelectedAthlete} />;
+        case "athletes":
+          return <Athletes onSelectAthlete={setSelectedAthlete} {...authProps} />;
+        case "teams":
+          return <Teams onSelectTeam={setSelectedTeam} {...authProps} />;
+        case "tournaments":
+          return <Tournaments {...authProps} onViewDetails={setSelectedTournament} />;
+        case "showcase":
+          return <Showcase onSelectAthlete={setSelectedAthlete} {...authProps} />;
+        case "lives":
+          return <Lives {...authProps} />;
+        case "invitations":
+          return <Invitations {...authProps} />;
+        case "messages":
+          return <Messages />;
+        case "ads":
+          return <Ads />;
+        case "polls":
+          return <Polls />;
+        case "photos":
+          return <Photos />;
+        case "videos":
+          return <Videos />;
+        case "verified":
+          return <Verified />;
+        case "monetization":
+          return <Monetization />;
+        case "referees":
+          return <Referees />;
+        default:
+          return <Feed {...authProps} onSelectAthlete={setSelectedAthlete} />;
+      }
+    } catch (error) {
+      console.error('❌ Erro ao renderizar view:', currentView, error);
+      return (
+        <div className="flex items-center justify-center h-screen p-6">
+          <div className="text-center space-y-4">
+            <p className="text-lg">⚠️ Erro ao carregar conteúdo</p>
+            <Button onClick={() => {
+              setCurrentView("feed");
+              window.location.reload();
+            }}>
+              Voltar ao Início
+            </Button>
+          </div>
+        </div>
+      );
     }
   };
 
@@ -717,7 +735,9 @@ export default function App() {
             
             {/* Conteúdo Principal - Com scroll */}
             <div className="w-full max-w-full overflow-x-hidden">
-              {renderView()}
+              <ErrorBoundary>
+                {renderView()}
+              </ErrorBoundary>
             </div>
           </main>
         </div>

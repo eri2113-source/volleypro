@@ -503,6 +503,10 @@ export const postApi = {
     return apiCall('/posts');
   },
 
+  async getUserPosts(userId: string) {
+    return apiCall(`/posts/user/${userId}`);
+  },
+
   async likePost(postId: string) {
     return apiCall(`/posts/${postId}/like`, {
       method: 'POST',
