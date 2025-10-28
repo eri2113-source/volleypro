@@ -34,6 +34,7 @@ import {
   AlertDialogTitle,
 } from "./ui/alert-dialog";
 import { postApi, authApi, userApi, masterAdminApi } from "../lib/api";
+import { uploadMediaOptimized } from "../lib/api-optimized";
 import { toast } from "sonner@2.0.3";
 import { Trash2, Shield } from "lucide-react";
 
@@ -347,7 +348,8 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
           });
         }
         
-        const uploadResult = await postApi.uploadMedia(selectedMedia);
+        // ⚡ Upload otimizado (compressão + CDN externa)
+        const uploadResult = await uploadMediaOptimized(selectedMedia);
         mediaUrl = uploadResult.url;
         mediaType = uploadResult.mediaType;
         console.log("✅ Upload concluído:", mediaType, mediaUrl.substring(0, 50) + "...");
