@@ -42,7 +42,7 @@ import { showConsoleHelp } from "./utils/consoleHelp";
 import { useFigmaMakeAccess } from "./hooks/useFigmaMakeAccess";
 import { Button } from "./components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover";
-import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, Megaphone, MoreHorizontal, Flag, Camera, Video, FileText } from "lucide-react";
+import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, Megaphone, MoreHorizontal, Flag, Camera, Video, FileText, AlertCircle } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -313,89 +313,105 @@ export default function App() {
   }
 
   const renderView = () => {
-    // Gerador de Ícones PWA (temporário para gerar os ícones)
-    if (currentView === "icon-generator") {
+    try {
+      // Gerador de Ícones PWA (temporário para gerar os ícones)
+      if (currentView === "icon-generator") {
+        return (
+          <div className="container mx-auto py-6">
+            <IconGenerator />
+          </div>
+        );
+      }
+      
+      // Download de Logos
+      if (currentView === "download-logos") {
+        return <DownloadLogos />;
+      }
+      
+      // Painel de Testes PWA
+      if (currentView === "pwa-test") {
+        return <PWATestPanel />;
+      }
+      
+      if (showMyProfile) {
+        return (
+          <MyProfile 
+            key={Date.now()} // Força remontagem do componente
+            onBack={() => setShowMyProfile(false)} 
+            onEditProfile={() => {
+              setShowMyProfile(false);
+              setShowProfileEditModal(true);
+            }} 
+          />
+        );
+      }
+      
+      if (selectedAthlete !== null) {
+        return <AthleteProfile athleteId={selectedAthlete} onBack={() => setSelectedAthlete(null)} />;
+      }
+      
+      if (selectedTeam !== null) {
+        return <TeamProfile teamId={selectedTeam} onBack={() => setSelectedTeam(null)} />;
+      }
+      
+      if (selectedTournament !== null) {
+        return <TournamentDetails tournamentId={selectedTournament} onBack={() => setSelectedTournament(null)} />;
+      }
+
+      // Passar props de autenticação para todos os componentes
+      const authProps = {
+        isAuthenticated,
+        onLoginPrompt: () => setShowAuthModal(true)
+      };
+
+      switch (currentView) {
+        case "feed":
+          return <Feed {...authProps} onSelectAthlete={setSelectedAthlete} />;
+        case "athletes":
+          return <Athletes onSelectAthlete={setSelectedAthlete} {...authProps} />;
+        case "teams":
+          return <Teams onSelectTeam={setSelectedTeam} {...authProps} />;
+        case "tournaments":
+          return <Tournaments {...authProps} onViewDetails={setSelectedTournament} />;
+        case "showcase":
+          return <Showcase onSelectAthlete={setSelectedAthlete} {...authProps} />;
+        case "lives":
+          return <Lives {...authProps} />;
+        case "invitations":
+          return <Invitations {...authProps} />;
+        case "messages":
+          return <Messages />;
+        case "ads":
+          return <Ads />;
+        case "polls":
+          return <Polls />;
+        case "photos":
+          return <Photos />;
+        case "videos":
+          return <Videos />;
+        case "verified":
+          return <Verified />;
+        case "monetization":
+          return <Monetization />;
+        case "referees":
+          return <Referees />;
+        default:
+          return <Feed {...authProps} onSelectAthlete={setSelectedAthlete} />;
+      }
+    } catch (error) {
+      console.error("❌ Erro ao renderizar view:", error);
       return (
-        <div className="container mx-auto py-6">
-          <IconGenerator />
+        <div className="flex items-center justify-center h-full p-8">
+          <div className="text-center space-y-4">
+            <AlertCircle className="h-16 w-16 text-destructive mx-auto" />
+            <h2 className="text-2xl font-bold">Erro ao carregar conteúdo</h2>
+            <p className="text-muted-foreground">Tente recarregar a página</p>
+            <Button onClick={() => window.location.reload()}>
+              Recarregar
+            </Button>
+          </div>
         </div>
       );
-    }
-    
-    // Download de Logos
-    if (currentView === "download-logos") {
-      return <DownloadLogos />;
-    }
-    
-    // Painel de Testes PWA
-    if (currentView === "pwa-test") {
-      return <PWATestPanel />;
-    }
-    
-    if (showMyProfile) {
-      return (
-        <MyProfile 
-          key={Date.now()} // Força remontagem do componente
-          onBack={() => setShowMyProfile(false)} 
-          onEditProfile={() => {
-            setShowMyProfile(false);
-            setShowProfileEditModal(true);
-          }} 
-        />
-      );
-    }
-    
-    if (selectedAthlete !== null) {
-      return <AthleteProfile athleteId={selectedAthlete} onBack={() => setSelectedAthlete(null)} />;
-    }
-    
-    if (selectedTeam !== null) {
-      return <TeamProfile teamId={selectedTeam} onBack={() => setSelectedTeam(null)} />;
-    }
-    
-    if (selectedTournament !== null) {
-      return <TournamentDetails tournamentId={selectedTournament} onBack={() => setSelectedTournament(null)} />;
-    }
-
-    // Passar props de autenticação para todos os componentes
-    const authProps = {
-      isAuthenticated,
-      onLoginPrompt: () => setShowAuthModal(true)
-    };
-
-    switch (currentView) {
-      case "feed":
-        return <Feed {...authProps} onSelectAthlete={setSelectedAthlete} />;
-      case "athletes":
-        return <Athletes onSelectAthlete={setSelectedAthlete} {...authProps} />;
-      case "teams":
-        return <Teams onSelectTeam={setSelectedTeam} {...authProps} />;
-      case "tournaments":
-        return <Tournaments {...authProps} onViewDetails={setSelectedTournament} />;
-      case "showcase":
-        return <Showcase onSelectAthlete={setSelectedAthlete} {...authProps} />;
-      case "lives":
-        return <Lives {...authProps} />;
-      case "invitations":
-        return <Invitations {...authProps} />;
-      case "messages":
-        return <Messages />;
-      case "ads":
-        return <Ads />;
-      case "polls":
-        return <Polls />;
-      case "photos":
-        return <Photos />;
-      case "videos":
-        return <Videos />;
-      case "verified":
-        return <Verified />;
-      case "monetization":
-        return <Monetization />;
-      case "referees":
-        return <Referees />;
-      default:
-        return <Feed {...authProps} />;
     }
   };
 
