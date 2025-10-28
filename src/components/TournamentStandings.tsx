@@ -429,10 +429,10 @@ export function TournamentStandings({ tournamentId, canEdit = false }: Tournamen
 
       {/* Modal de Edição */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="edit-team-stats-description">
           <DialogHeader>
             <DialogTitle>Editar Estatísticas</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="edit-team-stats-description">
               {editingTeam?.name} - Atualize os dados do time
             </DialogDescription>
           </DialogHeader>

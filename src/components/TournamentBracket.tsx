@@ -306,10 +306,10 @@ export function TournamentBracket({ tournament, tournamentId, canEdit = false }:
 
       {/* Modal de Edição de Horário */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md" aria-describedby="edit-match-schedule-description">
           <DialogHeader>
             <DialogTitle>Editar Horário do Jogo</DialogTitle>
-            <DialogDescription>
+            <DialogDescription id="edit-match-schedule-description">
               {editingMatch?.team1?.name} vs {editingMatch?.team2?.name}
             </DialogDescription>
           </DialogHeader>
