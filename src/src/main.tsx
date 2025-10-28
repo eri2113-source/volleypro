@@ -13,8 +13,17 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+// Limpar cache do navegador em produção para forçar novo build
+if (import.meta.env.PROD && 'caches' in window) {
+  caches.keys().then(names => {
+    names.forEach(name => {
+      if (name.includes('workbox') || name.includes('precache')) {
+        caches.delete(name);
+        console.log('🗑️ Cache antigo removido:', name);
+      }
+    });
+  });
+}
+
+// REMOVER StrictMode em produção para evitar double-render
+ReactDOM.createRoot(document.getElementById('root')!).render(<App />);
