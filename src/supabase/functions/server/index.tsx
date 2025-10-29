@@ -3908,6 +3908,44 @@ app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register', authMiddl
   }
 });
 
+// Get team registrations in tournament
+app.get('/make-server-0ea22bba/tournaments/:tournamentId/registrations/:teamId', authMiddleware, async (c) => {
+  console.log(`\n🔍 ====== GET /registrations/:teamId ======`);
+  
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const teamId = c.req.param('teamId');
+    
+    console.log(`   • userId: ${userId}`);
+    console.log(`   • tournamentId: ${tournamentId}`);
+    console.log(`   • teamId: ${teamId}`);
+    
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    const tournament = await kv.get(fullTournamentId);
+    
+    if (!tournament) {
+      console.log(`   ❌ Torneio não encontrado`);
+      return c.json({ registrations: [] });
+    }
+    
+    // Buscar todas as inscrições deste time
+    const teamRegistrations = tournament.squadRegistrations?.filter(
+      (reg: any) => reg.teamId === teamId
+    ) || [];
+    
+    console.log(`   ✅ Encontradas ${teamRegistrations.length} inscrição(ões)`);
+    teamRegistrations.forEach((reg: any, index: number) => {
+      console.log(`      ${index + 1}. ${reg.squadName || 'TIME COMPLETO'} (squadId: ${reg.squadId || 'null'})`);
+    });
+    
+    return c.json({ registrations: teamRegistrations });
+  } catch (error: any) {
+    console.error('❌ Erro ao buscar inscrições:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // Validate squad players (check for duplicates)
 app.post('/make-server-0ea22bba/tournaments/:tournamentId/validate-players', authMiddleware, async (c) => {
   try {
