@@ -3542,6 +3542,28 @@ app.post('/make-server-0ea22bba/teams/:teamId/categories/:categoryId/squads', au
   }
 });
 
+// Get squads available for tournament (DEVE VIR ANTES)
+app.get('/make-server-0ea22bba/teams/:teamId/squads/available', async (c) => {
+  const authHeader = c.req.header('Authorization');
+  const accessToken = authHeader?.split(' ')[1];
+  if (!accessToken) return c.json({ error: 'No token' }, 401);
+  try {
+    const teamId = c.req.param('teamId');
+    const categories = await kv.get(`team:${teamId}:categories`) || [];
+    const allSquads: any[] = [];
+    for (const cat of categories) {
+      if (cat?.squads && Array.isArray(cat.squads)) {
+        for (const sq of cat.squads) {
+          if (sq?.active) allSquads.push({...sq, categoryName: sq.categoryName || cat.name});
+        }
+      }
+    }
+    return c.json({ squads: allSquads });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 500);
+  }
+});
+
 // Get specific squad with players
 app.get('/make-server-0ea22bba/teams/:teamId/squads/:squadId', async (c) => {
   try {
