@@ -54,8 +54,28 @@ export function TournamentSquadSelectionModal({
   async function loadSquadsAndRegistrations() {
     setLoading(true);
     try {
+      console.log('🔍 Carregando equipes para:', {
+        teamId,
+        teamName,
+        modalityType,
+        tournamentId,
+        tournamentName
+      });
+
       // Buscar equipes disponíveis
       const { squads: availableSquads } = await teamCategoryApi.getSquadsForTournament(teamId, modalityType);
+      
+      console.log('📦 Resposta da API:', availableSquads);
+      console.log('✅ Equipes carregadas:', availableSquads?.length || 0);
+      
+      if (availableSquads && availableSquads.length > 0) {
+        availableSquads.forEach((squad: any, index: number) => {
+          console.log(`   ${index + 1}. ${squad.name} (${squad.categoryName}) - ${squad.players?.length || 0} jogadores`);
+        });
+      } else {
+        console.warn('⚠️ Nenhuma equipe retornada da API');
+      }
+      
       setSquads(availableSquads || []);
 
       // Buscar inscrições existentes neste torneio
@@ -63,7 +83,6 @@ export function TournamentSquadSelectionModal({
       const registeredSquadIds = registrations?.map((reg: any) => reg.squadId) || [];
       setRegisteredSquads(registeredSquadIds);
 
-      console.log('✅ Equipes carregadas:', availableSquads?.length || 0);
       console.log('✅ Inscrições existentes:', registeredSquadIds.length);
     } catch (error) {
       console.error('❌ Erro ao carregar equipes:', error);

@@ -3696,33 +3696,6 @@ app.delete('/make-server-0ea22bba/teams/:teamId/squads/:squadId/players/:playerI
     return c.json({ error: error.message }, 500);
   }
 });
-
-// Get squads available for tournament
-app.get('/make-server-0ea22bba/teams/:teamId/squads/available', async (c) => {
-  try {
-    const teamId = c.req.param('teamId');
-    const tournamentType = c.req.query('type');
-    
-    const categories = await kv.get(`team:${teamId}:categories`) || [];
-    
-    const allSquads: any[] = [];
-    for (const category of categories) {
-      if (category.squads) {
-        for (const squad of category.squads) {
-          if (squad.active) {
-            allSquads.push(squad);
-          }
-        }
-      }
-    }
-    
-    return c.json({ squads: allSquads });
-  } catch (error: any) {
-    console.error('❌ Erro ao buscar equipes:', error);
-    return c.json({ error: error.message }, 500);
-  }
-});
-
 // ============= TOURNAMENT SQUAD REGISTRATION ROUTES =============
 
 // Register squad in tournament
@@ -4226,25 +4199,28 @@ app.get('/make-server-0ea22bba/teams/:teamId/squads/available', authMiddleware, 
     const teamId = c.req.param('teamId');
     const type = c.req.query('type'); // 'indoor' or 'beach'
     
-    if (userId !== teamId) {
-      return c.json({ error: 'Unauthorized' }, 403);
-    }
-    
+    // Buscar categorias do time
     const categories = await kv.get(`team:${teamId}:categories`) || [];
+    
+    console.log(`🔍 Buscando equipes para time ${teamId}. Categorias encontradas:`, categories.length);
     
     // Flatten all squads from all categories
     const allSquads: any[] = [];
     for (const category of categories) {
       if (category.squads) {
+        console.log(`   📁 Categoria "${category.name}": ${category.squads.length} equipes`);
         for (const squad of category.squads) {
           if (squad.active) {
             allSquads.push(squad);
+            console.log(`      ✅ Equipe ativa: ${squad.name} (${squad.players?.length || 0} jogadores)`);
+          } else {
+            console.log(`      ⚠️ Equipe inativa: ${squad.name}`);
           }
         }
       }
     }
     
-    console.log(`✅ Available squads for team ${teamId}:`, allSquads.length);
+    console.log(`✅ Total de equipes disponíveis para time ${teamId}:`, allSquads.length);
     
     return c.json({ squads: allSquads });
   } catch (error: any) {
