@@ -45,6 +45,7 @@ export function TournamentSquadSelectionModal({
   const [selectedSquadId, setSelectedSquadId] = useState("");
   const [registeredSquads, setRegisteredSquads] = useState<string[]>([]);
   const [registering, setRegistering] = useState(false);
+  const [hasCategories, setHasCategories] = useState<boolean | null>(null); // null = não verificado, true/false = verificado
 
   useEffect(() => {
     if (open) {
@@ -63,10 +64,23 @@ export function TournamentSquadSelectionModal({
         tournamentName
       });
 
-      // Buscar equipes disponíveis
+      // 1. PRIMEIRO: Verificar se o time tem categorias cadastradas
+      console.log('📂 Verificando se time tem categorias...');
+      const { categories } = await teamCategoryApi.getCategories(teamId);
+      const hasCategoriesCreated = categories && categories.length > 0;
+      setHasCategories(hasCategoriesCreated);
+      
+      console.log(`📋 Categorias encontradas: ${categories?.length || 0}`);
+      if (hasCategoriesCreated) {
+        categories.forEach((cat: any, index: number) => {
+          console.log(`   ${index + 1}. ${cat.name} - ${cat.squads?.length || 0} equipes`);
+        });
+      }
+
+      // 2. SEGUNDO: Buscar equipes disponíveis (flatten de todas as categorias)
       const { squads: availableSquads } = await teamCategoryApi.getSquadsForTournament(teamId, modalityType);
       
-      console.log('📦 Resposta da API:', availableSquads);
+      console.log('📦 Resposta da API (squads):', availableSquads);
       console.log('✅ Equipes carregadas:', availableSquads?.length || 0);
       
       if (availableSquads && availableSquads.length > 0) {
@@ -75,11 +89,17 @@ export function TournamentSquadSelectionModal({
         });
       } else {
         console.warn('⚠️ Nenhuma equipe retornada da API');
+        
+        // Se tem categorias mas não tem squads, algo está errado
+        if (hasCategoriesCreated) {
+          console.error('🔴 ERRO: Time tem categorias mas nenhuma equipe foi retornada!');
+          console.log('💡 Possível causa: Equipes estão todas inativas ou não foram criadas dentro das categorias');
+        }
       }
       
       setSquads(availableSquads || []);
 
-      // Buscar inscrições existentes neste torneio
+      // 3. TERCEIRO: Buscar inscrições existentes neste torneio
       const { registrations } = await tournamentApi.getTeamRegistrations(tournamentId, teamId);
       const registeredSquadIds = registrations?.map((reg: any) => reg.squadId) || [];
       setRegisteredSquads(registeredSquadIds);
@@ -89,6 +109,7 @@ export function TournamentSquadSelectionModal({
       console.error('❌ Erro ao carregar equipes:', error);
       setSquads([]);
       setRegisteredSquads([]);
+      setHasCategories(false);
     } finally {
       setLoading(false);
     }
@@ -210,98 +231,135 @@ export function TournamentSquadSelectionModal({
           {squads.length === 0 ? (
             <Card>
               <CardContent className="p-8 text-center">
-                <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="mb-2">Time Simples</h3>
-                <p className="text-muted-foreground mb-6">
-                  Você não tem categorias criadas. Inscreva seu time completo ou crie categorias se tiver múltiplas equipes.
-                </p>
+                {/* CASO 1: TEM CATEGORIAS mas NENHUMA EQUIPE - ERRO! */}
+                {hasCategories === true ? (
+                  <>
+                    <AlertCircle className="h-12 w-12 mx-auto mb-4 text-destructive" />
+                    <h3 className="mb-2 text-destructive">Categorias sem Equipes</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Você tem categorias criadas, mas nenhuma equipe foi encontrada dentro delas.
+                    </p>
 
-                <div className="grid gap-4 max-w-md mx-auto">
-                  {/* Opção 1: Inscrever Time Completo (SIMPLES) */}
-                  <Card className="border-2 border-primary/20 bg-primary/5">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <Trophy className="h-5 w-5 text-primary mt-1 shrink-0" />
-                        <div className="text-left">
-                          <h4 className="font-medium mb-1">Inscrever Time Completo</h4>
-                          <p className="text-sm text-muted-foreground mb-3">
-                            Para times simples sem categorias separadas
-                          </p>
-                          <Button 
-                            onClick={async () => {
-                              try {
-                                setRegistering(true);
-                                // Inscrever time completo (sem squad específico)
-                                await tournamentApi.registerSquad(tournamentId, teamId, null);
-                                
-                                toast.success(`${teamName} inscrito com sucesso!`, {
-                                  description: "Time completo registrado no torneio"
-                                });
+                    <div className="p-4 bg-muted/50 rounded-lg text-left text-sm mb-6">
+                      <p className="font-medium mb-2">🔍 Possíveis causas:</p>
+                      <ul className="space-y-2 text-muted-foreground list-disc list-inside">
+                        <li>Categorias criadas mas sem equipes dentro</li>
+                        <li>Todas as equipes estão marcadas como inativas</li>
+                        <li>Equipes foram deletadas acidentalmente</li>
+                      </ul>
+                    </div>
 
-                                // Callback
-                                onSquadSelected({ id: teamId, name: teamName } as any);
-                                
-                                // Fechar modal
-                                handleClose();
-                              } catch (error: any) {
-                                console.error('❌ Erro ao inscrever time:', error);
-                                toast.error(error.message || "Erro ao inscrever time");
-                              } finally {
-                                setRegistering(false);
-                              }
-                            }}
-                            disabled={registering}
-                            className="w-full"
-                          >
-                            {registering ? (
-                              <>
-                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                Inscrevendo...
-                              </>
-                            ) : (
-                              <>
-                                <Trophy className="h-4 w-4 mr-2" />
-                                Inscrever Agora
-                              </>
-                            )}
-                          </Button>
+                    <div className="space-y-3">
+                      <Button 
+                        onClick={() => window.location.href = '#profile'}
+                        className="w-full"
+                      >
+                        <Users className="h-4 w-4 mr-2" />
+                        Ir para Categorias e Criar Equipes
+                      </Button>
+                      
+                      <p className="text-xs text-muted-foreground">
+                        Abra o Console (F12) para ver logs detalhados
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  /* CASO 2: NÃO TEM CATEGORIAS - TIME SIMPLES */
+                  <>
+                    <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                    <h3 className="mb-2">Time Simples</h3>
+                    <p className="text-muted-foreground mb-6">
+                      Você não tem categorias criadas. Inscreva seu time completo ou crie categorias se tiver múltiplas equipes.
+                    </p>
+
+                    <div className="grid gap-4 max-w-md mx-auto">
+                      {/* Opção 1: Inscrever Time Completo (SIMPLES) */}
+                      <Card className="border-2 border-primary/20 bg-primary/5">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Trophy className="h-5 w-5 text-primary mt-1 shrink-0" />
+                            <div className="text-left">
+                              <h4 className="font-medium mb-1">Inscrever Time Completo</h4>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                Para times simples sem categorias separadas
+                              </p>
+                              <Button 
+                                onClick={async () => {
+                                  try {
+                                    setRegistering(true);
+                                    // Inscrever time completo (sem squad específico)
+                                    await tournamentApi.registerSquad(tournamentId, teamId, null);
+                                    
+                                    toast.success(`${teamName} inscrito com sucesso!`, {
+                                      description: "Time completo registrado no torneio"
+                                    });
+
+                                    // Callback
+                                    onSquadSelected({ id: teamId, name: teamName } as any);
+                                    
+                                    // Fechar modal
+                                    handleClose();
+                                  } catch (error: any) {
+                                    console.error('❌ Erro ao inscrever time:', error);
+                                    toast.error(error.message || "Erro ao inscrever time");
+                                  } finally {
+                                    setRegistering(false);
+                                  }
+                                }}
+                                disabled={registering}
+                                className="w-full"
+                              >
+                                {registering ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Inscrevendo...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Trophy className="h-4 w-4 mr-2" />
+                                    Inscrever Agora
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Divisor */}
+                      <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                          <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                          <span className="bg-background px-2 text-muted-foreground">ou</span>
                         </div>
                       </div>
-                    </CardContent>
-                  </Card>
 
-                  {/* Divisor */}
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
+                      {/* Opção 2: Criar Categorias (MÚLTIPLAS EQUIPES) */}
+                      <Card className="border-2">
+                        <CardContent className="p-4">
+                          <div className="flex items-start gap-3">
+                            <Users className="h-5 w-5 text-muted-foreground mt-1 shrink-0" />
+                            <div className="text-left">
+                              <h4 className="font-medium mb-1">Criar Categorias</h4>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                Se você tem múltiplas equipes (Feminino A/B, Masculino A/B, etc.)
+                              </p>
+                              <Button 
+                                variant="outline"
+                                onClick={() => window.location.href = '#profile'}
+                                className="w-full"
+                              >
+                                Ir para Meu Perfil → Categorias
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-background px-2 text-muted-foreground">ou</span>
-                    </div>
-                  </div>
-
-                  {/* Opção 2: Criar Categorias (MÚLTIPLAS EQUIPES) */}
-                  <Card className="border-2">
-                    <CardContent className="p-4">
-                      <div className="flex items-start gap-3">
-                        <Users className="h-5 w-5 text-muted-foreground mt-1 shrink-0" />
-                        <div className="text-left">
-                          <h4 className="font-medium mb-1">Criar Categorias</h4>
-                          <p className="text-sm text-muted-foreground mb-3">
-                            Se você tem múltiplas equipes (Feminino A/B, Masculino A/B, etc.)
-                          </p>
-                          <Button 
-                            variant="outline"
-                            onClick={() => window.location.href = '#profile'}
-                            className="w-full"
-                          >
-                            Ir para Meu Perfil → Categorias
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           ) : (
