@@ -3867,8 +3867,10 @@ app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register', authMiddl
   try {
     const userId = c.get('userId');
     const tournamentId = c.req.param('tournamentId');
+    const { teamId } = await c.req.json();
     
     console.log(`   • userId: ${userId}`);
+    console.log(`   • teamId: ${teamId}`);
     console.log(`   • tournamentId: ${tournamentId}`);
     
     const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
@@ -3883,7 +3885,7 @@ app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register', authMiddl
     // Remover TODAS as inscrições deste time (incluindo time completo e equipes específicas)
     const initialLength = tournament.squadRegistrations?.length || 0;
     tournament.squadRegistrations = tournament.squadRegistrations?.filter(
-      (reg: any) => reg.teamId !== userId
+      (reg: any) => reg.teamId !== teamId
     ) || [];
     
     const removedCount = initialLength - tournament.squadRegistrations.length;
@@ -3893,7 +3895,7 @@ app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register', authMiddl
     // Também remover do array legado registeredTeams
     if (tournament.registeredTeams) {
       tournament.registeredTeams = tournament.registeredTeams.filter(
-        (teamId: string) => teamId !== userId
+        (id: string) => id !== teamId
       );
     }
     

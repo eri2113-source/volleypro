@@ -237,7 +237,7 @@ export function TournamentDetailsModal({
   async function handleUnregister() {
     try {
       setLoading(true);
-      await tournamentApi.unregisterTeam(tournamentId);
+      await tournamentApi.unregisterTeam(tournamentId, currentUserId!);
       toast.success("Inscrição cancelada");
       await loadTournamentDetails();
     } catch (error: any) {
@@ -301,7 +301,13 @@ export function TournamentDetailsModal({
   }
 
   const isOrganizer = currentUserId === tournament.organizerId;
-  const isRegistered = tournament.registeredTeams?.includes(currentUserId);
+  
+  // ✅ VERIFICAÇÃO CORRETA: Checa AMBOS arrays (legado + novo sistema)
+  const isRegisteredLegacy = tournament.registeredTeams?.includes(currentUserId);
+  const isRegisteredSquad = tournament.squadRegistrations?.some(
+    (reg: any) => reg.teamId === currentUserId
+  );
+  const isRegistered = isRegisteredLegacy || isRegisteredSquad;
   
   // Detectar se é torneio de areia
   const isBeachTournament = tournament.modalityType === 'beach';
@@ -318,31 +324,36 @@ export function TournamentDetailsModal({
   const canRegisterBeach = isBeachTournament && userType === 'athlete' && tournament.status === 'upcoming';
   const canUnregister = userType === 'team' && tournament.status === 'upcoming' && isRegistered;
 
-  // Debug log detalhado
-  console.log('🔍 TournamentDetailsModal debug:', {
-    tournamentId,
-    tournamentName: tournament.name,
-    tournamentStatus: tournament.status,
+  // Debug log SUPER DETALHADO
+  console.log('🔍 ====== TOURNAMENT DETAILS DEBUG ======');
+  console.log('📋 Torneio:', {
+    id: tournamentId,
+    name: tournament.name,
+    status: tournament.status,
     modalityType: tournament.modalityType,
-    isBeachTournament,
     organizerId: tournament.organizerId,
+  });
+  console.log('👤 Usuário:', {
     currentUserId,
     userType,
     isOrganizer,
-    isRegistered,
+  });
+  console.log('📊 Arrays de Inscrição:', {
+    'registeredTeams (LEGADO)': tournament.registeredTeams || [],
+    'squadRegistrations (NOVO)': tournament.squadRegistrations || [],
+  });
+  console.log('✅ Verificações:', {
+    isRegisteredLegacy: tournament.registeredTeams?.includes(currentUserId),
+    isRegisteredSquad: tournament.squadRegistrations?.some((reg: any) => reg.teamId === currentUserId),
+    isRegistered: isRegistered,
     isRegisteredBeach: isRegisteredBeach || false,
+  });
+  console.log('🎮 Ações Permitidas:', {
     canRegister,
     canRegisterBeach,
     canUnregister,
-    registeredTeams: tournament.registeredTeams,
-    registeredTeamsLength: tournament.registeredTeams?.length || 0,
-    individualRegistrations: tournament.individualRegistrations?.length || 0,
-    isRegisteredCheck: {
-      registeredTeamsArray: tournament.registeredTeams,
-      includes: tournament.registeredTeams?.includes(currentUserId),
-      comparison: `currentUserId (${currentUserId}) in [${tournament.registeredTeams?.join(', ')}]`
-    }
   });
+  console.log('=======================================\n');
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

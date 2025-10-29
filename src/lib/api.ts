@@ -583,9 +583,10 @@ export const tournamentApi = {
     });
   },
 
-  async unregisterTeam(tournamentId: string) {
+  async unregisterTeam(tournamentId: string, teamId: string) {
     return apiCall(`/tournaments/${tournamentId}/register`, {
       method: 'DELETE',
+      body: JSON.stringify({ teamId }),
     });
   },
 
