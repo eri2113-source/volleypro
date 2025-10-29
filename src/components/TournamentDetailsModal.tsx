@@ -591,24 +591,35 @@ export function TournamentDetailsModal({
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {teams.map((team: any, index: number) => (
-                  <Card key={team.id}>
+                  <Card key={team.id || team.squadId || index}>
                     <CardContent className="p-4 flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-white">
-                        {index + 1}
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-white overflow-hidden">
+                        {team.photoUrl ? (
+                          <img src={team.photoUrl} alt={team.teamName || team.name} className="h-full w-full object-cover" />
+                        ) : (
+                          <span>{index + 1}</span>
+                        )}
                       </div>
                       <div className="flex-1">
-                        <p>{team.teamName || team.name}</p>
+                        <p className="font-semibold">{team.teamName || team.name}</p>
                         {team.squadName && (
-                          <p className="text-sm text-primary/80">
-                            {team.squadName}
+                          <p className="text-sm font-medium text-primary">
+                            📌 {team.squadName}
+                          </p>
+                        )}
+                        {team.categoryName && !team.squadName && (
+                          <p className="text-sm font-medium text-primary">
+                            📌 {team.categoryName}
                           </p>
                         )}
                         {team.players && team.players.length > 0 ? (
                           <p className="text-sm text-muted-foreground">
-                            {team.players.length} jogador(es)
+                            ✅ {team.players.length} jogador(es) cadastrado(s)
                           </p>
                         ) : (
-                          <p className="text-sm text-muted-foreground">{team.city || 'Sem jogadores'}</p>
+                          <p className="text-sm text-orange-500">
+                            ⚠️ Sem jogadores cadastrados
+                          </p>
                         )}
                       </div>
                     </CardContent>

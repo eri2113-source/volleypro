@@ -3827,9 +3827,12 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', authM
         teamId,
         teamName: user.name,
         squadId: null,
-        squadName: user.name, // Nome do time
+        squadName: 'Equipe Principal', // Times simples = Equipe Principal
         categoryName: null,
         players: [],
+        city: user.city || null,
+        state: user.state || null,
+        photoUrl: user.photoUrl || null,
         registeredAt: new Date().toISOString(),
         isFullTeam: true // Flag para identificar time completo
       };
@@ -3876,6 +3879,9 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', authM
         squadName: foundSquad.name,
         categoryName: foundSquad.categoryName,
         players: foundSquad.players || [],
+        city: user.city || null,
+        state: user.state || null,
+        photoUrl: user.photoUrl || null,
         registeredAt: new Date().toISOString(),
         isFullTeam: false
       };

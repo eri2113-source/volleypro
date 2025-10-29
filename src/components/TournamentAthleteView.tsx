@@ -355,7 +355,7 @@ export function TournamentAthleteView({
                           </div>
                           <div>
                             <CardTitle className="text-base flex items-center gap-2">
-                              {team.name}
+                              {team.teamName || team.name}
                               {userInThisTeam && (
                                 <Badge variant="default" className="gap-1">
                                   <User className="h-3 w-3" />
@@ -363,8 +363,18 @@ export function TournamentAthleteView({
                                 </Badge>
                               )}
                             </CardTitle>
+                            {team.squadName && (
+                              <p className="text-sm font-medium text-primary">
+                                📌 {team.squadName}
+                              </p>
+                            )}
+                            {team.categoryName && !team.squadName && (
+                              <p className="text-sm font-medium text-primary">
+                                📌 {team.categoryName}
+                              </p>
+                            )}
                             <p className="text-sm text-muted-foreground">
-                              {team.city && team.state ? `${team.city}, ${team.state}` : 'Localização não informada'}
+                              {team.city && team.state ? `${team.city}, ${team.state}` : (team.players?.length > 0 ? `${team.players.length} jogador(es)` : 'Localização não informada')}
                             </p>
                           </div>
                         </div>
