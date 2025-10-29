@@ -237,11 +237,13 @@ export function TournamentDetailsModal({
   async function handleUnregister() {
     try {
       setLoading(true);
+      console.log('🗑️ Cancelando inscrição...', { tournamentId, currentUserId });
       await tournamentApi.unregisterTeam(tournamentId, currentUserId!);
-      toast.success("Inscrição cancelada");
+      toast.success("Inscrição cancelada com sucesso!");
+      console.log('✅ Inscrição cancelada, recarregando...');
       await loadTournamentDetails();
     } catch (error: any) {
-      console.error("Error unregistering:", error);
+      console.error("❌ Erro ao cancelar:", error);
       toast.error(error.message || "Erro ao cancelar inscrição");
     } finally {
       setLoading(false);
