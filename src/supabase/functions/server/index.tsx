@@ -3705,7 +3705,7 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', authM
     const tournamentId = c.req.param('tournamentId');
     const { teamId, squadId } = await c.req.json();
     
-    console.log(`🏆 Inscrevendo equipe ${squadId} do time ${teamId} no torneio ${tournamentId}`);
+    console.log(`🏆 Inscrevendo no torneio ${tournamentId}:`, { teamId, squadId: squadId || 'TIME COMPLETO' });
     
     const user = await kv.get(`user:${userId}`);
     if (!user || user.id !== teamId) {
@@ -3718,53 +3718,99 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', authM
       return c.json({ error: 'Torneio não encontrado' }, 404);
     }
     
-    // Buscar dados da equipe
-    const categories = await kv.get(`team:${teamId}:categories`) || [];
-    let foundSquad = null;
-    for (const category of categories) {
-      if (category.squads) {
-        const squad = category.squads.find((s: any) => s.id === squadId);
-        if (squad) {
-          foundSquad = squad;
-          break;
-        }
-      }
-    }
-    
-    if (!foundSquad) {
-      return c.json({ error: 'Equipe não encontrada' }, 404);
-    }
-    
     // Inicializar registrations se não existir
     if (!tournament.squadRegistrations) {
       tournament.squadRegistrations = [];
     }
     
-    // Verificar se já está inscrita
-    const alreadyRegistered = tournament.squadRegistrations.find(
-      (reg: any) => reg.teamId === teamId && reg.squadId === squadId
-    );
-    if (alreadyRegistered) {
-      return c.json({ error: 'Esta equipe já está inscrita' }, 400);
+    let registration;
+    
+    // CASO 1: TIME SIMPLES (squadId = null) - Inscrição completa
+    if (!squadId || squadId === null) {
+      console.log(`📋 Inscrição de TIME COMPLETO: ${user.name}`);
+      
+      // Verificar se time já está inscrito (sem squad específico)
+      const alreadyRegistered = tournament.squadRegistrations.find(
+        (reg: any) => reg.teamId === teamId && (!reg.squadId || reg.squadId === null)
+      );
+      if (alreadyRegistered) {
+        return c.json({ error: 'Este time já está inscrito' }, 400);
+      }
+      
+      // Criar registro de time completo
+      registration = {
+        id: `registration:${Date.now()}`,
+        tournamentId: fullTournamentId,
+        teamId,
+        teamName: user.name,
+        squadId: null,
+        squadName: user.name, // Nome do time
+        categoryName: null,
+        players: [],
+        registeredAt: new Date().toISOString(),
+        isFullTeam: true // Flag para identificar time completo
+      };
+      
+      console.log(`✅ Time completo "${user.name}" inscrito com sucesso`);
+      
+    } 
+    // CASO 2: TIME COM CATEGORIAS (squadId != null) - Inscrição de equipe específica
+    else {
+      console.log(`📋 Buscando equipe específica: ${squadId}`);
+      
+      // Buscar dados da equipe
+      const categories = await kv.get(`team:${teamId}:categories`) || [];
+      let foundSquad = null;
+      for (const category of categories) {
+        if (category.squads) {
+          const squad = category.squads.find((s: any) => s.id === squadId);
+          if (squad) {
+            foundSquad = squad;
+            break;
+          }
+        }
+      }
+      
+      if (!foundSquad) {
+        return c.json({ error: 'Equipe não encontrada' }, 404);
+      }
+      
+      // Verificar se já está inscrita
+      const alreadyRegistered = tournament.squadRegistrations.find(
+        (reg: any) => reg.teamId === teamId && reg.squadId === squadId
+      );
+      if (alreadyRegistered) {
+        return c.json({ error: 'Esta equipe já está inscrita' }, 400);
+      }
+      
+      // Criar registro de equipe específica
+      registration = {
+        id: `registration:${Date.now()}`,
+        tournamentId: fullTournamentId,
+        teamId,
+        teamName: user.name,
+        squadId,
+        squadName: foundSquad.name,
+        categoryName: foundSquad.categoryName,
+        players: foundSquad.players || [],
+        registeredAt: new Date().toISOString(),
+        isFullTeam: false
+      };
+      
+      console.log(`✅ Equipe "${foundSquad.name}" inscrita com sucesso`);
     }
     
-    // Criar registro
-    const registration = {
-      id: `registration:${Date.now()}`,
-      tournamentId: fullTournamentId,
-      teamId,
-      teamName: user.name,
-      squadId,
-      squadName: foundSquad.name,
-      categoryName: foundSquad.categoryName,
-      players: foundSquad.players || [],
-      registeredAt: new Date().toISOString()
-    };
-    
     tournament.squadRegistrations.push(registration);
-    await kv.set(fullTournamentId, tournament);
     
-    console.log(`✅ Equipe ${foundSquad.name} inscrita com sucesso`);
+    // Também adicionar ao array legado registeredTeams (compatibilidade)
+    if (!tournament.registeredTeams) {
+      tournament.registeredTeams = [];
+    }
+    if (!tournament.registeredTeams.includes(teamId)) {
+      tournament.registeredTeams.push(teamId);
+    }
+    
+    await kv.set(fullTournamentId, tournament);
     
     return c.json({ registration });
   } catch (error: any) {

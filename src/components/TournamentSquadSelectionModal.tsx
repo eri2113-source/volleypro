@@ -209,29 +209,99 @@ export function TournamentSquadSelectionModal({
         <div className="space-y-6">
           {squads.length === 0 ? (
             <Card>
-              <CardContent className="p-12 text-center">
+              <CardContent className="p-8 text-center">
                 <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="mb-2">Nenhuma equipe disponível</h3>
-                <p className="text-muted-foreground mb-4">
-                  Você precisa criar categorias e equipes primeiro
+                <h3 className="mb-2">Time Simples</h3>
+                <p className="text-muted-foreground mb-6">
+                  Você não tem categorias criadas. Inscreva seu time completo ou crie categorias se tiver múltiplas equipes.
                 </p>
-                
-                {/* Debug Info */}
-                <div className="mt-6 p-4 bg-muted/50 rounded-lg text-left text-sm">
-                  <p className="font-medium mb-2">🔍 Informações de Debug:</p>
-                  <div className="space-y-1 text-muted-foreground">
-                    <p>• <strong>ID do Time:</strong> {teamId}</p>
-                    <p>• <strong>Nome:</strong> {teamName}</p>
-                    <p>• <strong>Modalidade:</strong> {modalityType}</p>
-                    <p className="text-xs mt-3 opacity-70">
-                      📌 Abra o Console (F12) para ver logs detalhados
-                    </p>
-                  </div>
-                </div>
 
-                <Button onClick={() => window.location.href = '#profile'} className="mt-4">
-                  Ir para Meu Perfil → Categorias
-                </Button>
+                <div className="grid gap-4 max-w-md mx-auto">
+                  {/* Opção 1: Inscrever Time Completo (SIMPLES) */}
+                  <Card className="border-2 border-primary/20 bg-primary/5">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <Trophy className="h-5 w-5 text-primary mt-1 shrink-0" />
+                        <div className="text-left">
+                          <h4 className="font-medium mb-1">Inscrever Time Completo</h4>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            Para times simples sem categorias separadas
+                          </p>
+                          <Button 
+                            onClick={async () => {
+                              try {
+                                setRegistering(true);
+                                // Inscrever time completo (sem squad específico)
+                                await tournamentApi.registerSquad(tournamentId, teamId, null);
+                                
+                                toast.success(`${teamName} inscrito com sucesso!`, {
+                                  description: "Time completo registrado no torneio"
+                                });
+
+                                // Callback
+                                onSquadSelected({ id: teamId, name: teamName } as any);
+                                
+                                // Fechar modal
+                                handleClose();
+                              } catch (error: any) {
+                                console.error('❌ Erro ao inscrever time:', error);
+                                toast.error(error.message || "Erro ao inscrever time");
+                              } finally {
+                                setRegistering(false);
+                              }
+                            }}
+                            disabled={registering}
+                            className="w-full"
+                          >
+                            {registering ? (
+                              <>
+                                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                Inscrevendo...
+                              </>
+                            ) : (
+                              <>
+                                <Trophy className="h-4 w-4 mr-2" />
+                                Inscrever Agora
+                              </>
+                            )}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Divisor */}
+                  <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                      <span className="bg-background px-2 text-muted-foreground">ou</span>
+                    </div>
+                  </div>
+
+                  {/* Opção 2: Criar Categorias (MÚLTIPLAS EQUIPES) */}
+                  <Card className="border-2">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-3">
+                        <Users className="h-5 w-5 text-muted-foreground mt-1 shrink-0" />
+                        <div className="text-left">
+                          <h4 className="font-medium mb-1">Criar Categorias</h4>
+                          <p className="text-sm text-muted-foreground mb-3">
+                            Se você tem múltiplas equipes (Feminino A/B, Masculino A/B, etc.)
+                          </p>
+                          <Button 
+                            variant="outline"
+                            onClick={() => window.location.href = '#profile'}
+                            className="w-full"
+                          >
+                            Ir para Meu Perfil → Categorias
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </CardContent>
             </Card>
           ) : (

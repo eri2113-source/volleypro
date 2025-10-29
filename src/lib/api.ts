@@ -634,7 +634,8 @@ export const tournamentApi = {
   },
 
   // Squad-based registration (multiple squads from same team)
-  async registerSquad(tournamentId: string, teamId: string, squadId: string) {
+  // squadId can be null for simple teams (full team registration)
+  async registerSquad(tournamentId: string, teamId: string, squadId: string | null) {
     return apiCall(`/tournaments/${tournamentId}/register-squad`, {
       method: 'POST',
       body: JSON.stringify({ teamId, squadId }),
