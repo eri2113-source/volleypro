@@ -65,51 +65,80 @@ export function TournamentSquadSelectionModal({
       });
 
       // 1. PRIMEIRO: Verificar se o time tem categorias cadastradas
-      console.log('📂 Verificando se time tem categorias...');
-      const { categories } = await teamCategoryApi.getCategories(teamId);
-      const hasCategoriesCreated = categories && categories.length > 0;
-      setHasCategories(hasCategoriesCreated);
+      let categories: any[] = [];
+      let hasCategoriesCreated = false;
       
-      console.log(`📋 Categorias encontradas: ${categories?.length || 0}`);
-      if (hasCategoriesCreated) {
-        categories.forEach((cat: any, index: number) => {
-          console.log(`   ${index + 1}. ${cat.name} - ${cat.squads?.length || 0} equipes`);
-        });
+      try {
+        console.log('📂 Verificando se time tem categorias...');
+        const categoriesResponse = await teamCategoryApi.getCategories(teamId);
+        categories = categoriesResponse.categories || [];
+        hasCategoriesCreated = categories && categories.length > 0;
+        setHasCategories(hasCategoriesCreated);
+        
+        console.log(`📋 Categorias encontradas: ${categories.length}`);
+        if (hasCategoriesCreated) {
+          categories.forEach((cat: any, index: number) => {
+            console.log(`   ${index + 1}. ${cat.name} - ${cat.squads?.length || 0} equipes`);
+          });
+        }
+      } catch (error: any) {
+        console.error('⚠️ Erro ao buscar categorias (pode não ter categorias ainda):', error.message);
+        setHasCategories(false);
       }
 
       // 2. SEGUNDO: Buscar equipes disponíveis (flatten de todas as categorias)
-      const { squads: availableSquads } = await teamCategoryApi.getSquadsForTournament(teamId, modalityType);
+      let availableSquads: any[] = [];
       
-      console.log('📦 Resposta da API (squads):', availableSquads);
-      console.log('✅ Equipes carregadas:', availableSquads?.length || 0);
-      
-      if (availableSquads && availableSquads.length > 0) {
-        availableSquads.forEach((squad: any, index: number) => {
-          console.log(`   ${index + 1}. ${squad.name} (${squad.categoryName}) - ${squad.players?.length || 0} jogadores`);
-        });
-      } else {
-        console.warn('⚠️ Nenhuma equipe retornada da API');
+      try {
+        console.log('📦 Buscando equipes disponíveis...');
+        const squadsResponse = await teamCategoryApi.getSquadsForTournament(teamId, modalityType);
+        availableSquads = squadsResponse.squads || [];
         
-        // Se tem categorias mas não tem squads, algo está errado
-        if (hasCategoriesCreated) {
-          console.error('🔴 ERRO: Time tem categorias mas nenhuma equipe foi retornada!');
-          console.log('💡 Possível causa: Equipes estão todas inativas ou não foram criadas dentro das categorias');
+        console.log('✅ Equipes carregadas:', availableSquads.length);
+        
+        if (availableSquads.length > 0) {
+          availableSquads.forEach((squad: any, index: number) => {
+            console.log(`   ${index + 1}. ${squad.name} (${squad.categoryName}) - ${squad.players?.length || 0} jogadores`);
+          });
+        } else {
+          console.warn('⚠️ Nenhuma equipe retornada da API');
+          
+          // Se tem categorias mas não tem squads, algo está errado
+          if (hasCategoriesCreated) {
+            console.error('🔴 ERRO: Time tem categorias mas nenhuma equipe foi retornada!');
+            console.log('💡 Possível causa: Equipes estão todas inativas ou não foram criadas dentro das categorias');
+            
+            // Mostrar detalhes das categorias
+            categories.forEach((cat: any) => {
+              if (cat.squads && cat.squads.length > 0) {
+                cat.squads.forEach((squad: any) => {
+                  console.log(`   🔍 Equipe "${squad.name}": active=${squad.active}, players=${squad.players?.length || 0}`);
+                });
+              }
+            });
+          }
         }
+      } catch (error: any) {
+        console.error('❌ Erro ao buscar equipes:', error);
+        console.error('   Detalhes:', error.message);
       }
       
-      setSquads(availableSquads || []);
+      setSquads(availableSquads);
 
       // 3. TERCEIRO: Buscar inscrições existentes neste torneio
-      const { registrations } = await tournamentApi.getTeamRegistrations(tournamentId, teamId);
-      const registeredSquadIds = registrations?.map((reg: any) => reg.squadId) || [];
-      setRegisteredSquads(registeredSquadIds);
-
-      console.log('✅ Inscrições existentes:', registeredSquadIds.length);
-    } catch (error) {
-      console.error('❌ Erro ao carregar equipes:', error);
-      setSquads([]);
-      setRegisteredSquads([]);
-      setHasCategories(false);
+      try {
+        console.log('📋 Buscando inscrições existentes...');
+        const { registrations } = await tournamentApi.getTeamRegistrations(tournamentId, teamId);
+        const registeredSquadIds = registrations?.map((reg: any) => reg.squadId) || [];
+        setRegisteredSquads(registeredSquadIds);
+        console.log('✅ Inscrições existentes:', registeredSquadIds.length);
+      } catch (error: any) {
+        console.error('⚠️ Erro ao buscar inscrições (pode não ter inscrições ainda):', error.message);
+        setRegisteredSquads([]);
+      }
+      
+    } catch (error: any) {
+      console.error('❌ Erro fatal ao carregar modal:', error);
     } finally {
       setLoading(false);
     }

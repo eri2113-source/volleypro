@@ -3923,18 +3923,54 @@ app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', aut
       return c.json({ error: 'Nenhuma inscrição encontrada' }, 404);
     }
     
+    console.log(`🗑️ Removendo inscrição:`, { teamId, squadId: squadId || 'TIME COMPLETO' });
+    console.log(`📋 Total de inscrições antes: ${tournament.squadRegistrations.length}`);
+    
     const initialLength = tournament.squadRegistrations.length;
+    
+    // IMPORTANTE: Comparar null/undefined corretamente
     tournament.squadRegistrations = tournament.squadRegistrations.filter(
-      (reg: any) => !(reg.teamId === teamId && reg.squadId === squadId)
+      (reg: any) => {
+        // Se os teamIds são diferentes, manter
+        if (reg.teamId !== teamId) return true;
+        
+        // Se ambos são null/undefined, remover (time completo)
+        if ((reg.squadId === null || reg.squadId === undefined) && 
+            (squadId === null || squadId === undefined)) {
+          console.log(`   🗑️ Removendo time completo: ${reg.teamName}`);
+          return false;
+        }
+        
+        // Se squadIds são iguais, remover (equipe específica)
+        if (reg.squadId === squadId) {
+          console.log(`   🗑️ Removendo equipe: ${reg.squadName} (${reg.categoryName})`);
+          return false;
+        }
+        
+        // Caso contrário, manter
+        return true;
+      }
     );
     
+    console.log(`📋 Total de inscrições depois: ${tournament.squadRegistrations.length}`);
+    
     if (tournament.squadRegistrations.length === initialLength) {
+      console.log(`⚠️ Nenhuma inscrição foi removida!`);
       return c.json({ error: 'Inscrição não encontrada' }, 404);
+    }
+    
+    // Atualizar registeredTeams também (compatibilidade)
+    if (tournament.registeredTeams) {
+      const hasOtherRegistrations = tournament.squadRegistrations.some((r: any) => r.teamId === teamId);
+      if (!hasOtherRegistrations) {
+        tournament.registeredTeams = tournament.registeredTeams.filter((id: string) => id !== teamId);
+        console.log(`   🗑️ Removido de registeredTeams também`);
+      }
     }
     
     await kv.set(fullTournamentId, tournament);
     
-    console.log(`✅ Equipe removida do torneio`);
+    console.log(`✅ Inscrição removida com sucesso do torneio`);
     
     return c.json({ success: true });
   } catch (error: any) {
