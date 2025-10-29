@@ -4199,10 +4199,17 @@ app.get('/make-server-0ea22bba/teams/:teamId/squads/available', authMiddleware, 
     const teamId = c.req.param('teamId');
     const type = c.req.query('type'); // 'indoor' or 'beach'
     
+    console.log(`🔍 GET /teams/${teamId}/squads/available`);
+    console.log(`   • Usuário logado (userId): ${userId}`);
+    console.log(`   • Time requisitado (teamId): ${teamId}`);
+    console.log(`   • Tipo de modalidade: ${type || 'não especificado'}`);
+    console.log(`   • Buscando chave KV: team:${teamId}:categories`);
+    
     // Buscar categorias do time
     const categories = await kv.get(`team:${teamId}:categories`) || [];
     
-    console.log(`🔍 Buscando equipes para time ${teamId}. Categorias encontradas:`, categories.length);
+    console.log(`📦 Categorias no KV:`, JSON.stringify(categories, null, 2));
+    console.log(`🔢 Total de categorias encontradas: ${categories.length}`);
     
     // Flatten all squads from all categories
     const allSquads: any[] = [];
@@ -4217,10 +4224,12 @@ app.get('/make-server-0ea22bba/teams/:teamId/squads/available', authMiddleware, 
             console.log(`      ⚠️ Equipe inativa: ${squad.name}`);
           }
         }
+      } else {
+        console.log(`   📁 Categoria "${category.name}": sem equipes (squads = ${category.squads})`);
       }
     }
     
-    console.log(`✅ Total de equipes disponíveis para time ${teamId}:`, allSquads.length);
+    console.log(`✅ Total de equipes disponíveis: ${allSquads.length}`);
     
     return c.json({ squads: allSquads });
   } catch (error: any) {

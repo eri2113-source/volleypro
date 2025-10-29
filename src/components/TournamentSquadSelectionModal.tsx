@@ -13,6 +13,7 @@ import { Card, CardContent } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { Separator } from "./ui/separator";
 import { Users, Trophy, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { teamCategoryApi, tournamentApi } from "../lib/api";
 import { toast } from "sonner@2.0.3";
@@ -214,7 +215,21 @@ export function TournamentSquadSelectionModal({
                 <p className="text-muted-foreground mb-4">
                   Você precisa criar categorias e equipes primeiro
                 </p>
-                <Button onClick={() => window.location.href = '#profile'}>
+                
+                {/* Debug Info */}
+                <div className="mt-6 p-4 bg-muted/50 rounded-lg text-left text-sm">
+                  <p className="font-medium mb-2">🔍 Informações de Debug:</p>
+                  <div className="space-y-1 text-muted-foreground">
+                    <p>• <strong>ID do Time:</strong> {teamId}</p>
+                    <p>• <strong>Nome:</strong> {teamName}</p>
+                    <p>• <strong>Modalidade:</strong> {modalityType}</p>
+                    <p className="text-xs mt-3 opacity-70">
+                      📌 Abra o Console (F12) para ver logs detalhados
+                    </p>
+                  </div>
+                </div>
+
+                <Button onClick={() => window.location.href = '#profile'} className="mt-4">
                   Ir para Meu Perfil → Categorias
                 </Button>
               </CardContent>
