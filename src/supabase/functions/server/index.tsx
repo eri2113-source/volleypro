@@ -4343,16 +4343,17 @@ app.delete('/make-server-0ea22bba/teams/:teamId/squads/:squadId/players/:playerI
 app.get('/make-server-0ea22bba/teams/:teamId/squads/available', async (c) => {
   console.log(`\n🔍 ====== INICIO GET /squads/available ======`);
   
+  // Auth check manual (melhor que middleware para debug)
+  const authHeader = c.req.header('Authorization');
+  const accessToken = authHeader?.split(' ')[1];
+  
+  if (!accessToken || accessToken === Deno.env.get('SUPABASE_ANON_KEY')) {
+    console.error('❌ No valid access token');
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  
+  let userId: string;
   try {
-    // Auth check manual (melhor que middleware para debug)
-    const authHeader = c.req.header('Authorization');
-    const accessToken = authHeader?.split(' ')[1];
-    
-    if (!accessToken || accessToken === Deno.env.get('SUPABASE_ANON_KEY')) {
-      console.error('❌ No valid access token');
-      return c.json({ error: 'Unauthorized' }, 401);
-    }
-    
     const supabaseClient = await initializeSupabase();
     const { data: { user }, error: authError } = await supabaseClient.auth.getUser(accessToken);
     
@@ -4361,7 +4362,13 @@ app.get('/make-server-0ea22bba/teams/:teamId/squads/available', async (c) => {
       return c.json({ error: 'Unauthorized' }, 401);
     }
     
-    const userId = user.id;
+    userId = user.id;
+  } catch (authError: any) {
+    console.error('❌ Auth error:', authError);
+    return c.json({ error: 'Auth service unavailable' }, 503);
+  }
+  
+  try {
     const teamId = c.req.param('teamId');
     const type = c.req.query('type'); // 'indoor' or 'beach'
     
