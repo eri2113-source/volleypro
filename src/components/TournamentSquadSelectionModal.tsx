@@ -49,7 +49,12 @@ export function TournamentSquadSelectionModal({
 
   useEffect(() => {
     if (open) {
+      console.log(`\n🔄 ====== MODAL ABERTO - RECARREGANDO DADOS ======`);
+      console.log(`   • tournamentId: ${tournamentId}`);
+      console.log(`   • teamId: ${teamId}`);
       loadSquadsAndRegistrations();
+    } else {
+      console.log(`🔒 Modal fechado`);
     }
   }, [open, teamId, tournamentId]);
 
@@ -127,13 +132,25 @@ export function TournamentSquadSelectionModal({
 
       // 3. TERCEIRO: Buscar inscrições existentes neste torneio
       try {
-        console.log('📋 Buscando inscrições existentes...');
-        const { registrations } = await tournamentApi.getTeamRegistrations(tournamentId, teamId);
-        const registeredSquadIds = registrations?.map((reg: any) => reg.squadId) || [];
+        console.log('\n📋 Buscando inscrições existentes...');
+        console.log(`   • URL: /tournaments/${tournamentId}/registrations/${teamId}`);
+        const response = await tournamentApi.getTeamRegistrations(tournamentId, teamId);
+        console.log(`   • Resposta:`, response);
+        const registrations = response.registrations || [];
+        console.log(`   • Total de registrations: ${registrations.length}`);
+        
+        if (registrations.length > 0) {
+          registrations.forEach((reg: any, index: number) => {
+            console.log(`   ${index + 1}. squadId: ${reg.squadId || 'TIME COMPLETO'}, squadName: ${reg.squadName}`);
+          });
+        }
+        
+        const registeredSquadIds = registrations.map((reg: any) => reg.squadId);
         setRegisteredSquads(registeredSquadIds);
-        console.log('✅ Inscrições existentes:', registeredSquadIds.length);
+        console.log(`✅ IDs das equipes inscritas:`, registeredSquadIds);
+        console.log(`✅ Total: ${registeredSquadIds.length} inscrição(ões)\n`);
       } catch (error: any) {
-        console.error('⚠️ Erro ao buscar inscrições (pode não ter inscrições ainda):', error.message);
+        console.error('⚠️ Erro ao buscar inscrições:', error.message);
         setRegisteredSquads([]);
       }
       

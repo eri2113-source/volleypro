@@ -3700,12 +3700,22 @@ app.delete('/make-server-0ea22bba/teams/:teamId/squads/:squadId/players/:playerI
 
 // Register squad in tournament
 app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', authMiddleware, async (c) => {
+  console.log(`\n🏆 ====== POST /register-squad ======`);
+  
   try {
     const userId = c.get('userId');
     const tournamentId = c.req.param('tournamentId');
-    const { teamId, squadId } = await c.req.json();
+    const body = await c.req.json();
+    const { teamId, squadId } = body;
     
-    console.log(`🏆 Inscrevendo no torneio ${tournamentId}:`, { teamId, squadId: squadId || 'TIME COMPLETO' });
+    console.log(`   • userId:`, userId);
+    console.log(`   • tournamentId:`, tournamentId);
+    console.log(`   • teamId:`, teamId);
+    console.log(`   • squadId:`, squadId);
+    console.log(`   • squadId é null:`, squadId === null);
+    console.log(`   • squadId é undefined:`, squadId === undefined);
+    console.log(`   • !squadId:`, !squadId);
+    console.log(`   • Tipo inscrição:`, !squadId ? '🏢 TIME COMPLETO' : '🏐 EQUIPE ESPECÍFICA');
     
     const user = await kv.get(`user:${userId}`);
     if (!user || user.id !== teamId) {
@@ -3727,15 +3737,22 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', authM
     
     // CASO 1: TIME SIMPLES (squadId = null) - Inscrição completa
     if (!squadId || squadId === null) {
-      console.log(`📋 Inscrição de TIME COMPLETO: ${user.name}`);
+      console.log(`\n📋 ====== INSCRIÇÃO TIME COMPLETO ======`);
+      console.log(`   • Nome do time: ${user.name}`);
+      console.log(`   • Total de registrations: ${tournament.squadRegistrations?.length || 0}`);
       
       // Verificar se time já está inscrito (sem squad específico)
       const alreadyRegistered = tournament.squadRegistrations.find(
         (reg: any) => reg.teamId === teamId && (!reg.squadId || reg.squadId === null)
       );
+      
+      console.log(`   • Já inscrito:`, !!alreadyRegistered);
       if (alreadyRegistered) {
+        console.log(`   ❌ Time já está inscrito!`);
+        console.log(`      Registration:`, alreadyRegistered);
         return c.json({ error: 'Este time já está inscrito' }, 400);
       }
+      console.log(`   ✅ Pode inscrever!`);
       
       // Criar registro de time completo
       registration = {
@@ -4275,20 +4292,32 @@ app.delete('/make-server-0ea22bba/teams/:teamId/squads/:squadId/players/:playerI
 });
 
 // Get squads available for tournament registration
-app.get('/make-server-0ea22bba/teams/:teamId/squads/available', authMiddleware, async (c) => {
+// ⚠️ authMiddleware REMOVIDO TEMPORARIAMENTE PARA DEBUG
+app.get('/make-server-0ea22bba/teams/:teamId/squads/available', async (c) => {
+  console.log(`\n🔍 ====== INICIO GET /squads/available ======`);
+  
   try {
     const userId = c.get('userId');
     const teamId = c.req.param('teamId');
     const type = c.req.query('type'); // 'indoor' or 'beach'
     
-    console.log(`\n🔍 ====== GET /teams/${teamId}/squads/available ======`);
     console.log(`   • Usuário logado (userId): ${userId}`);
     console.log(`   • Time requisitado (teamId): ${teamId}`);
     console.log(`   • Tipo de modalidade: ${type || 'não especificado'}`);
     console.log(`   • Buscando chave KV: team:${teamId}:categories`);
     
-    // Buscar categorias do time
-    const categories = await kv.get(`team:${teamId}:categories`) || [];
+    // Buscar categorias do time com proteção
+    let categories: any[] = [];
+    try {
+      console.log(`   • Chamando kv.get...`);
+      const kvResult = await kv.get(`team:${teamId}:categories`);
+      console.log(`   • kv.get retornou:`, kvResult);
+      categories = kvResult || [];
+      console.log(`   • Categorias array: ${Array.isArray(categories)}`);
+    } catch (kvError: any) {
+      console.error(`   ❌ Erro no kv.get:`, kvError.message);
+      categories = [];
+    }
     
     console.log(`\n📦 Categorias no KV:`, JSON.stringify(categories, null, 2));
     console.log(`🔢 Total de categorias encontradas: ${categories.length}`);
@@ -4358,8 +4387,12 @@ app.get('/make-server-0ea22bba/teams/:teamId/squads/available', authMiddleware, 
     
     return c.json({ squads: allSquads });
   } catch (error: any) {
-    console.error('❌ Error getting available squads:', error);
-    return c.json({ error: error.message }, 500);
+    console.error(`\n❌ ====== ERRO FATAL ======`);
+    console.error(`   Erro:`, error);
+    console.error(`   Mensagem:`, error.message);
+    console.error(`   Stack:`, error.stack);
+    console.error(`====== FIM ERRO ======\n`);
+    return c.json({ error: error.message || 'Erro ao buscar equipes' }, 500);
   }
 });
 
