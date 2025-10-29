@@ -271,11 +271,71 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
       )}
 
       <Tabs defaultValue="ongoing" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="ongoing">Em Andamento ({ongoingTournaments.length})</TabsTrigger>
-          <TabsTrigger value="upcoming">Próximos ({upcomingTournaments.length})</TabsTrigger>
-          <TabsTrigger value="cancelled">Cancelados ({cancelledTournaments.length})</TabsTrigger>
-          <TabsTrigger value="mvp">MVP Rankings</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 bg-transparent h-auto p-0">
+          <TabsTrigger 
+            value="ongoing"
+            className="relative overflow-hidden bg-gradient-to-br from-green-500 via-emerald-600 to-green-700 text-white border-0 shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 data-[state=active]:scale-110 data-[state=active]:shadow-2xl data-[state=active]:shadow-green-500/50 h-16 group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative flex flex-col items-center gap-1">
+              <div className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 animate-pulse" />
+                <span className="font-bold">Em Andamento</span>
+              </div>
+              <Badge className="bg-white/20 backdrop-blur-sm text-white border-0 px-2 py-0.5 text-xs font-bold">
+                {ongoingTournaments.length}
+              </Badge>
+            </div>
+          </TabsTrigger>
+          
+          <TabsTrigger 
+            value="upcoming"
+            className="relative overflow-hidden bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-700 text-white border-0 shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 data-[state=active]:scale-110 data-[state=active]:shadow-2xl data-[state=active]:shadow-blue-500/50 h-16 group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative flex flex-col items-center gap-1">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-5 w-5" />
+                <span className="font-bold">Próximos</span>
+              </div>
+              <Badge className="bg-white/20 backdrop-blur-sm text-white border-0 px-2 py-0.5 text-xs font-bold">
+                {upcomingTournaments.length}
+              </Badge>
+            </div>
+          </TabsTrigger>
+          
+          <TabsTrigger 
+            value="cancelled"
+            className="relative overflow-hidden bg-gradient-to-br from-red-500 via-rose-600 to-red-700 text-white border-0 shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 data-[state=active]:scale-110 data-[state=active]:shadow-2xl data-[state=active]:shadow-red-500/50 h-16 group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="relative flex flex-col items-center gap-1">
+              <div className="flex items-center gap-2">
+                <Trash2 className="h-5 w-5" />
+                <span className="font-bold">Cancelados</span>
+              </div>
+              <Badge className="bg-white/20 backdrop-blur-sm text-white border-0 px-2 py-0.5 text-xs font-bold">
+                {cancelledTournaments.length}
+              </Badge>
+            </div>
+          </TabsTrigger>
+          
+          <TabsTrigger 
+            value="mvp"
+            className="relative overflow-hidden bg-gradient-to-br from-yellow-500 via-amber-600 to-orange-700 text-white border-0 shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 data-[state=active]:scale-110 data-[state=active]:shadow-2xl data-[state=active]:shadow-yellow-500/50 h-16 group"
+          >
+            <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            <div className="absolute -top-1 -right-1 w-6 h-6 bg-white/30 rounded-full blur-xl group-hover:scale-150 transition-transform duration-500" />
+            <div className="relative flex flex-col items-center gap-1">
+              <div className="flex items-center gap-2">
+                <Award className="h-5 w-5 animate-pulse" />
+                <span className="font-bold">MVP</span>
+              </div>
+              <Badge className="bg-white/20 backdrop-blur-sm text-white border-0 px-2 py-0.5 text-xs font-bold">
+                Rankings
+              </Badge>
+            </div>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="ongoing" className="space-y-4">
