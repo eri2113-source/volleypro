@@ -4340,8 +4340,7 @@ app.delete('/make-server-0ea22bba/teams/:teamId/squads/:squadId/players/:playerI
 });
 
 // Get squads available for tournament registration
-// ⚠️ authMiddleware REMOVIDO TEMPORARIAMENTE PARA DEBUG
-app.get('/make-server-0ea22bba/teams/:teamId/squads/available', async (c) => {
+app.get('/make-server-0ea22bba/teams/:teamId/squads/available', authMiddleware, async (c) => {
   console.log(`\n🔍 ====== INICIO GET /squads/available ======`);
   
   try {
