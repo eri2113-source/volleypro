@@ -46,12 +46,18 @@ export function TournamentSquadSelectionModal({
   const [registeredSquads, setRegisteredSquads] = useState<string[]>([]);
   const [registering, setRegistering] = useState(false);
   const [hasCategories, setHasCategories] = useState<boolean | null>(null); // null = não verificado, true/false = verificado
+  const [errorLoadingSquads, setErrorLoadingSquads] = useState(false); // Flag para indicar erro ao carregar equipes
 
   useEffect(() => {
     if (open) {
       console.log(`\n🔄 ====== MODAL ABERTO - RECARREGANDO DADOS ======`);
       console.log(`   • tournamentId: ${tournamentId}`);
       console.log(`   • teamId: ${teamId}`);
+      
+      // Resetar estados de erro
+      setErrorLoadingSquads(false);
+      setHasCategories(null);
+      
       loadSquadsAndRegistrations();
     } else {
       console.log(`🔒 Modal fechado`);
@@ -127,9 +133,8 @@ export function TournamentSquadSelectionModal({
         console.error('❌ Erro ao buscar equipes:', error);
         console.error('   Detalhes:', error.message);
         
-        // Se der erro ao buscar equipes, permite inscrição como time completo
-        console.log('💡 Permitindo inscrição como TIME COMPLETO devido ao erro');
-        setHasCategories(false);
+        // Marcar que houve erro ao carregar equipes
+        setErrorLoadingSquads(true);
         availableSquads = [];
       }
       
@@ -159,11 +164,11 @@ export function TournamentSquadSelectionModal({
         setRegisteredSquads([]);
       }
       
-      // 4. QUARTO: Se não tem categorias OU não tem equipes disponíveis, inscrever automaticamente como TIME COMPLETO
-      if ((!hasCategoriesCreated || availableSquads.length === 0)) {
-        console.log('\n🏢 ====== TIME SEM CATEGORIAS/EQUIPES ======');
-        console.log('   • hasCategoriesCreated:', hasCategoriesCreated);
-        console.log('   • availableSquads:', availableSquads.length);
+      // 4. QUARTO: Decidir se inscreve automaticamente ou mostra lista
+      
+      // CASO 1: Time SEM categorias → Inscreve automaticamente
+      if (!hasCategoriesCreated) {
+        console.log('\n🏢 ====== TIME SEM CATEGORIAS ======');
         console.log('   ✅ Inscrevendo automaticamente como TIME COMPLETO...');
         
         try {
@@ -196,6 +201,37 @@ export function TournamentSquadSelectionModal({
         setLoading(false);
         return;
       }
+      
+      // CASO 2: Time COM categorias mas ERRO ao buscar equipes → Mostra erro
+      if (hasCategoriesCreated && errorLoadingSquads) {
+        console.log('\n⚠️ ====== ERRO AO CARREGAR EQUIPES ======');
+        console.log('   • Time tem categorias mas erro ao buscar equipes');
+        console.log('   • NÃO vai inscrever automaticamente');
+        
+        toast.error('Erro ao carregar equipes', {
+          description: 'Não foi possível buscar suas equipes. Tente novamente.'
+        });
+        
+        setLoading(false);
+        // NÃO retorna, deixa o modal aberto mostrando o erro
+        return;
+      }
+      
+      // CASO 3: Time COM categorias mas SEM equipes ativas → Mostra aviso
+      if (hasCategoriesCreated && availableSquads.length === 0 && !errorLoadingSquads) {
+        console.log('\n⚠️ ====== SEM EQUIPES ATIVAS ======');
+        console.log('   • Time tem categorias mas nenhuma equipe ativa');
+        
+        toast.error('Nenhuma equipe disponível', {
+          description: 'Crie equipes ativas nas suas categorias antes de inscrever.'
+        });
+        
+        setLoading(false);
+        // NÃO retorna, deixa o modal aberto mostrando o aviso
+        return;
+      }
+      
+      // CASO 4: Time COM categorias e COM equipes → Mostra lista (continua normal)
       
     } catch (error: any) {
       console.error('❌ Erro fatal ao carregar modal:', error);
