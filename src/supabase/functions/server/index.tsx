@@ -4281,7 +4281,7 @@ app.get('/make-server-0ea22bba/teams/:teamId/squads/available', authMiddleware, 
     const teamId = c.req.param('teamId');
     const type = c.req.query('type'); // 'indoor' or 'beach'
     
-    console.log(`🔍 GET /teams/${teamId}/squads/available`);
+    console.log(`\n🔍 ====== GET /teams/${teamId}/squads/available ======`);
     console.log(`   • Usuário logado (userId): ${userId}`);
     console.log(`   • Time requisitado (teamId): ${teamId}`);
     console.log(`   • Tipo de modalidade: ${type || 'não especificado'}`);
@@ -4290,28 +4290,71 @@ app.get('/make-server-0ea22bba/teams/:teamId/squads/available', authMiddleware, 
     // Buscar categorias do time
     const categories = await kv.get(`team:${teamId}:categories`) || [];
     
-    console.log(`📦 Categorias no KV:`, JSON.stringify(categories, null, 2));
+    console.log(`\n📦 Categorias no KV:`, JSON.stringify(categories, null, 2));
     console.log(`🔢 Total de categorias encontradas: ${categories.length}`);
+    
+    if (!Array.isArray(categories)) {
+      console.error(`❌ ERRO: categories não é array!`, typeof categories);
+      return c.json({ squads: [] });
+    }
     
     // Flatten all squads from all categories
     const allSquads: any[] = [];
     for (const category of categories) {
-      if (category.squads) {
-        console.log(`   📁 Categoria "${category.name}": ${category.squads.length} equipes`);
+      if (!category) {
+        console.warn(`⚠️ Categoria nula encontrada, pulando...`);
+        continue;
+      }
+      
+      console.log(`\n   📁 Categoria "${category.name}"`);
+      console.log(`      • ID: ${category.id}`);
+      console.log(`      • Squads property: ${category.squads ? 'existe' : 'NÃO EXISTE'}`);
+      console.log(`      • Tipo squads: ${typeof category.squads}`);
+      console.log(`      • É array: ${Array.isArray(category.squads)}`);
+      
+      if (category.squads && Array.isArray(category.squads)) {
+        console.log(`      • Total de equipes: ${category.squads.length}`);
+        
         for (const squad of category.squads) {
+          if (!squad) {
+            console.warn(`      ⚠️ Squad nulo encontrado, pulando...`);
+            continue;
+          }
+          
+          console.log(`\n         🏐 Equipe: ${squad.name}`);
+          console.log(`            • ID: ${squad.id}`);
+          console.log(`            • Ativa: ${squad.active}`);
+          console.log(`            • Jogadores: ${squad.players?.length || 0}`);
+          console.log(`            • Categoria: ${squad.categoryName || category.name}`);
+          
           if (squad.active) {
-            allSquads.push(squad);
-            console.log(`      ✅ Equipe ativa: ${squad.name} (${squad.players?.length || 0} jogadores)`);
+            // Garantir que a equipe tenha categoryName
+            const squadWithCategory = {
+              ...squad,
+              categoryName: squad.categoryName || category.name
+            };
+            allSquads.push(squadWithCategory);
+            console.log(`            ✅ ADICIONADA à lista de disponíveis`);
           } else {
-            console.log(`      ⚠️ Equipe inativa: ${squad.name}`);
+            console.log(`            ⚠️ INATIVA - NÃO adicionada`);
           }
         }
+      } else if (category.squads) {
+        console.log(`      ❌ ERRO: squads existe mas não é array!`);
+        console.log(`         Valor: ${JSON.stringify(category.squads)}`);
       } else {
-        console.log(`   📁 Categoria "${category.name}": sem equipes (squads = ${category.squads})`);
+        console.log(`      ℹ️  Categoria sem equipes (squads não definido)`);
       }
     }
     
-    console.log(`✅ Total de equipes disponíveis: ${allSquads.length}`);
+    console.log(`\n✅ ====== RESULTADO ======`);
+    console.log(`   Total de equipes ATIVAS disponíveis: ${allSquads.length}`);
+    if (allSquads.length > 0) {
+      allSquads.forEach((s, i) => {
+        console.log(`   ${i + 1}. ${s.name} (${s.categoryName}) - ${s.players?.length || 0} jogadores`);
+      });
+    }
+    console.log(`====== FIM ======\n`);
     
     return c.json({ squads: allSquads });
   } catch (error: any) {

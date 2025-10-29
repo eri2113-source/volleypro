@@ -207,6 +207,10 @@ export function TournamentSquadSelectionModal({
 
   function handleClose() {
     setSelectedSquadId("");
+    // Reset estado ao fechar para garantir reload limpo na próxima abertura
+    setSquads([]);
+    setRegisteredSquads([]);
+    setHasCategories(null);
     onClose();
   }
 
