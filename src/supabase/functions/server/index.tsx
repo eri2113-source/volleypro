@@ -4416,8 +4416,9 @@ app.delete('/make-server-0ea22bba/teams/:teamId/squads/:squadId/players/:playerI
   }
 });
 
+// ❌ ROTA DUPLICADA COMENTADA - A versão correta está ANTES de /:squadId (linha ~3545)
 // Get squads available for tournament registration
-app.get('/make-server-0ea22bba/teams/:teamId/squads/available', async (c) => {
+/*app.get('/make-server-0ea22bba/teams/:teamId/squads/available', async (c) => {
   console.log(`\n🔍 ====== INICIO GET /squads/available ======`);
   
   // Auth check manual (melhor que middleware para debug)
@@ -4558,7 +4559,7 @@ app.get('/make-server-0ea22bba/teams/:teamId/squads/available', async (c) => {
     console.error(`====== FIM ERRO ======\n`);
     return c.json({ error: error.message || 'Erro ao buscar equipes' }, 500);
   }
-});
+});*/
 
 // ============= TOURNAMENTS ROUTES =============
 
