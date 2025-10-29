@@ -127,6 +127,21 @@ export function TournamentDraw({ tournamentId, tournament }: TournamentDrawProps
       return;
     }
 
+    // VALIDAÇÃO: Verificar se todos os times têm pelo menos 6 jogadores
+    const teamsWithoutMinPlayers = registeredTeams.filter(team => {
+      const playerCount = team.players?.length || 0;
+      return playerCount < 6;
+    });
+
+    if (teamsWithoutMinPlayers.length > 0) {
+      const teamNames = teamsWithoutMinPlayers.map(t => t.squadName || t.teamName).join(', ');
+      toast.error('Equipes sem jogadores suficientes!', {
+        description: `As seguintes equipes precisam ter pelo menos 6 jogadores: ${teamNames}`,
+        duration: 8000
+      });
+      return;
+    }
+
     // Resetar sorteio
     const shuffledTeams = [...registeredTeams].sort(() => Math.random() - 0.5);
     setRemainingTeams(shuffledTeams);

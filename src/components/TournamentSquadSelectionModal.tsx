@@ -252,36 +252,35 @@ export function TournamentSquadSelectionModal({
       return;
     }
 
-    // Verificar se tem jogadores
-    if (!selectedSquad.players || selectedSquad.players.length === 0) {
-      toast.error("Esta equipe não tem jogadores cadastrados");
-      return;
-    }
-
     setRegistering(true);
     try {
-      // Validar jogadores únicos
-      const { valid, conflicts } = await tournamentApi.validateSquadPlayers(
-        tournamentId,
-        teamId,
-        selectedSquad.id,
-        selectedSquad.players.map(p => p.id)
-      );
+      // Validar jogadores únicos (apenas se tiver jogadores)
+      if (selectedSquad.players && selectedSquad.players.length > 0) {
+        const { valid, conflicts } = await tournamentApi.validateSquadPlayers(
+          tournamentId,
+          teamId,
+          selectedSquad.id,
+          selectedSquad.players.map(p => p.id)
+        );
 
-      if (!valid && conflicts && conflicts.length > 0) {
-        const conflictNames = conflicts.map((c: any) => c.playerName).join(', ');
-        toast.error(`Jogador(es) já inscrito(s) em outra equipe: ${conflictNames}`, {
-          description: "Um jogador não pode participar em duas equipes do mesmo torneio"
-        });
-        setRegistering(false);
-        return;
+        if (!valid && conflicts && conflicts.length > 0) {
+          const conflictNames = conflicts.map((c: any) => c.playerName).join(', ');
+          toast.error(`Jogador(es) já inscrito(s) em outra equipe: ${conflictNames}`, {
+            description: "Um jogador não pode participar em duas equipes do mesmo torneio"
+          });
+          setRegistering(false);
+          return;
+        }
       }
 
       // Registrar equipe
       await tournamentApi.registerSquad(tournamentId, teamId, selectedSquad.id);
 
+      const playerCount = selectedSquad.players?.length || 0;
       toast.success(`${selectedSquad.name} inscrita com sucesso!`, {
-        description: `${selectedSquad.players.length} jogadores registrados`
+        description: playerCount > 0 
+          ? `${playerCount} jogadores registrados` 
+          : 'Lembre-se de adicionar jogadores antes do sorteio'
       });
 
       // Callback com a equipe selecionada
