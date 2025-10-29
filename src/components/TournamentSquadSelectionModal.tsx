@@ -126,6 +126,11 @@ export function TournamentSquadSelectionModal({
       } catch (error: any) {
         console.error('❌ Erro ao buscar equipes:', error);
         console.error('   Detalhes:', error.message);
+        
+        // Se der erro ao buscar equipes, permite inscrição como time completo
+        console.log('💡 Permitindo inscrição como TIME COMPLETO devido ao erro');
+        setHasCategories(false);
+        availableSquads = [];
       }
       
       setSquads(availableSquads);
@@ -152,6 +157,44 @@ export function TournamentSquadSelectionModal({
       } catch (error: any) {
         console.error('⚠️ Erro ao buscar inscrições:', error.message);
         setRegisteredSquads([]);
+      }
+      
+      // 4. QUARTO: Se não tem categorias OU não tem equipes disponíveis, inscrever automaticamente como TIME COMPLETO
+      if ((!hasCategoriesCreated || availableSquads.length === 0)) {
+        console.log('\n🏢 ====== TIME SEM CATEGORIAS/EQUIPES ======');
+        console.log('   • hasCategoriesCreated:', hasCategoriesCreated);
+        console.log('   • availableSquads:', availableSquads.length);
+        console.log('   ✅ Inscrevendo automaticamente como TIME COMPLETO...');
+        
+        try {
+          // Inscrever como TIME COMPLETO (squadId = null)
+          await tournamentApi.registerSquad(tournamentId, teamId, null);
+          
+          toast.success(`${teamName} inscrito com sucesso!`, {
+            description: 'Time completo registrado no torneio'
+          });
+          
+          console.log('✅ Inscrição TIME COMPLETO realizada!');
+          
+          // Fechar modal e notificar sucesso
+          onClose();
+          onSquadSelected({
+            id: 'full-team',
+            name: teamName,
+            categoryName: null,
+            players: [],
+            active: true,
+            createdAt: new Date().toISOString()
+          });
+        } catch (error: any) {
+          console.error('❌ Erro ao inscrever time completo:', error);
+          toast.error('Erro ao inscrever time', {
+            description: error.message || 'Tente novamente'
+          });
+        }
+        
+        setLoading(false);
+        return;
       }
       
     } catch (error: any) {
