@@ -501,24 +501,18 @@ export function TournamentSquadSelectionModal({
                     <SelectValue placeholder="Escolha uma equipe" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(squadsByCategory).map(([category, categorySquads]: [string, any]) => (
-                      <optgroup key={category} label={category}>
-                        {categorySquads.map((squad: TeamSquad) => {
-                          const isRegistered = registeredSquads.includes(squad.id);
-                          return (
-                            <SelectItem 
-                              key={squad.id} 
-                              value={squad.id}
-                              disabled={isRegistered}
-                            >
-                              {squad.name} - {squad.categoryName} 
-                              ({squad.players?.length || 0} jogadores)
-                              {isRegistered && ' ✓ Já inscrita'}
-                            </SelectItem>
-                          );
-                        })}
-                      </optgroup>
-                    ))}
+                    {squads.map((squad: TeamSquad) => {
+                      const isRegistered = registeredSquads.includes(squad.id);
+                      return (
+                        <SelectItem 
+                          key={squad.id} 
+                          value={squad.id}
+                          disabled={isRegistered}
+                        >
+                          {squad.name} - {squad.categoryName} ({squad.players?.length || 0} jogadores){isRegistered && ' ✓'}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               </div>
