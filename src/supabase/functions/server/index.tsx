@@ -4424,25 +4424,41 @@ app.get('/make-server-0ea22bba/teams/:teamId/squads/available', async (c) => {
   const authHeader = c.req.header('Authorization');
   const accessToken = authHeader?.split(' ')[1];
   
-  if (!accessToken || accessToken === Deno.env.get('SUPABASE_ANON_KEY')) {
-    console.error('❌ No valid access token');
-    return c.json({ error: 'Unauthorized' }, 401);
+  console.log(`   • Authorization header presente: ${!!authHeader}`);
+  console.log(`   • Access token extraído: ${accessToken ? 'SIM' : 'NÃO'}`);
+  console.log(`   • Token length: ${accessToken?.length || 0}`);
+  console.log(`   • É ANON_KEY: ${accessToken === Deno.env.get('SUPABASE_ANON_KEY')}`);
+  
+  // ✅ ACEITAR TOKEN DE USUÁRIO OU ANON_KEY (público)
+  if (!accessToken) {
+    console.error('❌ No access token provided');
+    return c.json({ error: 'Unauthorized - No token' }, 401);
   }
   
-  let userId: string;
-  try {
-    const supabaseClient = await initializeSupabase();
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(accessToken);
-    
-    if (authError || !user) {
-      console.error('❌ Auth failed:', authError?.message);
-      return c.json({ error: 'Unauthorized' }, 401);
+  let userId: string | null = null;
+  const isAnonKey = accessToken === Deno.env.get('SUPABASE_ANON_KEY');
+  
+  // Se NÃO for ANON_KEY, tentar autenticar usuário
+  if (!isAnonKey) {
+    try {
+      const supabaseClient = await initializeSupabase();
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser(accessToken);
+      
+      if (authError || !user) {
+        console.error('❌ Auth failed:', authError?.message);
+        // Tentar continuar sem userId (permite acesso público)
+        console.log('⚠️ Continuando sem userId (acesso público)');
+      } else {
+        userId = user.id;
+        console.log(`✅ Usuário autenticado: ${userId}`);
+      }
+    } catch (authError: any) {
+      console.error('❌ Auth error:', authError);
+      // Não retornar erro - permite acesso público
+      console.log('⚠️ Continuando sem userId (erro na auth)');
     }
-    
-    userId = user.id;
-  } catch (authError: any) {
-    console.error('❌ Auth error:', authError);
-    return c.json({ error: 'Auth service unavailable' }, 503);
+  } else {
+    console.log('ℹ️ ANON_KEY detectado - acesso público permitido');
   }
   
   try {
