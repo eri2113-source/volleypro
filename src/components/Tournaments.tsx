@@ -568,8 +568,8 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                     <div className="flex items-center gap-2">
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <div className="text-sm">
-                        <p className="text-muted-foreground">{tournament.modalityType === 'beach' ? 'Duplas inscritas' : 'Times inscritos'}</p>
-                        <p>{tournament.modalityType === 'beach' ? (tournament.registeredPlayers?.length || 0) : (tournament.registeredTeams?.length || 0)}</p>
+                        <p className="text-muted-foreground">{tournament.modalityType === 'beach' ? 'Duplas inscritas' : 'Equipes inscritas'}</p>
+                        <p>{tournament.modalityType === 'beach' ? (tournament.registeredPlayers?.length || 0) : (tournament.squadRegistrations?.length || 0)}</p>
                       </div>
                     </div>
                   </div>

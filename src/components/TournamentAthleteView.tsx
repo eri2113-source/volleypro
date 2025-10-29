@@ -271,7 +271,7 @@ export function TournamentAthleteView({
               <div className="text-center">
                 <Shield className="h-8 w-8 mx-auto mb-2 text-primary" />
                 <p className="text-2xl font-bold">{teams.length}</p>
-                <p className="text-sm text-muted-foreground">Times Inscritos</p>
+                <p className="text-sm text-muted-foreground">Equipes Inscritas</p>
               </div>
             </CardContent>
           </Card>
@@ -309,7 +309,7 @@ export function TournamentAthleteView({
         <div className="space-y-3">
           <h3 className="font-semibold flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Times Inscritos ({teams.length}/{tournament.maxTeams})
+            Equipes Inscritas ({teams.length}/{tournament.maxTeams})
           </h3>
 
           {teams.length === 0 ? (

@@ -427,8 +427,8 @@ export function TournamentDetailsModal({
           <div className="flex items-center gap-2">
             <Users className="h-4 w-4 text-muted-foreground" />
             <div className="text-sm">
-              <p className="text-muted-foreground">Times</p>
-              <p>{tournament.registeredTeams?.length || 0}/{tournament.maxTeams}</p>
+              <p className="text-muted-foreground">Equipes Inscritas</p>
+              <p>{tournament.squadRegistrations?.length || teams.length || 0}/{tournament.maxTeams}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -598,12 +598,17 @@ export function TournamentDetailsModal({
                       </div>
                       <div className="flex-1">
                         <p>{team.teamName || team.name}</p>
+                        {team.squadName && (
+                          <p className="text-sm text-primary/80">
+                            {team.squadName}
+                          </p>
+                        )}
                         {team.players && team.players.length > 0 ? (
                           <p className="text-sm text-muted-foreground">
-                            {team.players.map((p: any) => p.name).join(' / ')}
+                            {team.players.length} jogador(es)
                           </p>
                         ) : (
-                          <p className="text-sm text-muted-foreground">{team.city}</p>
+                          <p className="text-sm text-muted-foreground">{team.city || 'Sem jogadores'}</p>
                         )}
                       </div>
                     </CardContent>

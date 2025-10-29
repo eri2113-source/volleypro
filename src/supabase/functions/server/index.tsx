@@ -1541,7 +1541,7 @@ app.get('/make-server-0ea22bba/tournaments/:tournamentId', async (c) => {
     
     // Get registered teams details
     // 🏖️ Para torneios de PRAIA: registeredTeams já contém objetos completos
-    // 🏐 Para torneios de QUADRA: registeredTeams contém apenas IDs
+    // 🏐 Para torneios de QUADRA: usar squadRegistrations (cada equipe é um participante)
     let teamsDetails = [];
     
     if (tournament.modalityType === 'beach') {
@@ -1549,14 +1549,21 @@ app.get('/make-server-0ea22bba/tournaments/:tournamentId', async (c) => {
       teamsDetails = tournament.registeredTeams || [];
       console.log(`🏖️ Torneio de praia: ${teamsDetails.length} duplas/equipes inscritas`);
     } else {
-      // Torneio de quadra: registeredTeams são IDs que precisam ser buscados
-      teamsDetails = await Promise.all(
-        (tournament.registeredTeams || []).map(async (teamId: string) => {
-          const team = await kv.get(`user:${teamId}`);
-          return team;
-        })
-      );
-      console.log(`🏐 Torneio de quadra: ${teamsDetails.filter(Boolean).length} times encontrados`);
+      // Torneio de quadra: usar squadRegistrations (cada equipe conta individualmente)
+      if (tournament.squadRegistrations && tournament.squadRegistrations.length > 0) {
+        // Retornar as squadRegistrations completas (já têm teamName, squadName, players, etc)
+        teamsDetails = tournament.squadRegistrations;
+        console.log(`🏐 Torneio de quadra: ${teamsDetails.length} equipes inscritas (squadRegistrations)`);
+      } else {
+        // Fallback para registeredTeams (legado)
+        teamsDetails = await Promise.all(
+          (tournament.registeredTeams || []).map(async (teamId: string) => {
+            const team = await kv.get(`user:${teamId}`);
+            return team;
+          })
+        );
+        console.log(`🏐 Torneio de quadra (legado): ${teamsDetails.filter(Boolean).length} times encontrados`);
+      }
     }
     
     return c.json({ 
