@@ -1642,29 +1642,66 @@ app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register', authMiddl
   try {
     const userId = c.get('userId');
     const tournamentId = c.req.param('tournamentId');
+    const body = await c.req.json().catch(() => ({}));
+    const teamId = body.teamId || userId; // Usar teamId do body ou userId como fallback
+    
+    console.log('🗑️ ====== CANCELAR INSCRIÇÃO ======');
+    console.log('Tournament ID:', tournamentId);
+    console.log('Team ID:', teamId);
     
     const tournamentKey = `tournament:${tournamentId}`;
     const tournament = await kv.get(tournamentKey);
     if (!tournament) {
+      console.log('❌ Tournament not found');
       return c.json({ error: 'Tournament not found' }, 404);
     }
     
     if (tournament.status !== 'upcoming') {
+      console.log('❌ Cannot unregister from ongoing tournament');
       return c.json({ error: 'Cannot unregister from ongoing tournament' }, 400);
     }
     
-    const registeredTeams = tournament.registeredTeams || [];
-    const index = registeredTeams.indexOf(userId);
+    let removedFromLegacy = false;
+    let removedFromSquads = false;
     
-    if (index === -1) {
+    // ✅ REMOVER DO ARRAY LEGADO (registeredTeams)
+    const registeredTeams = tournament.registeredTeams || [];
+    const legacyIndex = registeredTeams.indexOf(teamId);
+    if (legacyIndex !== -1) {
+      registeredTeams.splice(legacyIndex, 1);
+      tournament.registeredTeams = registeredTeams;
+      removedFromLegacy = true;
+      console.log('✅ Removido do array LEGADO (registeredTeams)');
+    }
+    
+    // ✅ REMOVER DO ARRAY NOVO (squadRegistrations)
+    const squadRegistrations = tournament.squadRegistrations || [];
+    const squadIndex = squadRegistrations.findIndex((reg: any) => reg.teamId === teamId);
+    if (squadIndex !== -1) {
+      squadRegistrations.splice(squadIndex, 1);
+      tournament.squadRegistrations = squadRegistrations;
+      removedFromSquads = true;
+      console.log('✅ Removido do array NOVO (squadRegistrations)');
+    }
+    
+    // Verificar se foi removido de pelo menos um array
+    if (!removedFromLegacy && !removedFromSquads) {
+      console.log('❌ Team not found in any array:', {
+        registeredTeams,
+        squadRegistrations
+      });
       return c.json({ error: 'Team not registered' }, 400);
     }
     
-    registeredTeams.splice(index, 1);
-    tournament.registeredTeams = registeredTeams;
+    // Salvar torneio atualizado
     await kv.set(tournamentKey, tournament);
     
-    console.log(`✅ Team ${userId} unregistered from tournament ${tournamentId}`);
+    console.log(`✅ Team ${teamId} unregistered from tournament ${tournamentId}`);
+    console.log('Removido de:', {
+      legacyArray: removedFromLegacy,
+      squadArray: removedFromSquads
+    });
+    console.log('=====================================\n');
     
     return c.json({ tournament });
   } catch (error: any) {
