@@ -3860,6 +3860,54 @@ app.get('/make-server-0ea22bba/tournaments/:tournamentId/registrations/:teamId',
   }
 });
 
+// Unregister team/squad from tournament (DELETE)
+app.delete('/make-server-0ea22bba/tournaments/:tournamentId/register', authMiddleware, async (c) => {
+  console.log(`\n🗑️ ====== DELETE /register (Cancelar Inscrição) ======`);
+  
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    
+    console.log(`   • userId: ${userId}`);
+    console.log(`   • tournamentId: ${tournamentId}`);
+    
+    const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    const tournament = await kv.get(fullTournamentId);
+    
+    if (!tournament) {
+      return c.json({ error: 'Torneio não encontrado' }, 404);
+    }
+    
+    console.log(`   • Total de inscrições ANTES: ${tournament.squadRegistrations?.length || 0}`);
+    
+    // Remover TODAS as inscrições deste time (incluindo time completo e equipes específicas)
+    const initialLength = tournament.squadRegistrations?.length || 0;
+    tournament.squadRegistrations = tournament.squadRegistrations?.filter(
+      (reg: any) => reg.teamId !== userId
+    ) || [];
+    
+    const removedCount = initialLength - tournament.squadRegistrations.length;
+    console.log(`   • Inscrições removidas: ${removedCount}`);
+    console.log(`   • Total de inscrições DEPOIS: ${tournament.squadRegistrations.length}`);
+    
+    // Também remover do array legado registeredTeams
+    if (tournament.registeredTeams) {
+      tournament.registeredTeams = tournament.registeredTeams.filter(
+        (teamId: string) => teamId !== userId
+      );
+    }
+    
+    await kv.set(fullTournamentId, tournament);
+    
+    console.log(`✅ Inscrição(ões) cancelada(s) com sucesso`);
+    
+    return c.json({ success: true, removedCount });
+  } catch (error: any) {
+    console.error('❌ Erro ao cancelar inscrição:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // Validate squad players (check for duplicates)
 app.post('/make-server-0ea22bba/tournaments/:tournamentId/validate-players', authMiddleware, async (c) => {
   try {
