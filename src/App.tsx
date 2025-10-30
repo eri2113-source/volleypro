@@ -55,7 +55,7 @@ export default function App() {
   const [currentView, setCurrentView] = useState("feed");
   const [selectedAthlete, setSelectedAthlete] = useState<number | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
-  const [selectedTournament, setSelectedTournament] = useState<number | null>(null);
+  const [selectedTournament, setSelectedTournament] = useState<string | null>(null);
   const [showMyProfile, setShowMyProfile] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showProfileEditModal, setShowProfileEditModal] = useState(false);

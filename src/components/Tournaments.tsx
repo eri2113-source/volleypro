@@ -24,7 +24,7 @@ import { projectId } from "../utils/supabase/info";
 interface TournamentsProps {
   isAuthenticated?: boolean;
   onLoginPrompt?: () => void;
-  onViewDetails?: (tournamentId: number) => void;
+  onViewDetails?: (tournamentId: string) => void;
 }
 
 export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDetails }: TournamentsProps = {}) {

@@ -3137,7 +3137,7 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/roster/:teamId/decline
       message: 'Callup declined'
     });
   } catch (error: any) {
-    console.error('❌ Error declining callup:', error);
+    console.error('��� Error declining callup:', error);
     return c.json({ error: error.message }, 500);
   }
 });
