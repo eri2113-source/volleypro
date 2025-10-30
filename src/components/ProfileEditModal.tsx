@@ -223,16 +223,12 @@ function ProfileFormContent({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="currentTeam">Equipe Atual</Label>
-              <Input
-                id="currentTeam"
-                value={profile.currentTeam || ""}
-                onChange={(e) =>
-                  setProfile({ ...profile, currentTeam: e.target.value })
-                }
-                placeholder="Nome da sua equipe"
-              />
+            {/* Aviso sobre Time Atual */}
+            <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <p className="text-sm text-blue-400">
+                ℹ️ <strong>Time Atual:</strong> Times te convocam pela <strong>Vitrine</strong> ou por <strong>CPF</strong>. 
+                Quando você aceitar um convite, seu time será exibido automaticamente no perfil.
+              </p>
             </div>
 
             {/* Campo CPF - Importante para convocações */}

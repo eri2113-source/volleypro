@@ -1,6 +1,6 @@
 # ⚡ FAZER AGORA - 1 COMMIT ÚNICO
 
-## 🎯 8 MUDANÇAS PRONTAS EM 1 COMMIT
+## 🎯 9 MUDANÇAS PRONTAS EM 1 COMMIT
 
 ---
 
@@ -8,7 +8,7 @@
 
 ### **TÍTULO:**
 ```
-🎥🔒🔧📱📧✅👥 Transmissão + Perfil + Menu + LED + Convites + Elenco
+🎥🔒🔧📱📧✅👥🛡️ Transmissão + Perfil + Convites + Elenco + Segurança
 ```
 
 ### **DESCRIÇÃO:**
@@ -40,6 +40,12 @@ ADICIONAR DO ELENCO DIRETO:
 - Detecta e previne duplicatas automaticamente
 - Redução de 50% nos cliques para adicionar jogadores
 
+TIME ATUAL BLOQUEADO:
+- Campo "Equipe Atual" removido da edição de perfil de atletas
+- Atleta só entra em time via convite (Vitrine ou CPF)
+- Aviso educativo sobre como funciona o sistema
+- Previne atletas se adicionando manualmente em times
+
 TRANSMISSÃO EXTERNA:
 - Modal de config com 4 plataformas (YouTube/Twitch/Facebook/Custom)
 - Player incorporado com badge "AO VIVO" pulsante
@@ -65,7 +71,7 @@ VERCEL REDIRECT:
 ## ✅ CHECKLIST
 
 - [ ] Abriu GitHub Desktop
-- [ ] Viu 13 arquivos modificados
+- [ ] Viu 14 arquivos modificados
 - [ ] Colou título acima
 - [ ] Colou descrição acima
 - [ ] Clicou "Commit to main"
@@ -84,6 +90,7 @@ Depois de fazer isso, você terá:
 ✅ Convites: envio com mensagens claras (explica quando falta CPF)
 ✅ Convites: aceitar/rejeitar funcionando corretamente
 ✅ Adicionar jogadores do elenco direto às equipes (sem convite)
+✅ Time atual bloqueado para edição (só via convite)
 ✅ Sistema de transmissão externa funcionando
 ✅ Perfil de times com privacidade correta
 ✅ Vercel protegido (só master e teste)
