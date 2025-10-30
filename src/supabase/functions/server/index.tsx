@@ -6319,6 +6319,188 @@ app.get('/make-server-0ea22bba/tournaments/:id/can-edit', async (c) => {
   }
 });
 
+// ============= TOURNAMENT ORGANIZERS & SPONSORS ROUTES =============
+
+// Get tournament organizers
+app.get('/make-server-0ea22bba/tournaments/:tournamentId/organizers', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = parseInt(c.req.param('tournamentId'));
+    
+    console.log(`📋 Buscando organizadores do torneio ${tournamentId}`);
+    
+    // Verificar se é organizador/criador
+    const tournament = await kv.get(`tournament:${tournamentId}`);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    const isCreator = tournament.createdBy === userId;
+    const isOrganizer = !!(await kv.get(`tournament:${tournamentId}:organizer:${userId}`));
+    
+    if (!isCreator && !isOrganizer) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    // Buscar lista de organizadores
+    const organizersData = await kv.get(`tournament:${tournamentId}:organizers`) || [];
+    
+    // Adicionar criador à lista (sempre)
+    const creator = await kv.get(`user:${tournament.createdBy}`);
+    const organizers = [
+      {
+        id: tournament.createdBy,
+        email: creator?.email || '',
+        name: creator?.name || '',
+        role: 'creator',
+        addedAt: tournament.createdAt
+      },
+      ...organizersData
+    ];
+    
+    return c.json({ organizers });
+  } catch (error: any) {
+    console.error('❌ Erro ao buscar organizadores:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Add tournament organizer
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/organizers', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = parseInt(c.req.param('tournamentId'));
+    const { email } = await c.req.json();
+    
+    console.log(`➕ Adicionando organizador ${email} ao torneio ${tournamentId}`);
+    
+    // Verificar se é o criador
+    const tournament = await kv.get(`tournament:${tournamentId}`);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    if (tournament.createdBy !== userId) {
+      return c.json({ error: 'Only the creator can add organizers' }, 403);
+    }
+    
+    // Buscar usuário pelo email
+    const allUsers = await kv.getByPrefix('user:');
+    const user = allUsers.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+    
+    if (!user) {
+      return c.json({ error: 'User not found. They must have a VolleyPro account first.' }, 404);
+    }
+    
+    // Verificar se já é organizador
+    const organizers = await kv.get(`tournament:${tournamentId}:organizers`) || [];
+    if (organizers.some((o: any) => o.id === user.id)) {
+      return c.json({ error: 'User is already an organizer' }, 400);
+    }
+    
+    // Adicionar à lista de organizadores
+    const newOrganizer = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      role: 'organizer',
+      addedAt: new Date().toISOString()
+    };
+    
+    organizers.push(newOrganizer);
+    await kv.set(`tournament:${tournamentId}:organizers`, organizers);
+    
+    // Criar chave de permissão rápida
+    await kv.set(`tournament:${tournamentId}:organizer:${user.id}`, true);
+    
+    console.log(`✅ Organizador ${email} adicionado ao torneio ${tournamentId}`);
+    
+    return c.json({ success: true, organizer: newOrganizer });
+  } catch (error: any) {
+    console.error('❌ Erro ao adicionar organizador:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Remove tournament organizer
+app.delete('/make-server-0ea22bba/tournaments/:tournamentId/organizers/:organizerId', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = parseInt(c.req.param('tournamentId'));
+    const organizerId = c.req.param('organizerId');
+    
+    console.log(`🗑️ Removendo organizador ${organizerId} do torneio ${tournamentId}`);
+    
+    // Verificar se é o criador
+    const tournament = await kv.get(`tournament:${tournamentId}`);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    if (tournament.createdBy !== userId) {
+      return c.json({ error: 'Only the creator can remove organizers' }, 403);
+    }
+    
+    // Não permitir remover o criador
+    if (organizerId === tournament.createdBy) {
+      return c.json({ error: 'Cannot remove the tournament creator' }, 400);
+    }
+    
+    // Remover da lista de organizadores
+    const organizers = await kv.get(`tournament:${tournamentId}:organizers`) || [];
+    const filteredOrganizers = organizers.filter((o: any) => o.id !== organizerId);
+    await kv.set(`tournament:${tournamentId}:organizers`, filteredOrganizers);
+    
+    // Remover chave de permissão
+    await kv.del(`tournament:${tournamentId}:organizer:${organizerId}`);
+    
+    console.log(`✅ Organizador ${organizerId} removido do torneio ${tournamentId}`);
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('❌ Erro ao remover organizador:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Save tournament sponsors
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/sponsors', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = parseInt(c.req.param('tournamentId'));
+    const { sponsors, layout } = await c.req.json();
+    
+    console.log(`💾 Salvando ${sponsors?.length || 0} patrocinadores no torneio ${tournamentId}`);
+    
+    // Verificar permissão
+    const tournament = await kv.get(`tournament:${tournamentId}`);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    const isCreator = tournament.createdBy === userId;
+    const isOrganizer = !!(await kv.get(`tournament:${tournamentId}:organizer:${userId}`));
+    
+    if (!isCreator && !isOrganizer) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    // Atualizar torneio com patrocinadores e layout
+    tournament.sponsors = sponsors || [];
+    tournament.sponsorsLayout = layout || 'grid-3';
+    tournament.updatedAt = new Date().toISOString();
+    
+    await kv.set(`tournament:${tournamentId}`, tournament);
+    
+    console.log(`✅ Patrocinadores salvos no torneio ${tournamentId}`);
+    
+    return c.json({ success: true, sponsors, layout });
+  } catch (error: any) {
+    console.error('❌ Erro ao salvar patrocinadores:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // ============= START SERVER =============
 // Initialize server asynchronously to register LiveKit routes
 (async () => {

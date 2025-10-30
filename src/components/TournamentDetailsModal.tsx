@@ -34,7 +34,7 @@ import {
 } from "./ui/alert-dialog";
 import { tournamentApi, userApi } from "../lib/api";
 import { toast } from "sonner@2.0.3";
-import { Trophy, Users, Calendar, MapPin, Award, Play, CheckCircle2, X, XCircle, UserPlus } from "lucide-react";
+import { Trophy, Users, Calendar, MapPin, Award, Play, CheckCircle2, X, XCircle, UserPlus, Shield, ImagePlus } from "lucide-react";
 import { TournamentRosterModal } from "./TournamentRosterModal";
 import { BeachTournamentRegistration } from "./BeachTournamentRegistration";
 import { BeachTournamentIndividualRegistration } from "./BeachTournamentIndividualRegistration";
@@ -44,6 +44,8 @@ import { BeachTournamentBracket } from "./BeachTournamentBracket";
 import { BeachTournamentStandings } from "./BeachTournamentStandings";
 import { AnimatedLEDPanel } from "./AnimatedLEDPanel";
 import { TournamentSquadSelectionModal } from "./TournamentSquadSelectionModal";
+import { TournamentOrganizerTeamModal } from "./TournamentOrganizerTeamModal";
+import { TournamentSponsorsManager } from "./TournamentSponsorsManager";
 
 interface TournamentDetailsModalProps {
   open: boolean;
@@ -94,6 +96,10 @@ export function TournamentDetailsModal({
   // Squad Selection Modal (for teams with multiple squads)
   const [showSquadSelection, setShowSquadSelection] = useState(false);
   const [showSquadSelectionForConvocation, setShowSquadSelectionForConvocation] = useState(false);
+  
+  // Organizer Management Modals
+  const [showOrganizerTeamModal, setShowOrganizerTeamModal] = useState(false);
+  const [showSponsorsManager, setShowSponsorsManager] = useState(false);
 
   useEffect(() => {
     if (open && tournamentId && tournamentId !== '') {
@@ -451,6 +457,29 @@ export function TournamentDetailsModal({
                 <Play className="h-4 w-4 mr-2" />
                 Sortear e Iniciar Torneio
               </Button>
+            )}
+            
+            {/* Botões de Gerenciamento - Visíveis APENAS para o organizador */}
+            {isOrganizer && (
+              <>
+                <Button 
+                  onClick={() => setShowOrganizerTeamModal(true)}
+                  variant="outline"
+                  className="border-primary text-primary hover:bg-primary/10"
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Equipe Organizadora
+                </Button>
+                
+                <Button 
+                  onClick={() => setShowSponsorsManager(true)}
+                  variant="outline"
+                  className="border-secondary text-secondary hover:bg-secondary/10"
+                >
+                  <ImagePlus className="h-4 w-4 mr-2" />
+                  Patrocinadores
+                </Button>
+              </>
             )}
             
             {canRegister && (
@@ -858,37 +887,38 @@ export function TournamentDetailsModal({
 
           <TabsContent value="led" className="space-y-4">
             {/* Banner LED Animado com Patrocinadores */}
-            <AnimatedLEDPanel 
-              layout="grid-3"
-              animationType="horizontal"
-              randomOrder={true}
-              autoPlay={true}
-              transitionSpeed={5}
-              height={280}
-              media={[
-                {
-                  id: "sponsor-1",
-                  type: "image",
-                  url: "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=800&h=400&fit=crop",
-                  duration: 5,
-                  name: "Patrocinador 1"
-                },
-                {
-                  id: "sponsor-2",
-                  type: "image",
-                  url: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=800&h=400&fit=crop",
-                  duration: 5,
-                  name: "Patrocinador 2"
-                },
-                {
-                  id: "sponsor-3",
-                  type: "image",
-                  url: "https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=800&h=400&fit=crop",
-                  duration: 5,
-                  name: "Patrocinador 3"
-                },
-              ]}
-            />
+            {tournament.sponsors && tournament.sponsors.length > 0 ? (
+              <AnimatedLEDPanel 
+                layout={tournament.sponsorsLayout || "grid-3"}
+                animationType="horizontal"
+                randomOrder={true}
+                autoPlay={true}
+                transitionSpeed={5}
+                height={280}
+                media={tournament.sponsors}
+              />
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <ImagePlus className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-20" />
+                  <p className="text-muted-foreground mb-2">Nenhum patrocinador adicionado ainda</p>
+                  {isOrganizer && (
+                    <>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        Clique em "Patrocinadores" acima para adicionar logos e vídeos dos patrocinadores
+                      </p>
+                      <Button 
+                        onClick={() => setShowSponsorsManager(true)}
+                        variant="outline"
+                      >
+                        <ImagePlus className="h-4 w-4 mr-2" />
+                        Adicionar Patrocinadores
+                      </Button>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            )}
             
             {/* Card informativo sobre classificação com tema de areia se for beach */}
             {isBeachTournament ? (
@@ -1075,6 +1105,74 @@ export function TournamentDetailsModal({
             }
           }}
         />
+      )}
+
+      {/* Modal de Gerenciamento da Equipe Organizadora */}
+      {showOrganizerTeamModal && isOrganizer && tournament && (
+        <TournamentOrganizerTeamModal
+          open={showOrganizerTeamModal}
+          onClose={() => setShowOrganizerTeamModal(false)}
+          tournamentId={parseInt(tournamentId)}
+          isCreator={currentUserId === tournament.organizerId}
+        />
+      )}
+
+      {/* Modal de Gerenciamento de Patrocinadores */}
+      {showSponsorsManager && isOrganizer && tournament && (
+        <Dialog open={showSponsorsManager} onOpenChange={setShowSponsorsManager}>
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" aria-describedby="sponsors-manager-description">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <ImagePlus className="h-5 w-5 text-secondary" />
+                Gerenciar Patrocinadores do Painel LED
+              </DialogTitle>
+              <DialogDescription id="sponsors-manager-description">
+                Adicione e organize os patrocinadores que aparecerão no painel de LED do torneio
+              </DialogDescription>
+            </DialogHeader>
+            
+            <TournamentSponsorsManager
+              tournamentId={tournamentId}
+              initialSponsors={tournament.sponsors || []}
+              initialLayout={tournament.sponsorsLayout || "grid-3"}
+              onSave={async (sponsors, layout) => {
+                try {
+                  console.log('💾 Salvando patrocinadores:', { sponsors, layout });
+                  
+                  const token = localStorage.getItem('volleypro_token');
+                  const response = await fetch(
+                    `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/sponsors`,
+                    {
+                      method: 'POST',
+                      headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                      },
+                      body: JSON.stringify({ sponsors, layout })
+                    }
+                  );
+                  
+                  if (!response.ok) {
+                    throw new Error('Erro ao salvar patrocinadores');
+                  }
+                  
+                  toast.success('✅ Patrocinadores salvos com sucesso!');
+                  // Recarregar torneio para atualizar dados
+                  await loadTournamentDetails();
+                } catch (error: any) {
+                  console.error('Erro ao salvar patrocinadores:', error);
+                  toast.error(error.message || 'Erro ao salvar patrocinadores');
+                }
+              }}
+            />
+            
+            <DialogFooter className="border-t pt-4">
+              <Button variant="outline" onClick={() => setShowSponsorsManager(false)}>
+                Fechar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* AlertDialog para solicitar motivo do cancelamento */}
