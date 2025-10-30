@@ -36,6 +36,7 @@ import { IconGenerator } from "./components/IconGenerator";
 import { PWATestPanel } from "./components/PWATestPanel";
 import { MigrationNotice } from "./components/MigrationNotice";
 import { FigmaMakeAccessControl } from "./components/FigmaMakeAccessControl";
+import { VercelAccessControl } from "./components/VercelAccessControl";
 import { FigmaMakeWarning } from "./components/FigmaMakeWarning";
 import { TournamentDetails } from "./components/TournamentDetails";
 import { authApi, userApi } from "./lib/api";
@@ -526,6 +527,9 @@ export default function App() {
         {/* Aviso do Figma Make para usuários não logados */}
         {isFigmaMake && <FigmaMakeWarning />}
         
+        {/* 🔒 Controle de Acesso Vercel para usuários não logados */}
+        <VercelAccessControl userEmail={userEmail} />
+        
         <PWAManager />
         <CacheBuster />
         <LandingPage onLoginClick={() => setShowAuthModal(true)} />
@@ -566,7 +570,7 @@ export default function App() {
   // Menus principais que vão na barra horizontal
   // Itens principais (sempre visíveis)
   const primaryMenuItems = [
-    { id: "feed", label: "Alimentar", icon: Home },
+    { id: "feed", label: "Feed", icon: Home },
     { id: "athletes", label: "Atletas", icon: Users },
     { id: "teams", label: "Equipes", icon: Shield },
     { id: "tournaments", label: "Torneios", icon: Trophy },
@@ -590,6 +594,9 @@ export default function App() {
     <>
       {/* 🔒 Controle de Acesso Figma Make */}
       <FigmaMakeAccessControl userEmail={userEmail} />
+      
+      {/* 🔒 Controle de Acesso Vercel */}
+      <VercelAccessControl userEmail={userEmail} />
       
       {/* ⚠️ Aviso Visual para todos os usuários */}
       <FigmaMakeWarning />
