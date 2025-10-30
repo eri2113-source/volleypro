@@ -1,6 +1,6 @@
 # ⚡ FAZER AGORA - 1 COMMIT ÚNICO
 
-## 🎯 6 MUDANÇAS PRONTAS EM 1 COMMIT
+## 🎯 7 MUDANÇAS PRONTAS EM 1 COMMIT
 
 ---
 
@@ -8,7 +8,7 @@
 
 ### **TÍTULO:**
 ```
-🎥🔒🔧📱📧 Transmissão + Perfil + Redirect + Menu + LED + Convites
+🎥🔒🔧📱📧✅ Transmissão + Perfil + Redirect + Menu + LED + Convites
 ```
 
 ### **DESCRIÇÃO:**
@@ -22,11 +22,17 @@ PAINEL LED MOBILE:
 - minHeight garantido + console.logs para debug
 - Imagens agora visíveis em todas as telas
 
-CONVITES MELHORADOS:
+CONVITES MELHORADOS (ENVIO):
 - Mensagens de erro claras e específicas
 - Explica quando atleta não tem CPF cadastrado
 - Explica quando atleta já tem outro time
 - Console.logs no backend para debug
+
+CONVITES CORRIGIDOS (ACEITAR/REJEITAR):
+- Frontend agora chama rotas corretas (/accept e /reject)
+- Mensagens de sucesso melhoradas
+- Logs de debug completos no backend
+- Toast de 5 segundos com confirmação
 
 TRANSMISSÃO EXTERNA:
 - Modal de config com 4 plataformas (YouTube/Twitch/Facebook/Custom)
@@ -53,7 +59,7 @@ VERCEL REDIRECT:
 ## ✅ CHECKLIST
 
 - [ ] Abriu GitHub Desktop
-- [ ] Viu 11 arquivos modificados
+- [ ] Viu 12 arquivos modificados
 - [ ] Colou título acima
 - [ ] Colou descrição acima
 - [ ] Clicou "Commit to main"
@@ -69,7 +75,8 @@ Depois de fazer isso, você terá:
 
 ✅ Menu "Feed" (em vez de "Alimentar")
 ✅ Painel LED funcionando no mobile (patrocinadores visíveis)
-✅ Convites com mensagens claras (explica quando falta CPF)
+✅ Convites: envio com mensagens claras (explica quando falta CPF)
+✅ Convites: aceitar/rejeitar funcionando corretamente
 ✅ Sistema de transmissão externa funcionando
 ✅ Perfil de times com privacidade correta
 ✅ Vercel protegido (só master e teste)

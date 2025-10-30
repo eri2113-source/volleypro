@@ -7,12 +7,20 @@
 - **Solução:** Grid responsivo (1 coluna no mobile)
 - **Arquivo:** `components/AnimatedLEDPanel.tsx`
 
-### **2. CONVITES SEM RESPOSTA** 📧
+### **2. CONVITES: ENVIO MELHORADO** 📧
 - **Problema:** Mensagens de erro genéricas
 - **Solução:** Mensagens claras ("Atleta precisa cadastrar CPF")
 - **Arquivos:** 
   - `components/Showcase.tsx` (frontend)
   - `supabase/functions/server/index.tsx` (backend)
+
+### **3. CONVITES: ACEITAR/REJEITAR CORRIGIDO** ✅
+- **Problema:** Atleta não conseguia aceitar convites
+- **Causa:** Frontend chamava rota `/respond` que não existia
+- **Solução:** Frontend agora chama `/accept` e `/reject`
+- **Arquivos:**
+  - `components/Invitations.tsx` (frontend)
+  - `supabase/functions/server/index.tsx` (logs debug)
 
 ---
 
@@ -33,12 +41,20 @@
 
 ---
 
-### **TESTE 2: Sistema de Convites**
+### **TESTE 2: Enviar Convites**
 
 1. Faça login como TIME
 2. Vá em "Vitrine"
-3. Tente convocar um atleta
+3. Tente convocar um atleta SEM CPF
 4. **PERGUNTA:** Aparece mensagem clara sobre CPF? ✅ ❌
+
+### **TESTE 3: Aceitar Convites** ⭐ NOVO!
+
+1. Envie convite para atleta COM CPF
+2. Logout → Login como ATLETA
+3. Vá em "Convites"
+4. Clique "Aceitar"
+5. **PERGUNTA:** Convite foi aceito com sucesso? ✅ ❌
 
 ---
 
@@ -51,8 +67,12 @@ TESTE 1 - PAINEL LED MOBILE:
 [ ] ✅ Funcionou! Patrocinadores aparecem em 1 coluna
 [ ] ❌ Não funcionou (descreva o que viu)
 
-TESTE 2 - CONVITES:
+TESTE 2 - ENVIAR CONVITES:
 [ ] ✅ Funcionou! Mensagem clara sobre CPF
+[ ] ❌ Não funcionou (descreva o que viu)
+
+TESTE 3 - ACEITAR CONVITES:
+[ ] ✅ Funcionou! Convite aceito com sucesso
 [ ] ❌ Não funcionou (descreva o que viu)
 
 CONSOLE (F12):
@@ -68,21 +88,22 @@ PRINT DO CONSOLE (se não funcionou):
 
 ## 📋 SE TUDO FUNCIONAR
 
-**Você terá 6 mudanças prontas:**
+**Você terá 7 mudanças prontas:**
 
 1. ✅ Menu "Feed"
 2. ✅ Painel LED mobile
-3. ✅ Convites melhorados
-4. ✅ Transmissão externa
-5. ✅ Perfil público
-6. ✅ Redirect Vercel
+3. ✅ Convites: envio melhorado (mensagens claras)
+4. ✅ Convites: aceitar/rejeitar corrigido
+5. ✅ Transmissão externa
+6. ✅ Perfil público
+7. ✅ Redirect Vercel
 
 **Commit único:**
 ```
-🎥🔒🔧📱📧 Transmissão + Perfil + Redirect + Menu + LED + Convites
+🎥🔒🔧📱📧✅ Transmissão + Perfil + Redirect + Menu + LED + Convites
 ```
 
-**11 arquivos modificados**
+**12 arquivos modificados**
 
 Abra: `⚡_FAZER_AGORA_1_COMMIT.md`
 

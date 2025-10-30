@@ -2521,17 +2521,24 @@ app.post('/make-server-0ea22bba/invitations/:invitationId/accept', authMiddlewar
     const userId = c.get('userId');
     const invitationId = c.req.param('invitationId');
     
+    console.log('✅ ACEITAR CONVITE - Início:', { userId, invitationId });
+    
     const invitation = await kv.get(invitationId);
     
     if (!invitation) {
+      console.log('❌ CONVITE NÃO ENCONTRADO:', invitationId);
       return c.json({ error: 'Invitation not found' }, 404);
     }
     
+    console.log('📧 Convite encontrado:', invitation);
+    
     if (invitation.athleteId !== userId) {
+      console.log('⛔ USUÁRIO NÃO AUTORIZADO:', { athleteId: invitation.athleteId, userId });
       return c.json({ error: 'Unauthorized' }, 403);
     }
     
     if (invitation.status !== 'pending') {
+      console.log('⚠️ CONVITE JÁ PROCESSADO:', invitation.status);
       return c.json({ error: 'Invitation already processed' }, 400);
     }
     
@@ -2602,7 +2609,12 @@ app.post('/make-server-0ea22bba/invitations/:invitationId/accept', authMiddlewar
       console.log(`✅ Player added to team roster: ${athlete.name} → ${invitation.teamName}`);
     }
     
-    console.log(`✅ Invitation accepted: ${userId} joined ${invitation.teamName}`);
+    console.log(`✅✅✅ CONVITE ACEITO COM SUCESSO!`, {
+      athlete: athlete.name,
+      team: invitation.teamName,
+      teamId: invitation.teamId,
+      cpf: athlete.cpf
+    });
     
     return c.json({ 
       success: true,
@@ -2621,17 +2633,24 @@ app.post('/make-server-0ea22bba/invitations/:invitationId/reject', authMiddlewar
     const userId = c.get('userId');
     const invitationId = c.req.param('invitationId');
     
+    console.log('❌ REJEITAR CONVITE - Início:', { userId, invitationId });
+    
     const invitation = await kv.get(invitationId);
     
     if (!invitation) {
+      console.log('❌ CONVITE NÃO ENCONTRADO:', invitationId);
       return c.json({ error: 'Invitation not found' }, 404);
     }
     
+    console.log('📧 Convite encontrado:', invitation);
+    
     if (invitation.athleteId !== userId) {
+      console.log('⛔ USUÁRIO NÃO AUTORIZADO:', { athleteId: invitation.athleteId, userId });
       return c.json({ error: 'Unauthorized' }, 403);
     }
     
     if (invitation.status !== 'pending') {
+      console.log('⚠️ CONVITE JÁ PROCESSADO:', invitation.status);
       return c.json({ error: 'Invitation already processed' }, 400);
     }
     
@@ -2640,7 +2659,10 @@ app.post('/make-server-0ea22bba/invitations/:invitationId/reject', authMiddlewar
     invitation.rejectedAt = new Date().toISOString();
     await kv.set(invitationId, invitation);
     
-    console.log(`✅ Invitation rejected: ${userId} rejected ${invitation.teamName}`);
+    console.log(`❌❌❌ CONVITE REJEITADO!`, {
+      athlete: userId,
+      team: invitation.teamName
+    });
     
     return c.json({ success: true });
   } catch (error: any) {

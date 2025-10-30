@@ -42,12 +42,22 @@ export function Invitations() {
 
   async function handleResponse(invitationId: string, status: 'accepted' | 'rejected') {
     try {
-      await invitationApi.respondToInvitation(invitationId, status);
-      toast.success(status === 'accepted' ? "Convite aceito!" : "Convite recusado");
+      console.log('🎯 Respondendo convite:', { invitationId, status });
+      
+      if (status === 'accepted') {
+        await invitationApi.acceptInvitation(invitationId);
+      } else {
+        await invitationApi.rejectInvitation(invitationId);
+      }
+      
+      toast.success(status === 'accepted' ? "✅ Convite aceito! Você agora faz parte do time!" : "❌ Convite recusado", {
+        duration: 5000
+      });
+      
       loadInvitations();
     } catch (error: any) {
-      console.error("Error responding to invitation:", error);
-      toast.error(error.message || "Erro ao responder convite");
+      console.error("❌ Erro ao responder convite:", error);
+      toast.error(error.message || "Erro ao responder convite", { duration: 5000 });
     }
   }
 
