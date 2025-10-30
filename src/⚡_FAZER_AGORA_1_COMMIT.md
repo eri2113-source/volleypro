@@ -1,6 +1,6 @@
 # ⚡ FAZER AGORA - 1 COMMIT ÚNICO
 
-## 🎯 4 MUDANÇAS PRONTAS EM 1 COMMIT
+## 🎯 5 MUDANÇAS PRONTAS EM 1 COMMIT
 
 ---
 
@@ -8,13 +8,18 @@
 
 ### **TÍTULO:**
 ```
-🎥🔒🔧 Transmissão + Perfil + Redirect + Menu Feed
+🎥🔒🔧📱 Transmissão + Perfil + Redirect + Menu + LED Mobile
 ```
 
 ### **DESCRIÇÃO:**
 ```
 MENU:
 - "Alimentar" → "Feed" (mais intuitivo e reconhecível)
+
+PAINEL LED MOBILE:
+- Corrigido grid responsivo (patrocinadores não apareciam no mobile)
+- Breakpoints: 1 col (mobile) → 2 cols (tablet) → 3-4 cols (desktop)
+- Imagens agora visíveis em todas as telas
 
 TRANSMISSÃO EXTERNA:
 - Modal de config com 4 plataformas (YouTube/Twitch/Facebook/Custom)
@@ -41,7 +46,7 @@ VERCEL REDIRECT:
 ## ✅ CHECKLIST
 
 - [ ] Abriu GitHub Desktop
-- [ ] Viu 9 arquivos modificados
+- [ ] Viu 10 arquivos modificados
 - [ ] Colou título acima
 - [ ] Colou descrição acima
 - [ ] Clicou "Commit to main"
@@ -56,6 +61,7 @@ VERCEL REDIRECT:
 Depois de fazer isso, você terá:
 
 ✅ Menu "Feed" (em vez de "Alimentar")
+✅ Painel LED funcionando no mobile (patrocinadores visíveis)
 ✅ Sistema de transmissão externa funcionando
 ✅ Perfil de times com privacidade correta
 ✅ Vercel protegido (só master e teste)

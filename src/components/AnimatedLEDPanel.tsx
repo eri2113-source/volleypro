@@ -67,9 +67,9 @@ export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
   const gridClass = useMemo(() => {
     const gridClasses = {
       single: "grid-cols-1",
-      "grid-2": "grid-cols-2",
-      "grid-3": "grid-cols-3",
-      "grid-4": "grid-cols-2 lg:grid-cols-4",
+      "grid-2": "grid-cols-1 sm:grid-cols-2",
+      "grid-3": "grid-cols-1 sm:grid-cols-2 md:grid-cols-3",
+      "grid-4": "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
     };
     return gridClasses[layout];
   }, [layout]);
