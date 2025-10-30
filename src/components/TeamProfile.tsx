@@ -730,15 +730,18 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
         {/* Tabs de Navegação */}
         <Tabs defaultValue="roster" className="space-y-6">
           <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/50 p-2">
-            <TabsList className="w-full grid grid-cols-3 md:grid-cols-6 gap-2 bg-transparent">
+            <TabsList className={`w-full ${isOwner ? 'grid-cols-3 md:grid-cols-6' : 'grid-cols-2 md:grid-cols-5'} grid gap-2 bg-transparent`}>
               <TabsTrigger value="roster" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">
                 <Users className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Elenco</span>
               </TabsTrigger>
-              <TabsTrigger value="lineup" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">
-                <Clipboard className="h-4 w-4 mr-2" />
-                <span className="hidden sm:inline">Escalação</span>
-              </TabsTrigger>
+              {/* Escalação - APENAS para o dono do time */}
+              {isOwner && (
+                <TabsTrigger value="lineup" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">
+                  <Clipboard className="h-4 w-4 mr-2" />
+                  <span className="hidden sm:inline">Escalação</span>
+                </TabsTrigger>
+              )}
               <TabsTrigger value="tournaments" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-blue-500 data-[state=active]:text-white">
                 <Trophy className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Torneios</span>
@@ -813,7 +816,9 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                   <div className="flex items-center gap-2">
                     <Users className="h-5 w-5 text-primary" />
-                    <h3 className="text-xl font-semibold">Elenco Atual ({players.length} jogadores)</h3>
+                    <h3 className="text-xl font-semibold">
+                      {isOwner ? 'Elenco Atual' : 'Elenco'} ({players.length} jogadores)
+                    </h3>
                   </div>
                   {isOwner && (
                     <Button 
