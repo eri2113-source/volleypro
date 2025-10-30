@@ -10,6 +10,8 @@ import { TournamentMVP } from "./TournamentMVP";
 import { TournamentDraw } from "./TournamentDraw";
 import { AnimatedLEDPanel } from "./AnimatedLEDPanel";
 import { LEDPanelConfigModal } from "./LEDPanelConfigModal";
+import { TournamentStreamConfigModal } from "./TournamentStreamConfigModal";
+import { TournamentStreamPlayer } from "./TournamentStreamPlayer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -34,7 +36,8 @@ import {
   BellOff,
   Filter,
   Settings,
-  Shield
+  Shield,
+  Video
 } from "lucide-react";
 
 interface TournamentDetailsProps {
@@ -56,6 +59,7 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
   const [showOrganizerTeam, setShowOrganizerTeam] = useState(false);
   const [canEdit, setCanEdit] = useState(false);
   const [isCreator, setIsCreator] = useState(false);
+  const [showStreamConfig, setShowStreamConfig] = useState(false);
 
   useEffect(() => {
     loadTournamentData();
@@ -89,6 +93,16 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
   async function loadTournamentData() {
     setLoading(true);
     try {
+      // 🔥 VALIDAR UUID: Ignorar IDs antigos (numéricos)
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      
+      if (!uuidRegex.test(tournamentId)) {
+        console.warn('⚠️ ID de torneio inválido (não é UUID). Ignorando:', tournamentId);
+        toast.error('Torneio não encontrado');
+        onBack();
+        return;
+      }
+      
       console.log('🔍 Carregando torneio:', tournamentId);
       
       // Pegar usuário autenticado
@@ -129,31 +143,32 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
       const result = await tournamentApi.getTournamentDetails(tournamentId.toString());
       
       if (!result.tournament) {
-        console.error('❌ Torneio não encontrado. ID solicitado:', tournamentId);
-        throw new Error(`Torneio não encontrado (ID: ${tournamentId})`);
+        console.warn('⚠️ Torneio não encontrado (provavelmente deletado):', tournamentId);
+        toast.error('Torneio não encontrado');
+        onBack();
+        return;
       }
       
       const tournamentData = result.tournament;
       
-      // Contar times inscritos REAIS
-      const registeredTeamsCount = tournamentData.registeredTeams?.length || 0;
-      const registeredPlayersCount = tournamentData.registeredPlayers?.length || 0;
+      // 🔥 CORREÇÃO: O backend retorna times/equipes inscritas no campo 'teams'
+      const teamsFromBackend = result.teams || [];
+      const registeredTeamsCount = teamsFromBackend.length;
       
       console.log('📊 Dados do torneio carregados:', {
         id: tournamentData.id,
         name: tournamentData.name,
-        registeredTeams: registeredTeamsCount,
-        registeredPlayers: registeredPlayersCount,
+        teamsFromBackend: registeredTeamsCount,
+        teamsData: teamsFromBackend.slice(0, 2), // Sample
         modalityType: tournamentData.modalityType
       });
       
-      // Montar dados do torneio com contagem real
+      // Montar dados do torneio com contagem REAL dos times retornados pelo backend
       const tournament = {
         ...tournamentData,
-        // Usar contagem REAL de times/jogadores inscritos
-        teams: tournamentData.modalityType === 'beach' 
-          ? registeredPlayersCount 
-          : registeredTeamsCount,
+        // Usar contagem REAL de times/equipes do campo 'teams' retornado pelo backend
+        teams: registeredTeamsCount,
+        registeredTeams: teamsFromBackend, // Salvar array completo para uso posterior
         organizerAvatar: tournamentData.organizerAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(tournamentData.organizerName || 'ORG')}&background=0052cc&color=fff`,
         liveMatches: 0, // TODO: Implementar contagem de lives
         categories: tournamentData.categories || ["masculino"],
@@ -168,9 +183,16 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
       if (userId) {
         setIsOrganizer(tournamentData.organizerId === userId);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao carregar torneio:", error);
-      toast.error("Erro ao carregar detalhes do torneio");
+      
+      // Se for erro 404, apenas voltar silenciosamente
+      if (error?.message?.includes('404') || error?.message?.includes('not found')) {
+        console.warn('⚠️ Torneio não encontrado, voltando...');
+        onBack();
+      } else {
+        toast.error("Erro ao carregar detalhes do torneio");
+      }
     } finally {
       setLoading(false);
     }
@@ -289,6 +311,16 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
             >
               <Settings className="h-4 w-4 mr-2" />
               Configurar Painel LED
+            </Button>
+            <Button
+              onClick={() => {
+                console.log('🔘 Clicou em Transmissão Externa');
+                setShowStreamConfig(true);
+              }}
+              className="bg-red-600/90 hover:bg-red-700 text-white border border-white/30 backdrop-blur-sm"
+            >
+              <Video className="h-4 w-4 mr-2" />
+              Transmissão Externa
             </Button>
           </div>
         ) : (
@@ -482,6 +514,11 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
             </p>
           </div>
         </div>
+      </div>
+
+      {/* Transmissão Externa */}
+      <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-4">
+        <TournamentStreamPlayer tournamentId={tournamentId} />
       </div>
 
       {/* Tabs de Navegação */}
@@ -744,6 +781,17 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
         tournamentId={tournamentId}
         isCreator={isCreator}
       />
+
+      {/* Modal de Configuração de Transmissão Externa */}
+      {showStreamConfig && (
+        <TournamentStreamConfigModal
+          open={showStreamConfig}
+          onClose={() => setShowStreamConfig(false)}
+          tournamentId={tournamentId}
+          tournamentName={tournament?.name || ''}
+          isOrganizer={canEdit}
+        />
+      )}
     </div>
   );
 }

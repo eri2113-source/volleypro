@@ -6,6 +6,7 @@ import { Badge } from "./ui/badge";
 import { X, UserPlus, Search, Trash2, Shield, Crown, Users, User, Trophy, Flag, Heart } from "lucide-react";
 import { toast } from "sonner@2.0.3";
 import { Card, CardContent } from "./ui/card";
+import { projectId } from '../utils/supabase/info';
 
 interface Organizer {
   id: string;
@@ -63,7 +64,7 @@ export function TournamentOrganizerTeamModal({
       
       const token = localStorage.getItem('volleypro_token');
       const response = await fetch(
-        `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/organizers`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/organizers`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -91,7 +92,7 @@ export function TournamentOrganizerTeamModal({
       
       const token = localStorage.getItem('volleypro_token');
       const response = await fetch(
-        `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/make-server-0ea22bba/search/people?q=${encodeURIComponent(searchQuery)}`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/search/people?q=${encodeURIComponent(searchQuery)}`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -129,7 +130,7 @@ export function TournamentOrganizerTeamModal({
 
       const token = localStorage.getItem('volleypro_token');
       const response = await fetch(
-        `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/organizers`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/organizers`,
         {
           method: 'POST',
           headers: {
@@ -174,7 +175,7 @@ export function TournamentOrganizerTeamModal({
 
       const token = localStorage.getItem('volleypro_token');
       const response = await fetch(
-        `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/organizers/${organizerId}`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/organizers/${organizerId}`,
         {
           method: 'DELETE',
           headers: {

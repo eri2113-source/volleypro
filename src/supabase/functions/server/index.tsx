@@ -129,6 +129,14 @@ const app = new Hono();
 app.use('*', cors());
 app.use('*', logger(console.log));
 
+// ============= UTILITY FUNCTIONS =============
+
+// 🔥 Validar se ID é UUID válido
+function isValidUUID(id: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+}
+
 // ============= ROTAS PÚBLICAS (SEM AUTENTICAÇÃO) =============
 // IMPORTANTE: Estas rotas são 100% PÚBLICAS para o Google
 
@@ -1362,6 +1370,44 @@ app.post('/make-server-0ea22bba/tournaments', authMiddleware, async (c) => {
 
 // ============= TOURNAMENT ORGANIZERS ROUTES =============
 
+// Check if user can edit tournament
+app.get('/make-server-0ea22bba/tournaments/:tournamentId/can-edit', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    
+    // Validar UUID
+    if (!isValidUUID(tournamentId)) {
+      return c.json({ error: 'Invalid tournament ID' }, 400);
+    }
+    
+    // Buscar torneio
+    const tournament = await kv.get(`tournament:${tournamentId}`);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    // Verificar se é criador
+    const isCreator = tournament.organizerId === userId;
+    
+    // Verificar se é organizador
+    const organizers = await kv.getByPrefix(`tournament_organizer:${tournamentId}:${userId}:`);
+    const isOrganizer = organizers.length > 0;
+    
+    const canEdit = isCreator || isOrganizer;
+    
+    return c.json({ 
+      canEdit,
+      isCreator,
+      isOrganizer,
+      role: isCreator ? 'creator' : (isOrganizer ? 'organizer' : null)
+    });
+  } catch (error: any) {
+    console.error('❌ Error checking edit permissions:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // Get tournament organizers (equipe organizadora)
 app.get('/make-server-0ea22bba/tournaments/:tournamentId/organizers', authMiddleware, async (c) => {
   try {
@@ -1736,11 +1782,7 @@ app.get('/make-server-0ea22bba/tournaments', async (c) => {
     const allTournaments = await kv.getByPrefix('tournament:');
     
     // 🔥 FILTRAR APENAS TORNEIOS COM UUIDs VÁLIDOS (remover IDs numéricos antigos)
-    const validTournaments = allTournaments.filter((t: any) => {
-      // UUID tem formato: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-      return uuidRegex.test(t.id);
-    });
+    const validTournaments = allTournaments.filter((t: any) => isValidUUID(t.id));
     
     let tournaments = validTournaments;
     if (status) {
@@ -1771,6 +1813,14 @@ app.get('/make-server-0ea22bba/tournaments/:tournamentId', async (c) => {
       return c.json({ error: 'Invalid tournament ID' }, 400);
     }
     
+    // 🔥 VALIDAR UUID: Rejeitar IDs antigos (numéricos)
+    const cleanId = id.replace('tournament:', '');
+    
+    if (!isValidUUID(cleanId)) {
+      console.warn('⚠️ ID de torneio inválido (não é UUID):', id);
+      return c.json({ error: 'Invalid tournament ID format' }, 400);
+    }
+    
     // Verificar se já tem o prefixo 'tournament:'
     const tournamentId = id.startsWith('tournament:') ? id : `tournament:${id}`;
     const baseId = id.replace('tournament:', ''); // ID sem prefixo para matches
@@ -1779,10 +1829,7 @@ app.get('/make-server-0ea22bba/tournaments/:tournamentId', async (c) => {
     const tournament = await kv.get(tournamentId);
     
     if (!tournament) {
-      console.error(`❌ Torneio não encontrado: ${tournamentId}`);
-      // Listar torneios disponíveis para debug
-      const allTournaments = await kv.getByPrefix('tournament:');
-      console.log('📋 Torneios disponíveis:', allTournaments?.map((t: any) => ({ id: t.id, name: t.name })) || []);
+      console.warn(`⚠️ Torneio não encontrado: ${tournamentId}`);
       return c.json({ error: 'Tournament not found' }, 404);
     }
 
@@ -3495,6 +3542,103 @@ app.patch('/make-server-0ea22bba/tournaments/:tournamentId/matches/:matchId', au
     return c.json({ success: true, match: updatedMatch });
   } catch (error: any) {
     console.error('❌ Error updating match:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// ============= TOURNAMENT EXTERNAL STREAM ROUTES =============
+
+// Get stream configuration for tournament
+app.get('/make-server-0ea22bba/tournaments/:tournamentId/stream-config', async (c) => {
+  try {
+    const tournamentId = c.req.param('tournamentId');
+    const streamKey = `tournament:${tournamentId}:stream`;
+    
+    const config = await kv.get(streamKey);
+    
+    return c.json({ config: config || null });
+  } catch (error: any) {
+    console.error('❌ Error getting stream config:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Save stream configuration (organizers only)
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/stream-config', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const streamData = await c.req.json();
+    
+    // Verificar se é organizador
+    const tournament = await kv.get(`tournament:${tournamentId}`);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    const isCreator = tournament.organizerId === userId;
+    const organizers = await kv.getByPrefix(`tournament_organizer:${tournamentId}:${userId}:`);
+    const isOrganizer = organizers.length > 0;
+    
+    if (!isCreator && !isOrganizer) {
+      return c.json({ error: 'Only tournament organizers can configure streams' }, 403);
+    }
+    
+    // Salvar configuração
+    const streamKey = `tournament:${tournamentId}:stream`;
+    const config = {
+      ...streamData,
+      organizerId: userId,
+      updatedAt: new Date().toISOString()
+    };
+    
+    await kv.set(streamKey, config);
+    
+    console.log(`✅ Stream config saved for tournament ${tournamentId}`);
+    
+    return c.json({ success: true, config });
+  } catch (error: any) {
+    console.error('❌ Error saving stream config:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Toggle live status (organizers only)
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/stream-toggle', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const { isLive } = await c.req.json();
+    
+    // Verificar se é organizador
+    const tournament = await kv.get(`tournament:${tournamentId}`);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    const isCreator = tournament.organizerId === userId;
+    const organizers = await kv.getByPrefix(`tournament_organizer:${tournamentId}:${userId}:`);
+    const isOrganizer = organizers.length > 0;
+    
+    if (!isCreator && !isOrganizer) {
+      return c.json({ error: 'Only tournament organizers can toggle stream' }, 403);
+    }
+    
+    // Atualizar status
+    const streamKey = `tournament:${tournamentId}:stream`;
+    const config = await kv.get(streamKey) || {};
+    
+    config.isLive = isLive;
+    config.startedAt = isLive ? new Date().toISOString() : config.startedAt;
+    config.stoppedAt = !isLive ? new Date().toISOString() : undefined;
+    
+    await kv.set(streamKey, config);
+    
+    console.log(`✅ Stream ${isLive ? 'started' : 'stopped'} for tournament ${tournamentId}`);
+    
+    return c.json({ success: true, isLive });
+  } catch (error: any) {
+    console.error('❌ Error toggling stream:', error);
     return c.json({ error: error.message }, 500);
   }
 });

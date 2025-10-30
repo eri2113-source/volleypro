@@ -34,7 +34,7 @@ import {
 } from "./ui/alert-dialog";
 import { tournamentApi, userApi } from "../lib/api";
 import { toast } from "sonner@2.0.3";
-import { Trophy, Users, Calendar, MapPin, Award, Play, CheckCircle2, X, XCircle, UserPlus, Shield, ImagePlus } from "lucide-react";
+import { Trophy, Users, Calendar, MapPin, Award, Play, CheckCircle2, X, XCircle, UserPlus, Shield, ImagePlus, Video } from "lucide-react";
 import { TournamentRosterModal } from "./TournamentRosterModal";
 import { BeachTournamentRegistration } from "./BeachTournamentRegistration";
 import { BeachTournamentIndividualRegistration } from "./BeachTournamentIndividualRegistration";
@@ -46,6 +46,8 @@ import { AnimatedLEDPanel } from "./AnimatedLEDPanel";
 import { TournamentSquadSelectionModal } from "./TournamentSquadSelectionModal";
 import { TournamentOrganizerTeamModal } from "./TournamentOrganizerTeamModal";
 import { LEDPanelConfigModal } from "./LEDPanelConfigModal";
+import { TournamentStreamConfigModal } from "./TournamentStreamConfigModal";
+import { TournamentStreamPlayer } from "./TournamentStreamPlayer";
 
 interface TournamentDetailsModalProps {
   open: boolean;
@@ -100,6 +102,7 @@ export function TournamentDetailsModal({
   // Organizer Management Modals
   const [showOrganizerTeamModal, setShowOrganizerTeamModal] = useState(false);
   const [showLEDPanelConfig, setShowLEDPanelConfig] = useState(false);
+  const [showStreamConfig, setShowStreamConfig] = useState(false);
 
   useEffect(() => {
     if (open && tournamentId && tournamentId !== '') {
@@ -479,6 +482,15 @@ export function TournamentDetailsModal({
                   <ImagePlus className="h-4 w-4 mr-2" />
                   Painel LED
                 </Button>
+                
+                <Button 
+                  onClick={() => setShowStreamConfig(true)}
+                  variant="outline"
+                  className="border-red-500 text-red-600 hover:bg-red-50"
+                >
+                  <Video className="h-4 w-4 mr-2" />
+                  Transmissão Externa
+                </Button>
               </>
             )}
             
@@ -627,6 +639,11 @@ export function TournamentDetailsModal({
               Cancelar Torneio
             </Button>
           )}
+        </div>
+
+        {/* Transmissão Externa */}
+        <div className="mt-4">
+          <TournamentStreamPlayer tournamentId={tournamentId} />
         </div>
 
         <Tabs defaultValue="teams" className="mt-4">
@@ -1221,6 +1238,17 @@ export function TournamentDetailsModal({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal de Configuração de Transmissão Externa */}
+      {showStreamConfig && (
+        <TournamentStreamConfigModal
+          open={showStreamConfig}
+          onClose={() => setShowStreamConfig(false)}
+          tournamentId={tournamentId}
+          tournamentName={tournament?.name || ''}
+          isOrganizer={isOrganizer}
+        />
+      )}
     </Dialog>
   );
 }

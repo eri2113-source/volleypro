@@ -3092,6 +3092,16 @@
     }
   }
 
+  .bg-red-600\/90 {
+    background-color: color-mix(in srgb, oklch(.577 .245 27.325) 90%, transparent);
+  }
+
+  @supports (color: color-mix(in lab, red, red)) {
+    .bg-red-600\/90 {
+      background-color: color-mix(in oklab, var(--color-red-600) 90%, transparent);
+    }
+  }
+
   .bg-secondary {
     background-color: var(--secondary);
   }
@@ -3865,6 +3875,11 @@
 
   .to-pink-500 {
     --tw-gradient-to: var(--color-pink-500);
+    --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
+  }
+
+  .to-pink-600 {
+    --tw-gradient-to: var(--color-pink-600);
     --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position));
   }
 
@@ -5687,8 +5702,20 @@
   }
 
   @media (hover: hover) {
+    .hover\:bg-red-50:hover {
+      background-color: var(--color-red-50);
+    }
+  }
+
+  @media (hover: hover) {
     .hover\:bg-red-600:hover {
       background-color: var(--color-red-600);
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:bg-red-700:hover {
+      background-color: var(--color-red-700);
     }
   }
 
@@ -6963,6 +6990,13 @@
     .sm\:text-3xl {
       font-size: var(--text-3xl);
       line-height: var(--tw-leading, var(--text-3xl--line-height));
+    }
+  }
+
+  @media (width >= 40rem) {
+    .sm\:text-base {
+      font-size: var(--text-base);
+      line-height: var(--tw-leading, var(--text-base--line-height));
     }
   }
 
