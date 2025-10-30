@@ -6133,6 +6133,62 @@ app.post('/make-server-0ea22bba/upload', authMiddleware, async (c) => {
   }
 });
 
+// ============= PEOPLE SEARCH ROUTE =============
+
+// GET /search/people - Buscar pessoas por nome ou CPF
+app.get('/make-server-0ea22bba/search/people', async (c) => {
+  try {
+    const authHeader = c.req.header('Authorization');
+    
+    if (!authHeader) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseClient = await initializeSupabase();
+    const { data: { user } } = await supabaseClient.auth.getUser(token);
+    
+    if (!user) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+    
+    const query = c.req.query('q')?.toLowerCase() || '';
+    
+    if (query.length < 2) {
+      return c.json({ people: [] });
+    }
+    
+    const kvStore = await initializeKV();
+    
+    // Buscar em todos os usuários
+    const allUsers = await kvStore.getByPrefix('user:');
+    
+    // Filtrar por nome ou CPF
+    const filtered = allUsers.filter((person: any) => {
+      const matchName = person.name?.toLowerCase().includes(query);
+      const matchCPF = person.cpf?.includes(query);
+      return matchName || matchCPF;
+    });
+    
+    // Formatar resultados
+    const results = filtered.slice(0, 20).map((person: any) => ({
+      id: person.id,
+      name: person.name,
+      email: person.email,
+      cpf: person.cpf,
+      type: person.type || 'other',
+      avatar: person.avatar
+    }));
+    
+    console.log(`🔍 Search people: query="${query}", found=${results.length}`);
+    
+    return c.json({ people: results });
+  } catch (error: any) {
+    console.error('Error searching people:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // ============= TOURNAMENT ORGANIZERS ROUTES =============
 
 // GET /tournaments/:id/organizers - Listar equipe organizadora
@@ -6155,18 +6211,42 @@ app.get('/make-server-0ea22bba/tournaments/:id/organizers', async (c) => {
     
     const kvStore = await initializeKV();
     
+    // Buscar torneio
+    const tournament = await kvStore.get(`tournament:${tournamentId}`);
+    
+    // Buscar criador do torneio
+    const creator = await kvStore.get(`user:${tournament?.createdBy}`);
+    
     // Buscar organizadores do torneio
     const organizers = await kvStore.getByPrefix(`tournament:${tournamentId}:organizer:`);
     
-    return c.json({ 
-      organizers: organizers.map((org: any) => ({
+    // Adicionar criador à lista
+    const allOrganizers = creator ? [{
+      id: creator.id,
+      userId: creator.id,
+      email: creator.email,
+      name: creator.name,
+      cpf: creator.cpf,
+      type: creator.type,
+      role: 'creator',
+      addedAt: tournament?.createdAt || new Date().toISOString()
+    }] : [];
+    
+    // Adicionar demais organizadores
+    organizers.forEach((org: any) => {
+      allOrganizers.push({
         id: org.userId,
+        userId: org.userId,
         email: org.email,
         name: org.name,
+        cpf: org.cpf,
+        type: org.type,
         role: org.role,
         addedAt: org.addedAt
-      }))
+      });
     });
+    
+    return c.json({ organizers: allOrganizers });
   } catch (error: any) {
     console.error('Error loading organizers:', error);
     return c.json({ error: error.message }, 500);
@@ -6199,14 +6279,17 @@ app.post('/make-server-0ea22bba/tournaments/:id/organizers', async (c) => {
       return c.json({ error: 'Only the creator can add organizers' }, 403);
     }
     
-    const { email } = await c.req.json();
+    const { userId, name, email, cpf, type } = await c.req.json();
     
-    // Buscar usuário pelo email
-    const allUsers = await kvStore.getByPrefix('user:');
-    const targetUser = allUsers.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+    if (!userId) {
+      return c.json({ error: 'userId is required' }, 400);
+    }
+    
+    // Buscar usuário pelo ID
+    const targetUser = await kvStore.get(`user:${userId}`);
     
     if (!targetUser) {
-      return c.json({ error: 'User not found. They need to create an account first.' }, 404);
+      return c.json({ error: 'User not found' }, 404);
     }
     
     // Verificar se já não é organizador
@@ -6218,8 +6301,10 @@ app.post('/make-server-0ea22bba/tournaments/:id/organizers', async (c) => {
     // Adicionar como organizador
     await kvStore.set(`tournament:${tournamentId}:organizer:${targetUser.id}`, {
       userId: targetUser.id,
-      email: targetUser.email,
-      name: targetUser.name,
+      email: email || targetUser.email,
+      name: name || targetUser.name,
+      cpf: cpf || targetUser.cpf,
+      type: type || targetUser.type,
       role: 'organizer',
       addedAt: new Date().toISOString(),
       addedBy: user.id
