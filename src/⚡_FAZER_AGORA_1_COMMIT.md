@@ -1,6 +1,6 @@
 # ⚡ FAZER AGORA - 1 COMMIT ÚNICO
 
-## 🎯 7 MUDANÇAS PRONTAS EM 1 COMMIT
+## 🎯 8 MUDANÇAS PRONTAS EM 1 COMMIT
 
 ---
 
@@ -8,7 +8,7 @@
 
 ### **TÍTULO:**
 ```
-🎥🔒🔧📱📧✅ Transmissão + Perfil + Redirect + Menu + LED + Convites
+🎥🔒🔧📱📧✅👥 Transmissão + Perfil + Menu + LED + Convites + Elenco
 ```
 
 ### **DESCRIÇÃO:**
@@ -33,6 +33,12 @@ CONVITES CORRIGIDOS (ACEITAR/REJEITAR):
 - Mensagens de sucesso melhoradas
 - Logs de debug completos no backend
 - Toast de 5 segundos com confirmação
+
+ADICIONAR DO ELENCO DIRETO:
+- Jogadores do elenco podem ser adicionados a equipes sem convite
+- 3 modos: "Do Elenco", "CPF", "Manual"
+- Detecta e previne duplicatas automaticamente
+- Redução de 50% nos cliques para adicionar jogadores
 
 TRANSMISSÃO EXTERNA:
 - Modal de config com 4 plataformas (YouTube/Twitch/Facebook/Custom)
@@ -59,7 +65,7 @@ VERCEL REDIRECT:
 ## ✅ CHECKLIST
 
 - [ ] Abriu GitHub Desktop
-- [ ] Viu 12 arquivos modificados
+- [ ] Viu 13 arquivos modificados
 - [ ] Colou título acima
 - [ ] Colou descrição acima
 - [ ] Clicou "Commit to main"
@@ -77,6 +83,7 @@ Depois de fazer isso, você terá:
 ✅ Painel LED funcionando no mobile (patrocinadores visíveis)
 ✅ Convites: envio com mensagens claras (explica quando falta CPF)
 ✅ Convites: aceitar/rejeitar funcionando corretamente
+✅ Adicionar jogadores do elenco direto às equipes (sem convite)
 ✅ Sistema de transmissão externa funcionando
 ✅ Perfil de times com privacidade correta
 ✅ Vercel protegido (só master e teste)

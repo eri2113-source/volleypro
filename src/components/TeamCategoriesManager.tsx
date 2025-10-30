@@ -29,6 +29,7 @@ import { teamCategoryApi, userApi, invitationApi } from "../lib/api";
 import { toast } from "sonner@2.0.3";
 import { formatHeight } from "../utils/formatters";
 import { CATEGORIES, DEFAULT_SQUAD_NAMES, TeamSquad, TeamPlayer } from "../lib/teamCategories";
+import { projectId } from '../utils/supabase/info';
 
 interface TeamCategoriesManagerProps {
   teamId: string;
@@ -50,10 +51,12 @@ export function TeamCategoriesManager({ teamId, teamName }: TeamCategoriesManage
   const [selectedSquad, setSelectedSquad] = useState<TeamSquad | null>(null);
   
   // Estados para adicionar jogadores
-  const [addPlayerMode, setAddPlayerMode] = useState<'cpf' | 'manual'>('cpf');
+  const [addPlayerMode, setAddPlayerMode] = useState<'roster' | 'cpf' | 'manual'>('roster');
   const [searchCPF, setSearchCPF] = useState("");
   const [searchingCPF, setSearchingCPF] = useState(false);
   const [athleteFound, setAthleteFound] = useState<any>(null);
+  const [teamRoster, setTeamRoster] = useState<TeamPlayer[]>([]);
+  const [loadingRoster, setLoadingRoster] = useState(false);
   const [newPlayer, setNewPlayer] = useState({
     name: "",
     position: "",
@@ -143,6 +146,85 @@ export function TeamCategoriesManager({ teamId, teamName }: TeamCategoriesManage
   function openSquadPlayers(squad: TeamSquad) {
     setSelectedSquad(squad);
     setShowSquadPlayersModal(true);
+  }
+
+  async function loadTeamRoster() {
+    setLoadingRoster(true);
+    try {
+      console.log(`🔍 Carregando elenco do time: ${teamId}`);
+      const token = localStorage.getItem('volleypro_token');
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/teams/${teamId}/players`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Erro ao carregar elenco');
+      }
+
+      const data = await response.json();
+      console.log(`✅ Elenco carregado:`, data.players);
+      setTeamRoster(data.players || []);
+    } catch (error) {
+      console.error('❌ Erro ao carregar elenco:', error);
+      setTeamRoster([]);
+      // Não mostrar erro se time não tiver elenco ainda
+    } finally {
+      setLoadingRoster(false);
+    }
+  }
+
+  // Carregar elenco quando abrir modal de adicionar jogador
+  useEffect(() => {
+    if (showAddPlayerModal && addPlayerMode === 'roster') {
+      loadTeamRoster();
+    }
+  }, [showAddPlayerModal, addPlayerMode]);
+
+  async function handleAddPlayerFromRoster(player: TeamPlayer) {
+    if (!selectedSquad) return;
+
+    try {
+      console.log(`➕ Adicionando jogador do elenco à equipe:`, {
+        player: player.name,
+        squad: selectedSquad.name
+      });
+
+      await teamCategoryApi.addPlayerToSquad(teamId, selectedSquad.id, {
+        name: player.name,
+        position: player.position,
+        number: player.number,
+        age: player.age,
+        height: player.height,
+        photoUrl: player.photoUrl,
+        cpf: player.cpf,
+        userId: player.userId
+      });
+
+      toast.success(`✅ ${player.name} adicionado à ${selectedSquad.name}!`);
+      
+      setShowAddPlayerModal(false);
+      await loadCategories();
+      
+      // Reabrir modal de jogadores da equipe para ver atualização
+      const updatedCategory = categories.find(c => 
+        c.squads?.some((s: TeamSquad) => s.id === selectedSquad.id)
+      );
+      if (updatedCategory) {
+        const updatedSquad = updatedCategory.squads.find((s: TeamSquad) => s.id === selectedSquad.id);
+        if (updatedSquad) {
+          setSelectedSquad(updatedSquad);
+          setShowSquadPlayersModal(true);
+        }
+      }
+    } catch (error: any) {
+      console.error('❌ Erro ao adicionar jogador:', error);
+      toast.error(error.message || "Erro ao adicionar jogador");
+    }
   }
 
   async function handleSearchCPF() {
@@ -569,12 +651,20 @@ export function TeamCategoriesManager({ teamId, teamName }: TeamCategoriesManage
           <DialogHeader>
             <DialogTitle>Adicionar Jogador</DialogTitle>
             <DialogDescription id="add-player-description">
-              Busque por CPF ou adicione manualmente
+              Adicione jogadores do elenco, busque por CPF ou adicione manualmente
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="flex gap-2 border-b pb-2">
+            <div className="flex gap-2 border-b pb-2 flex-wrap">
+              <Button
+                variant={addPlayerMode === 'roster' ? 'default' : 'ghost'}
+                onClick={() => setAddPlayerMode('roster')}
+                size="sm"
+              >
+                <Users className="h-4 w-4 mr-1" />
+                Do Elenco
+              </Button>
               <Button
                 variant={addPlayerMode === 'cpf' ? 'default' : 'ghost'}
                 onClick={() => setAddPlayerMode('cpf')}
@@ -591,7 +681,84 @@ export function TeamCategoriesManager({ teamId, teamName }: TeamCategoriesManage
               </Button>
             </div>
 
-            {addPlayerMode === 'cpf' ? (
+            {addPlayerMode === 'roster' ? (
+              <div className="space-y-4">
+                <div className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-lg">
+                  ℹ️ Adicione jogadores que já fazem parte do elenco do time sem precisar enviar convite
+                </div>
+
+                {loadingRoster ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2" />
+                    <p className="text-sm text-muted-foreground">Carregando elenco...</p>
+                  </div>
+                ) : teamRoster.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Users className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      Nenhum jogador no elenco do time ainda
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Adicione jogadores ao elenco na aba "Elenco" do perfil do time
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {teamRoster.map((player) => {
+                      // Verificar se jogador já está na equipe
+                      const alreadyInSquad = selectedSquad?.players?.some(p => 
+                        p.cpf === player.cpf || p.userId === player.userId
+                      );
+
+                      return (
+                        <Card key={player.id} className={alreadyInSquad ? "bg-muted/30 opacity-60" : "bg-muted/50"}>
+                          <CardContent className="p-3">
+                            <div className="flex items-center gap-3">
+                              <Avatar className="h-12 w-12">
+                                <AvatarImage src={player.photoUrl} alt={player.name} />
+                                <AvatarFallback>{player.name[0]}</AvatarFallback>
+                              </Avatar>
+                              
+                              <div className="flex-1">
+                                <h4 className="font-medium text-sm">{player.name}</h4>
+                                <div className="flex gap-2 mt-1">
+                                  <Badge variant="outline" className="text-xs">
+                                    #{player.number}
+                                  </Badge>
+                                  <Badge variant="outline" className="text-xs">
+                                    {player.position}
+                                  </Badge>
+                                </div>
+                              </div>
+
+                              <div className="text-right text-xs text-muted-foreground">
+                                {player.height && <p>{formatHeight(player.height)}</p>}
+                                {player.age && <p>{player.age} anos</p>}
+                              </div>
+
+                              <Button
+                                size="sm"
+                                onClick={() => handleAddPlayerFromRoster(player)}
+                                disabled={alreadyInSquad}
+                              >
+                                {alreadyInSquad ? (
+                                  "Já na equipe"
+                                ) : (
+                                  <>
+                                    <Plus className="h-4 w-4 mr-1" />
+                                    Adicionar
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : addPlayerMode === 'cpf' ? (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label>CPF do Atleta</Label>
