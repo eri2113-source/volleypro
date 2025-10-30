@@ -34,6 +34,8 @@ interface TournamentRosterModalProps {
   tournamentName: string;
   teamId: string;
   teamName: string;
+  squadId?: string; // ID da equipe/categoria específica
+  squadName?: string; // Nome da equipe/categoria
   modalityType?: 'indoor' | 'beach'; // Nova prop
   teamSize?: 'duo' | 'trio' | 'quartet' | 'quintet'; // Para vôlei de praia
 }
@@ -136,6 +138,8 @@ export function TournamentRosterModal({
   tournamentName,
   teamId,
   teamName,
+  squadId = '',
+  squadName = '',
   modalityType = 'indoor',
   teamSize = 'duo',
 }: TournamentRosterModalProps) {
@@ -178,7 +182,7 @@ export function TournamentRosterModal({
 
   async function loadRoster() {
     try {
-      const { roster: existingRoster } = await tournamentApi.getRoster(tournamentId, teamId);
+      const { roster: existingRoster } = await tournamentApi.getRoster(tournamentId, teamId, squadId);
       
       if (existingRoster && Object.keys(existingRoster).length > 0) {
         setRoster(existingRoster);
@@ -292,7 +296,8 @@ export function TournamentRosterModal({
 
     setSaving(true);
     try {
-      await tournamentApi.saveRoster(tournamentId, teamId, roster);
+      // Enviar squadId junto com o roster
+      await tournamentApi.saveRoster(tournamentId, teamId, roster, squadId);
       
       toast.success("Convocação salva!", {
         description: "Os jogadores convocados foram notificados e precisam confirmar"
@@ -338,7 +343,11 @@ export function TournamentRosterModal({
             <div>
               <DialogTitle>Convocação - {tournamentName}</DialogTitle>
               <DialogDescription id="roster-description">
-                {teamName} • Monte sua equipe para o torneio
+                {teamName}
+                {squadName && squadName !== 'Equipe Principal' && (
+                  <span className="text-primary font-semibold"> • {squadName}</span>
+                )}
+                {!squadName || squadName === 'Equipe Principal' ? ' • Monte sua equipe para o torneio' : ''}
               </DialogDescription>
             </div>
           </div>

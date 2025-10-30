@@ -84,6 +84,8 @@ export function TournamentDetailsModal({
   // Roster/Convocação
   const [showRosterModal, setShowRosterModal] = useState(false);
   const [currentUserTeamName, setCurrentUserTeamName] = useState("");
+  const [selectedSquadId, setSelectedSquadId] = useState<string>("");
+  const [selectedSquadName, setSelectedSquadName] = useState<string>("");
   
   // Beach Tournament Registration
   const [showBeachRegistration, setShowBeachRegistration] = useState(false);
@@ -91,6 +93,7 @@ export function TournamentDetailsModal({
   
   // Squad Selection Modal (for teams with multiple squads)
   const [showSquadSelection, setShowSquadSelection] = useState(false);
+  const [showSquadSelectionForConvocation, setShowSquadSelectionForConvocation] = useState(false);
 
   useEffect(() => {
     if (open && tournamentId && tournamentId !== '') {
@@ -510,7 +513,32 @@ export function TournamentDetailsModal({
             {/* Botão de Convocação - Apenas para times inscritos */}
             {isRegistered && userType === 'team' && (
               <Button 
-                onClick={() => setShowRosterModal(true)}
+                onClick={() => {
+                  // Verificar quantas equipes do time estão inscritas no torneio
+                  const mySquads = teams.filter((t: any) => t.teamId === currentUserId);
+                  
+                  console.log('🎯 Verificando equipes inscritas:', {
+                    totalTeams: teams.length,
+                    currentUserId,
+                    mySquads: mySquads.length,
+                    mySquadsData: mySquads
+                  });
+                  
+                  if (mySquads.length === 0) {
+                    toast.error("Erro: Nenhuma equipe encontrada");
+                    return;
+                  }
+                  
+                  if (mySquads.length === 1) {
+                    // Uma equipe apenas: abrir modal direto
+                    setSelectedSquadId(mySquads[0].squadId || '');
+                    setSelectedSquadName(mySquads[0].squadName || 'Equipe Principal');
+                    setShowRosterModal(true);
+                  } else {
+                    // Múltiplas equipes: mostrar seletor primeiro
+                    setShowSquadSelectionForConvocation(true);
+                  }
+                }}
                 disabled={loading}
                 className="bg-gradient-to-r from-green-600 to-green-500 hover:from-green-700 hover:to-green-600"
               >
@@ -922,6 +950,8 @@ export function TournamentDetailsModal({
           open={showRosterModal}
           onClose={() => {
             setShowRosterModal(false);
+            setSelectedSquadId('');
+            setSelectedSquadName('');
             // Recarregar detalhes do torneio para atualizar status de convocação
             loadTournamentDetails();
           }}
@@ -929,9 +959,66 @@ export function TournamentDetailsModal({
           tournamentName={tournament.name}
           teamId={currentUserId}
           teamName={currentUserTeamName}
+          squadId={selectedSquadId}
+          squadName={selectedSquadName}
           modalityType={tournament.modalityType || 'indoor'}
           teamSize={tournament.teamSize || 'duo'}
         />
+      )}
+
+      {/* Squad Selection for Convocation */}
+      {showSquadSelectionForConvocation && (
+        <Dialog open={showSquadSelectionForConvocation} onOpenChange={setShowSquadSelectionForConvocation}>
+          <DialogContent className="max-w-md" aria-describedby="squad-selection-convocation-description">
+            <DialogHeader>
+              <DialogTitle>Selecione a Equipe</DialogTitle>
+              <DialogDescription id="squad-selection-convocation-description">
+                Você tem múltiplas equipes inscritas neste torneio. Selecione qual equipe deseja convocar jogadores.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-3 py-4">
+              {teams
+                .filter((t: any) => t.teamId === currentUserId)
+                .map((squad: any) => (
+                  <Card 
+                    key={squad.squadId || squad.id}
+                    className="cursor-pointer hover:border-primary transition-all duration-200"
+                    onClick={() => {
+                      setSelectedSquadId(squad.squadId || '');
+                      setSelectedSquadName(squad.squadName || 'Equipe Principal');
+                      setShowSquadSelectionForConvocation(false);
+                      setShowRosterModal(true);
+                    }}
+                  >
+                    <CardContent className="p-4 flex items-center gap-3">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-white overflow-hidden">
+                        {squad.photoUrl ? (
+                          <img src={squad.photoUrl} alt={squad.squadName} className="h-full w-full object-cover" />
+                        ) : (
+                          <Users className="h-6 w-6" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-bold">{squad.teamName || currentUserTeamName}</p>
+                        <p className="text-sm text-primary flex items-center gap-1">
+                          <Trophy className="h-3 w-3" />
+                          {squad.squadName || 'Equipe Principal'}
+                        </p>
+                      </div>
+                      <CheckCircle2 className="h-5 w-5 text-green-500" />
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+            
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowSquadSelectionForConvocation(false)}>
+                Cancelar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Beach Tournament Registration Modal */}

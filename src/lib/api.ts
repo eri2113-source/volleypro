@@ -682,15 +682,16 @@ export const tournamentApi = {
   // ============= ROSTER / CONVOCAÇÃO =============
   
   // Get roster for a tournament
-  async getRoster(tournamentId: string, teamId: string) {
-    return apiCall(`/tournaments/${tournamentId}/roster/${teamId}`);
+  async getRoster(tournamentId: string, teamId: string, squadId?: string) {
+    const squadParam = squadId ? `?squadId=${squadId}` : '';
+    return apiCall(`/tournaments/${tournamentId}/roster/${teamId}${squadParam}`);
   },
 
   // Save/Update roster
-  async saveRoster(tournamentId: string, teamId: string, roster: any) {
+  async saveRoster(tournamentId: string, teamId: string, roster: any, squadId?: string) {
     return apiCall(`/tournaments/${tournamentId}/roster`, {
       method: 'POST',
-      body: JSON.stringify({ teamId, roster }),
+      body: JSON.stringify({ teamId, roster, squadId }),
     });
   },
 
