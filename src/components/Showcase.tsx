@@ -120,8 +120,17 @@ export function Showcase({ onSelectAthlete }: ShowcaseProps) {
       setInviteMessage("");
       setSelectedAthleteId(null);
     } catch (error: any) {
-      console.error("❌ Error sending invitation:", error);
-      toast.error(error.message || "Erro ao enviar convite");
+      console.error("❌ Erro ao enviar convite:", error);
+      
+      // Mensagem mais clara sobre o erro
+      let errorMsg = error.message || "Erro ao enviar convite";
+      if (error.message?.includes('CPF')) {
+        errorMsg = "❌ Este atleta precisa cadastrar o CPF no perfil antes de receber convites";
+      } else if (error.message?.includes('already has a team')) {
+        errorMsg = "⚠️ Este atleta já faz parte de outro time";
+      }
+      
+      toast.error(errorMsg, { duration: 5000 });
     } finally {
       setLoading(false);
     }

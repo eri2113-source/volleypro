@@ -82,10 +82,11 @@ export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
 
   // Se não há mídia, mostra placeholder com marca d'água VolleyPro
   if (!hasAnyMedia) {
+    console.log('📺 LED Panel: SEM MÍDIA - Mostrando placeholder VolleyPro', { height, layout });
     return (
       <div
         className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-secondary/20 to-primary/20"
-        style={{ height: `${height}px` }}
+        style={{ height: `${height}px`, minHeight: `${height}px` }}
       >
         {/* Marca d'água VolleyPro */}
         <div className="absolute inset-0 flex items-center justify-center">
@@ -108,10 +109,18 @@ export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
     );
   }
 
+  console.log('📺 LED Panel: COM MÍDIA - Renderizando', { 
+    height, 
+    layout, 
+    gridClass,
+    numSlots,
+    slotMediaCount: slotMedia.map(s => s.length)
+  });
+
   return (
     <div
       className={`relative overflow-hidden grid ${gridClass} gap-0`}
-      style={{ height: `${height}px` }}
+      style={{ height: `${height}px`, minHeight: `${height}px` }}
     >
       {slotMedia.map((slotMediaList, slotIndex) => (
         <AnimatedSlot

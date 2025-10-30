@@ -2420,6 +2420,7 @@ app.post('/make-server-0ea22bba/invitations/send', authMiddleware, async (c) => 
     
     // VALIDAÇÃO: Atleta deve ter CPF cadastrado
     if (!athlete.cpf || athlete.cpf.trim() === '') {
+      console.log('⚠️ Convite bloqueado: Atleta sem CPF', { athleteId, athleteName: athlete.name });
       return c.json({ 
         error: 'Athlete must have CPF registered',
         details: 'O atleta precisa cadastrar o CPF no perfil antes de receber convites'
@@ -2466,7 +2467,12 @@ app.post('/make-server-0ea22bba/invitations/send', authMiddleware, async (c) => 
     };
     
     await kv.set(invitationId, invitation);
-    console.log('✅ Invitation sent:', invitationId);
+    console.log('✅ Convite enviado com sucesso!', { 
+      invitationId, 
+      team: team.name, 
+      athlete: athlete.name,
+      cpf: athlete.cpf 
+    });
     
     return c.json({ invitation });
   } catch (error: any) {
