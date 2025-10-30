@@ -1360,6 +1360,264 @@ app.post('/make-server-0ea22bba/tournaments', authMiddleware, async (c) => {
   }
 });
 
+// ============= TOURNAMENT ORGANIZERS ROUTES =============
+
+// Get tournament organizers (equipe organizadora)
+app.get('/make-server-0ea22bba/tournaments/:tournamentId/organizers', authMiddleware, async (c) => {
+  try {
+    const tournamentId = c.req.param('tournamentId');
+    
+    // Buscar todos os organizadores do torneio
+    const organizers = await kv.getByPrefix(`tournament_organizer:${tournamentId}:`);
+    
+    console.log(`📋 Organizers loaded for tournament ${tournamentId}:`, organizers.length);
+    
+    return c.json({ organizers: organizers || [] });
+  } catch (error: any) {
+    console.error('❌ Error fetching tournament organizers:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Add organizer to tournament
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/organizers', authMiddleware, async (c) => {
+  try {
+    const currentUserId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const { userId, name, email, cpf, type } = await c.req.json();
+    
+    // Verificar se o usuário atual é o criador do torneio
+    const tournament = await kv.get(`tournament:${tournamentId}`);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    if (tournament.organizerId !== currentUserId) {
+      return c.json({ error: 'Only the tournament creator can add organizers' }, 403);
+    }
+    
+    // Verificar se já é organizador
+    const existingOrganizers = await kv.getByPrefix(`tournament_organizer:${tournamentId}:${userId}`);
+    if (existingOrganizers.length > 0) {
+      return c.json({ error: 'This person is already an organizer' }, 400);
+    }
+    
+    // Criar novo organizador
+    const organizerId = crypto.randomUUID();
+    const organizer = {
+      id: organizerId,
+      userId,
+      name,
+      email: email || null,
+      cpf: cpf || null,
+      type: type || null,
+      role: 'organizer',
+      addedAt: new Date().toISOString()
+    };
+    
+    await kv.set(`tournament_organizer:${tournamentId}:${userId}:${organizerId}`, organizer);
+    
+    console.log(`✅ Organizer added to tournament ${tournamentId}:`, name);
+    
+    return c.json({ success: true, organizer });
+  } catch (error: any) {
+    console.error('❌ Error adding tournament organizer:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Remove organizer from tournament
+app.delete('/make-server-0ea22bba/tournaments/:tournamentId/organizers/:organizerId', authMiddleware, async (c) => {
+  try {
+    const currentUserId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const organizerId = c.req.param('organizerId');
+    
+    // Verificar se o usuário atual é o criador do torneio
+    const tournament = await kv.get(`tournament:${tournamentId}`);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    if (tournament.organizerId !== currentUserId) {
+      return c.json({ error: 'Only the tournament creator can remove organizers' }, 403);
+    }
+    
+    // Buscar o organizador para deletar
+    const allOrganizers = await kv.getByPrefix(`tournament_organizer:${tournamentId}:`);
+    const organizerToDelete = allOrganizers.find((org: any) => org.id === organizerId);
+    
+    if (!organizerToDelete) {
+      return c.json({ error: 'Organizer not found' }, 404);
+    }
+    
+    // Deletar organizador
+    await kv.del(`tournament_organizer:${tournamentId}:${organizerToDelete.userId}:${organizerId}`);
+    
+    console.log(`✅ Organizer removed from tournament ${tournamentId}`);
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('❌ Error removing tournament organizer:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Check if user is organizer of tournament
+app.get('/make-server-0ea22bba/tournaments/:tournamentId/is-organizer', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    
+    // Verificar se é criador
+    const tournament = await kv.get(`tournament:${tournamentId}`);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    if (tournament.organizerId === userId) {
+      return c.json({ isOrganizer: true, isCreator: true, role: 'creator' });
+    }
+    
+    // Verificar se é membro da equipe organizadora
+    const organizers = await kv.getByPrefix(`tournament_organizer:${tournamentId}:${userId}:`);
+    
+    if (organizers.length > 0) {
+      return c.json({ isOrganizer: true, isCreator: false, role: 'organizer' });
+    }
+    
+    return c.json({ isOrganizer: false, isCreator: false, role: null });
+  } catch (error: any) {
+    console.error('❌ Error checking organizer status:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Search people (for adding to organizer team)
+app.get('/make-server-0ea22bba/search/people', authMiddleware, async (c) => {
+  try {
+    const query = c.req.query('q')?.toLowerCase() || '';
+    
+    if (query.length < 2) {
+      return c.json({ people: [] });
+    }
+    
+    // Buscar todos os usuários
+    const allUsers = await kv.getByPrefix('user:');
+    
+    // Filtrar por nome ou CPF
+    const filteredUsers = allUsers.filter((user: any) => {
+      if (!user.name) return false;
+      
+      const nameMatch = user.name.toLowerCase().includes(query);
+      const cpfMatch = user.cpf && user.cpf.replace(/\D/g, '').includes(query.replace(/\D/g, ''));
+      
+      return nameMatch || cpfMatch;
+    });
+    
+    // Limitar a 20 resultados e retornar apenas dados necessários
+    const results = filteredUsers.slice(0, 20).map((user: any) => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      cpf: user.cpf,
+      type: user.userType,
+      photoUrl: user.photoUrl
+    }));
+    
+    return c.json({ people: results });
+  } catch (error: any) {
+    console.error('❌ Error searching people:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Update tournament match result (for organizers)
+app.put('/make-server-0ea22bba/tournaments/:tournamentId/matches/:matchId', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const matchId = c.req.param('matchId');
+    const { team1Score, team2Score, winnerId, sets } = await c.req.json();
+    
+    // Verificar se é organizador
+    const tournament = await kv.get(`tournament:${tournamentId}`);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    const isCreator = tournament.organizerId === userId;
+    const organizers = await kv.getByPrefix(`tournament_organizer:${tournamentId}:${userId}:`);
+    const isOrganizer = isCreator || organizers.length > 0;
+    
+    if (!isOrganizer) {
+      return c.json({ error: 'Only tournament organizers can update matches' }, 403);
+    }
+    
+    // Atualizar partida
+    const matchKey = `tournament_match:${tournamentId}:${matchId}`;
+    const match = await kv.get(matchKey);
+    
+    if (!match) {
+      return c.json({ error: 'Match not found' }, 404);
+    }
+    
+    match.team1Score = team1Score;
+    match.team2Score = team2Score;
+    match.winnerId = winnerId;
+    match.sets = sets || [];
+    match.status = 'finished';
+    match.updatedBy = userId;
+    match.updatedAt = new Date().toISOString();
+    
+    await kv.set(matchKey, match);
+    
+    console.log(`✅ Match ${matchId} updated in tournament ${tournamentId}`);
+    
+    return c.json({ success: true, match });
+  } catch (error: any) {
+    console.error('❌ Error updating match:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Update tournament standings (for organizers)
+app.put('/make-server-0ea22bba/tournaments/:tournamentId/standings', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const { standings } = await c.req.json();
+    
+    // Verificar se é organizador
+    const tournament = await kv.get(`tournament:${tournamentId}`);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    const isCreator = tournament.organizerId === userId;
+    const organizers = await kv.getByPrefix(`tournament_organizer:${tournamentId}:${userId}:`);
+    const isOrganizer = isCreator || organizers.length > 0;
+    
+    if (!isOrganizer) {
+      return c.json({ error: 'Only tournament organizers can update standings' }, 403);
+    }
+    
+    // Atualizar classificação
+    tournament.standings = standings;
+    tournament.updatedBy = userId;
+    tournament.updatedAt = new Date().toISOString();
+    
+    await kv.set(`tournament:${tournamentId}`, tournament);
+    
+    console.log(`✅ Standings updated for tournament ${tournamentId}`);
+    
+    return c.json({ success: true, tournament });
+  } catch (error: any) {
+    console.error('❌ Error updating standings:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // ============= INVITATIONS ROUTES =============
 
 app.post('/make-server-0ea22bba/invitations', authMiddleware, async (c) => {
@@ -2948,6 +3206,91 @@ app.delete('/make-server-0ea22bba/admin/users/:userId', authMiddleware, async (c
     });
   } catch (error: any) {
     console.error('❌ Error deleting user (master):', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Create tournament (rota principal de criação)
+app.post('/make-server-0ea22bba/tournaments', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentData = await c.req.json();
+    
+    console.log('🏆 Criando novo torneio:', tournamentData);
+    
+    // Validações
+    if (!tournamentData.name || !tournamentData.startDate || !tournamentData.endDate || !tournamentData.location) {
+      return c.json({ error: 'Dados obrigatórios faltando' }, 400);
+    }
+    
+    // Buscar dados do usuário
+    const user = await kv.get(`user:${userId}`);
+    if (!user) {
+      return c.json({ error: 'User not found' }, 404);
+    }
+    
+    // Gerar ID seguro com timestamp (SEMPRE 13 dígitos)
+    const timestamp = Date.now();
+    const tournamentId = `tournament:${timestamp}`;
+    
+    // Validar que timestamp está em range seguro
+    if (timestamp > Number.MAX_SAFE_INTEGER) {
+      console.error('❌ Timestamp overflow:', timestamp);
+      return c.json({ error: 'Erro ao gerar ID do torneio' }, 500);
+    }
+    
+    console.log(`📌 ID gerado: ${tournamentId} (timestamp: ${timestamp})`);
+    
+    // Criar torneio
+    const newTournament = {
+      id: tournamentId,
+      name: tournamentData.name,
+      description: tournamentData.description || '',
+      modalityType: tournamentData.modalityType || 'indoor',
+      startDate: tournamentData.startDate,
+      endDate: tournamentData.endDate,
+      location: tournamentData.location,
+      arena: tournamentData.arena,
+      city: tournamentData.city || '',
+      state: tournamentData.state || '',
+      maxTeams: tournamentData.maxTeams || 16,
+      registrationDeadline: tournamentData.registrationDeadline,
+      status: 'upcoming',
+      format: tournamentData.format || 'single_elimination',
+      categories: tournamentData.categories || ['masculino'],
+      divisions: tournamentData.divisions || ['Adulto'],
+      categoryData: {},
+      registeredTeams: [],
+      squadRegistrations: [],
+      registeredPlayers: [],
+      organizerName: user.name || user.username,
+      organizerAvatar: user.profilePhoto,
+      createdBy: userId,
+      createdAt: new Date().toISOString(),
+      sponsors: []
+    };
+    
+    // Inicializar categoryData
+    for (const category of newTournament.categories) {
+      newTournament.categoryData[category] = {};
+      for (const division of newTournament.divisions) {
+        newTournament.categoryData[category][division] = {
+          maxTeams: newTournament.maxTeams,
+          registeredTeams: []
+        };
+      }
+    }
+    
+    await kv.set(tournamentId, newTournament);
+    
+    console.log(`✅ Torneio criado: ${tournamentId} - ${newTournament.name}`);
+    
+    return c.json({ 
+      success: true,
+      tournament: newTournament 
+    });
+  } catch (error: any) {
+    console.error('❌ Error creating tournament:', error);
     return c.json({ error: error.message }, 500);
   }
 });

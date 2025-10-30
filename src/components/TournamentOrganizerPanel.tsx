@@ -107,33 +107,35 @@ export function TournamentOrganizerPanel({
 
     setSubmitting(true);
     try {
-      // Enviar resultado para o backend
+      const token = localStorage.getItem('volleypro_token');
+      
+      // Enviar resultado para o backend usando a nova rota
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournament/match/result`,
+        `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/matches/${selectedMatch.id}`,
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${publicAnonKey}`
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({
-            tournamentId,
-            matchId: selectedMatch.id,
-            category,
-            division,
-            result
+            team1Score: result.homeSets,
+            team2Score: result.awaySets,
+            winnerId: result.winner,
+            sets: result.sets || []
           })
         }
       );
 
       if (!response.ok) {
-        throw new Error("Erro ao salvar resultado");
+        const error = await response.json();
+        throw new Error(error.error || "Erro ao salvar resultado");
       }
 
       const data = await response.json();
 
       toast.success("✅ Resultado registrado!", {
-        description: `Classificação atualizada automaticamente. ${data.notifications || 0} participantes notificados.`
+        description: "Tabela e classificação atualizadas automaticamente"
       });
 
       // Recarregar partidas
@@ -142,12 +144,9 @@ export function TournamentOrganizerPanel({
       // Fechar formulário
       setSelectedMatch(null);
 
-      // Notificar participantes em tempo real
-      await notifyParticipants(selectedMatch, result);
-
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar resultado:", error);
-      toast.error("Erro ao salvar resultado", {
+      toast.error(error.message || "Erro ao salvar resultado", {
         description: "Tente novamente ou entre em contato com o suporte"
       });
     } finally {

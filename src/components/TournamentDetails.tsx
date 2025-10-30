@@ -89,6 +89,46 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
   async function loadTournamentData() {
     setLoading(true);
     try {
+      // ===== VALIDAÇÃO RIGOROSA DO ID =====
+      console.log('🔍 Validando ID do torneio:', {
+        value: tournamentId,
+        type: typeof tournamentId,
+        isNaN: isNaN(tournamentId),
+        isZero: tournamentId === 0,
+        isNegative: tournamentId < 0,
+        isSafe: tournamentId <= Number.MAX_SAFE_INTEGER
+      });
+      
+      // Validar que ID é um número válido
+      if (typeof tournamentId !== 'number' || isNaN(tournamentId)) {
+        console.error('❌ ID não é um número válido:', tournamentId);
+        toast.error('ID de torneio inválido (não é número)');
+        onBack();
+        return;
+      }
+      
+      // Validar que ID está em range seguro (evitar overflow)
+      if (tournamentId > Number.MAX_SAFE_INTEGER) {
+        console.error('❌ ID excede Number.MAX_SAFE_INTEGER:', {
+          id: tournamentId,
+          max: Number.MAX_SAFE_INTEGER,
+          difference: tournamentId - Number.MAX_SAFE_INTEGER
+        });
+        toast.error('ID de torneio muito grande (overflow). Por favor, recrie o torneio.');
+        onBack();
+        return;
+      }
+      
+      // Validar que ID não é zero ou negativo
+      if (tournamentId <= 0) {
+        console.error('❌ ID inválido (zero ou negativo):', tournamentId);
+        toast.error('ID de torneio inválido. Por favor, recrie o torneio.');
+        onBack();
+        return;
+      }
+      
+      console.log('✅ ID validado com sucesso:', tournamentId);
+      
       // Pegar usuário autenticado
       const userId = localStorage.getItem('volleypro_user_id');
       setCurrentUserId(userId);
@@ -118,12 +158,6 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
         } catch (error) {
           console.error('Erro ao verificar permissões:', error);
         }
-      }
-      
-      // Validar ID antes de fazer a chamada
-      if (!tournamentId && tournamentId !== 0) {
-        console.error('❌ ID de torneio inválido:', tournamentId);
-        throw new Error('ID de torneio inválido');
       }
       
       // Carregar dados reais do backend
