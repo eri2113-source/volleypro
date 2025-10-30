@@ -119,78 +119,49 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
         }
       }
       
-      // TODO: Carregar dados reais do backend
-      // Simulando dados do torneio
-      const mockUserId = userId || "user123";
+      // Carregar dados reais do backend
+      const { tournamentApi } = await import('../lib/api');
+      const result = await tournamentApi.getTournamentDetails(tournamentId.toString());
       
-      const mockTournament = {
-        id: tournamentId,
-        name: "Liga Municipal de Voleibol 2025",
-        description: "Campeonato municipal com os melhores times da região",
-        status: "ongoing",
-        startDate: "2025-11-07",
-        endDate: "2025-11-09",
-        location: "Ginásio Municipal",
-        organizer: "Prefeitura Municipal",
-        organizerId: mockUserId, // Mesmo ID para simular que é organizador
-        organizerAvatar: "https://ui-avatars.com/api/?name=PM&background=0052cc&color=fff",
-        teams: 16,
-        matches: 32,
-        format: "Grupos + Eliminatórias",
-        prize: "R$ 5.000,00",
-        currentPhase: "Fase de Grupos",
-        liveMatches: 2,
-        bannerImage: "https://images.unsplash.com/photo-1612872087720-bb876e2e67d1?w=1200&h=400&fit=crop",
-        categories: ["masculino", "feminino", "misto"],
-        divisions: ["1", "2", "3", "4"],
-        categoryData: {
-          masculino: {
-            "1": { teams: 16, matches: 32, liveMatches: 2 },
-            "2": { teams: 12, matches: 24, liveMatches: 1 },
-            "3": { teams: 8, matches: 16, liveMatches: 0 },
-            "4": { teams: 10, matches: 20, liveMatches: 1 }
-          },
-          feminino: {
-            "1": { teams: 14, matches: 28, liveMatches: 1 },
-            "2": { teams: 10, matches: 20, liveMatches: 0 },
-            "3": { teams: 6, matches: 12, liveMatches: 0 },
-            "4": { teams: 8, matches: 16, liveMatches: 0 }
-          },
-          misto: {
-            "1": { teams: 12, matches: 24, liveMatches: 0 },
-            "2": { teams: 8, matches: 16, liveMatches: 0 },
-            "3": { teams: 6, matches: 12, liveMatches: 0 },
-            "4": { teams: 4, matches: 8, liveMatches: 0 }
-          }
-        },
-        sponsors: [
-          {
-            id: "sponsor-1",
-            type: "image" as const,
-            url: "https://images.unsplash.com/photo-1599305445671-ac291c95aaa9?w=1200&h=400&fit=crop",
-            duration: 5,
-            link: "https://example.com/sponsor1"
-          },
-          {
-            id: "sponsor-2",
-            type: "image" as const,
-            url: "https://images.unsplash.com/photo-1560250097-0b93528c311a?w=1200&h=400&fit=crop",
-            duration: 5,
-            link: "https://example.com/sponsor2"
-          },
-          {
-            id: "sponsor-3",
-            type: "image" as const,
-            url: "https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&h=400&fit=crop",
-            duration: 6
-          }
-        ]
+      if (!result.tournament) {
+        throw new Error('Torneio não encontrado');
+      }
+      
+      const tournamentData = result.tournament;
+      
+      // Contar times inscritos REAIS
+      const registeredTeamsCount = tournamentData.registeredTeams?.length || 0;
+      const registeredPlayersCount = tournamentData.registeredPlayers?.length || 0;
+      
+      console.log('📊 Dados do torneio carregados:', {
+        id: tournamentData.id,
+        name: tournamentData.name,
+        registeredTeams: registeredTeamsCount,
+        registeredPlayers: registeredPlayersCount,
+        modalityType: tournamentData.modalityType
+      });
+      
+      // Montar dados do torneio com contagem real
+      const tournament = {
+        ...tournamentData,
+        // Usar contagem REAL de times/jogadores inscritos
+        teams: tournamentData.modalityType === 'beach' 
+          ? registeredPlayersCount 
+          : registeredTeamsCount,
+        organizerAvatar: tournamentData.organizerAvatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(tournamentData.organizerName || 'ORG')}&background=0052cc&color=fff`,
+        liveMatches: 0, // TODO: Implementar contagem de lives
+        categories: tournamentData.categories || ["masculino"],
+        divisions: tournamentData.divisions || ["1"],
+        categoryData: tournamentData.categoryData || {},
+        sponsors: tournamentData.sponsors || []
       };
 
-      setTournament(mockTournament);
+      setTournament(tournament);
       
       // Verificar se é organizador
-      setIsOrganizer(mockTournament.organizerId === mockUserId);
+      if (userId) {
+        setIsOrganizer(tournamentData.organizerId === userId);
+      }
     } catch (error) {
       console.error("Erro ao carregar torneio:", error);
       toast.error("Erro ao carregar detalhes do torneio");

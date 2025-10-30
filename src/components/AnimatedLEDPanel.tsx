@@ -80,17 +80,29 @@ export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
     [slotMedia]
   );
 
-  // Se não há mídia, mostra placeholder
+  // Se não há mídia, mostra placeholder com marca d'água VolleyPro
   if (!hasAnyMedia) {
     return (
       <div
-        className="relative overflow-hidden bg-gradient-to-r from-primary via-[#0052cc] to-primary"
+        className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-secondary/20 to-primary/20"
         style={{ height: `${height}px` }}
       >
+        {/* Marca d'água VolleyPro */}
         <div className="absolute inset-0 flex items-center justify-center">
-          <p className="text-white/60 text-lg">
-            Nenhuma mídia configurada
-          </p>
+          <div className="text-center space-y-4 opacity-30">
+            {/* Logo VolleyPro SVG */}
+            <svg width="120" height="120" viewBox="0 0 200 200" className="mx-auto">
+              <circle cx="100" cy="100" r="90" fill="none" stroke="currentColor" strokeWidth="8" className="text-primary" />
+              <path d="M70 80 L100 140 L130 80" fill="none" stroke="currentColor" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" className="text-primary" />
+              <circle cx="70" cy="70" r="8" fill="currentColor" className="text-primary" />
+              <circle cx="130" cy="70" r="8" fill="currentColor" className="text-primary" />
+              <circle cx="100" cy="150" r="8" fill="currentColor" className="text-primary" />
+            </svg>
+            <div className="space-y-1">
+              <p className="text-2xl font-bold text-primary">VolleyPro</p>
+              <p className="text-sm text-muted-foreground">Configure o Painel LED</p>
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -199,18 +211,21 @@ const AnimatedSlot = memo(function AnimatedSlot({
     }
   }, [shuffledMedia, currentIndex]);
 
-  // Se não há mídia neste slot
+  // Se não há mídia neste slot - Marca d'água VolleyPro
   if (!shuffledMedia || shuffledMedia.length === 0) {
     return (
-      <div className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-primary/10 to-primary/20 flex items-center justify-center">
-        {/* Logo VolleyPro como placeholder */}
-        <img 
-          src="/logo-volleypro-icone.svg" 
-          alt="VolleyPro" 
-          className="w-24 h-24 opacity-20"
-          loading="lazy"
-          style={{ objectFit: 'contain' }}
-        />
+      <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-primary/10 flex items-center justify-center">
+        {/* Marca d'água VolleyPro SVG inline */}
+        <div className="text-center space-y-2 opacity-20">
+          <svg width="80" height="80" viewBox="0 0 200 200" className="mx-auto">
+            <circle cx="100" cy="100" r="90" fill="none" stroke="currentColor" strokeWidth="8" className="text-primary" />
+            <path d="M70 80 L100 140 L130 80" fill="none" stroke="currentColor" strokeWidth="10" strokeLinecap="round" strokeLinejoin="round" className="text-primary" />
+            <circle cx="70" cy="70" r="8" fill="currentColor" className="text-primary" />
+            <circle cx="130" cy="70" r="8" fill="currentColor" className="text-primary" />
+            <circle cx="100" cy="150" r="8" fill="currentColor" className="text-primary" />
+          </svg>
+          <p className="text-xs font-semibold text-primary/60">VolleyPro</p>
+        </div>
       </div>
     );
   }
