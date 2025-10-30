@@ -45,7 +45,7 @@ import { BeachTournamentStandings } from "./BeachTournamentStandings";
 import { AnimatedLEDPanel } from "./AnimatedLEDPanel";
 import { TournamentSquadSelectionModal } from "./TournamentSquadSelectionModal";
 import { TournamentOrganizerTeamModal } from "./TournamentOrganizerTeamModal";
-import { TournamentSponsorsManager } from "./TournamentSponsorsManager";
+import { LEDPanelConfigModal } from "./LEDPanelConfigModal";
 
 interface TournamentDetailsModalProps {
   open: boolean;
@@ -99,7 +99,7 @@ export function TournamentDetailsModal({
   
   // Organizer Management Modals
   const [showOrganizerTeamModal, setShowOrganizerTeamModal] = useState(false);
-  const [showSponsorsManager, setShowSponsorsManager] = useState(false);
+  const [showLEDPanelConfig, setShowLEDPanelConfig] = useState(false);
 
   useEffect(() => {
     if (open && tournamentId && tournamentId !== '') {
@@ -472,12 +472,12 @@ export function TournamentDetailsModal({
                 </Button>
                 
                 <Button 
-                  onClick={() => setShowSponsorsManager(true)}
+                  onClick={() => setShowLEDPanelConfig(true)}
                   variant="outline"
                   className="border-secondary text-secondary hover:bg-secondary/10"
                 >
                   <ImagePlus className="h-4 w-4 mr-2" />
-                  Patrocinadores
+                  Painel LED
                 </Button>
               </>
             )}
@@ -887,32 +887,37 @@ export function TournamentDetailsModal({
 
           <TabsContent value="led" className="space-y-4">
             {/* Banner LED Animado com Patrocinadores */}
-            {tournament.sponsors && tournament.sponsors.length > 0 ? (
+            {tournament.ledPanelConfig && Object.values(tournament.ledPanelConfig.zones).some((zone: any) => zone.length > 0) ? (
               <AnimatedLEDPanel 
-                layout={tournament.sponsorsLayout || "grid-3"}
-                animationType="horizontal"
-                randomOrder={true}
-                autoPlay={true}
-                transitionSpeed={5}
+                layout={tournament.ledPanelConfig.layout || "grid-3"}
+                animationType={tournament.ledPanelConfig.animationType || "horizontal"}
+                randomOrder={tournament.ledPanelConfig.randomOrder ?? true}
+                autoPlay={tournament.ledPanelConfig.autoPlay ?? true}
+                transitionSpeed={tournament.ledPanelConfig.transitionSpeed || 5}
                 height={280}
-                media={tournament.sponsors}
+                media={[
+                  ...tournament.ledPanelConfig.zones.zone1,
+                  ...tournament.ledPanelConfig.zones.zone2,
+                  ...tournament.ledPanelConfig.zones.zone3,
+                  ...tournament.ledPanelConfig.zones.zone4,
+                ]}
               />
             ) : (
               <Card>
                 <CardContent className="p-12 text-center">
                   <ImagePlus className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-20" />
-                  <p className="text-muted-foreground mb-2">Nenhum patrocinador adicionado ainda</p>
+                  <p className="text-muted-foreground mb-2">Painel LED não configurado</p>
                   {isOrganizer && (
                     <>
                       <p className="text-sm text-muted-foreground mb-4">
-                        Clique em "Patrocinadores" acima para adicionar logos e vídeos dos patrocinadores
+                        Clique em "Painel LED" acima para adicionar logos e vídeos dos patrocinadores
                       </p>
                       <Button 
-                        onClick={() => setShowSponsorsManager(true)}
+                        onClick={() => setShowLEDPanelConfig(true)}
                         variant="outline"
                       >
                         <ImagePlus className="h-4 w-4 mr-2" />
-                        Adicionar Patrocinadores
+                        Configurar Painel LED
                       </Button>
                     </>
                   )}
@@ -1117,62 +1122,44 @@ export function TournamentDetailsModal({
         />
       )}
 
-      {/* Modal de Gerenciamento de Patrocinadores */}
-      {showSponsorsManager && isOrganizer && tournament && (
-        <Dialog open={showSponsorsManager} onOpenChange={setShowSponsorsManager}>
-          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto" aria-describedby="sponsors-manager-description">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <ImagePlus className="h-5 w-5 text-secondary" />
-                Gerenciar Patrocinadores do Painel LED
-              </DialogTitle>
-              <DialogDescription id="sponsors-manager-description">
-                Adicione e organize os patrocinadores que aparecerão no painel de LED do torneio
-              </DialogDescription>
-            </DialogHeader>
-            
-            <TournamentSponsorsManager
-              tournamentId={tournamentId}
-              initialSponsors={tournament.sponsors || []}
-              initialLayout={tournament.sponsorsLayout || "grid-3"}
-              onSave={async (sponsors, layout) => {
-                try {
-                  console.log('💾 Salvando patrocinadores:', { sponsors, layout });
-                  
-                  const token = localStorage.getItem('volleypro_token');
-                  const response = await fetch(
-                    `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/sponsors`,
-                    {
-                      method: 'POST',
-                      headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                      },
-                      body: JSON.stringify({ sponsors, layout })
-                    }
-                  );
-                  
-                  if (!response.ok) {
-                    throw new Error('Erro ao salvar patrocinadores');
-                  }
-                  
-                  toast.success('✅ Patrocinadores salvos com sucesso!');
-                  // Recarregar torneio para atualizar dados
-                  await loadTournamentDetails();
-                } catch (error: any) {
-                  console.error('Erro ao salvar patrocinadores:', error);
-                  toast.error(error.message || 'Erro ao salvar patrocinadores');
+      {/* Modal de Configuração do Painel LED */}
+      {showLEDPanelConfig && isOrganizer && tournament && (
+        <LEDPanelConfigModal
+          open={showLEDPanelConfig}
+          onOpenChange={setShowLEDPanelConfig}
+          tournamentId={tournamentId}
+          currentConfig={tournament.ledPanelConfig}
+          onSave={async (config) => {
+            try {
+              console.log('💾 Salvando configuração do painel LED:', config);
+              
+              const token = localStorage.getItem('volleypro_token');
+              const response = await fetch(
+                `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/led-config`,
+                {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ config })
                 }
-              }}
-            />
-            
-            <DialogFooter className="border-t pt-4">
-              <Button variant="outline" onClick={() => setShowSponsorsManager(false)}>
-                Fechar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              );
+              
+              if (!response.ok) {
+                throw new Error('Erro ao salvar configuração do painel');
+              }
+              
+              toast.success('✅ Painel LED configurado com sucesso!');
+              setShowLEDPanelConfig(false);
+              // Recarregar torneio para atualizar dados
+              await loadTournamentDetails();
+            } catch (error: any) {
+              console.error('Erro ao salvar painel LED:', error);
+              toast.error(error.message || 'Erro ao salvar configuração');
+            }
+          }}
+        />
       )}
 
       {/* AlertDialog para solicitar motivo do cancelamento */}

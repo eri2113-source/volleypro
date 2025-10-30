@@ -6463,14 +6463,14 @@ app.delete('/make-server-0ea22bba/tournaments/:tournamentId/organizers/:organize
   }
 });
 
-// Save tournament sponsors
-app.post('/make-server-0ea22bba/tournaments/:tournamentId/sponsors', authMiddleware, async (c) => {
+// Save tournament LED panel configuration
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/led-config', authMiddleware, async (c) => {
   try {
     const userId = c.get('userId');
     const tournamentId = parseInt(c.req.param('tournamentId'));
-    const { sponsors, layout } = await c.req.json();
+    const { config } = await c.req.json();
     
-    console.log(`💾 Salvando ${sponsors?.length || 0} patrocinadores no torneio ${tournamentId}`);
+    console.log(`💾 Salvando configuração do painel LED no torneio ${tournamentId}`);
     
     // Verificar permissão
     const tournament = await kv.get(`tournament:${tournamentId}`);
@@ -6485,18 +6485,17 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/sponsors', authMiddlew
       return c.json({ error: 'Unauthorized' }, 403);
     }
     
-    // Atualizar torneio com patrocinadores e layout
-    tournament.sponsors = sponsors || [];
-    tournament.sponsorsLayout = layout || 'grid-3';
+    // Atualizar torneio com configuração do painel LED
+    tournament.ledPanelConfig = config;
     tournament.updatedAt = new Date().toISOString();
     
     await kv.set(`tournament:${tournamentId}`, tournament);
     
-    console.log(`✅ Patrocinadores salvos no torneio ${tournamentId}`);
+    console.log(`✅ Painel LED configurado no torneio ${tournamentId}`);
     
-    return c.json({ success: true, sponsors, layout });
+    return c.json({ success: true, config });
   } catch (error: any) {
-    console.error('❌ Erro ao salvar patrocinadores:', error);
+    console.error('❌ Erro ao salvar configuração do painel LED:', error);
     return c.json({ error: error.message }, 500);
   }
 });
