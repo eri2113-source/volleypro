@@ -17,6 +17,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { toast } from "sonner@2.0.3";
+import { projectId } from "../utils/supabase/info";
 import { 
   ArrowLeft, 
   Trophy, 
@@ -97,7 +98,7 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
         try {
           const token = localStorage.getItem('volleypro_token');
           const response = await fetch(
-            `https://${import.meta.env.VITE_SUPABASE_PROJECT_ID}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/can-edit`,
+            `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${tournamentId}/can-edit`,
             {
               headers: {
                 'Authorization': `Bearer ${token}`
@@ -119,12 +120,21 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
         }
       }
       
+      // Validar ID antes de fazer a chamada
+      if (!tournamentId && tournamentId !== 0) {
+        console.error('❌ ID de torneio inválido:', tournamentId);
+        throw new Error('ID de torneio inválido');
+      }
+      
       // Carregar dados reais do backend
+      console.log('🔍 Carregando torneio ID:', tournamentId, 'Tipo:', typeof tournamentId);
+      
       const { tournamentApi } = await import('../lib/api');
       const result = await tournamentApi.getTournamentDetails(tournamentId.toString());
       
       if (!result.tournament) {
-        throw new Error('Torneio não encontrado');
+        console.error('❌ Torneio não encontrado. ID solicitado:', tournamentId);
+        throw new Error(`Torneio não encontrado (ID: ${tournamentId})`);
       }
       
       const tournamentData = result.tournament;

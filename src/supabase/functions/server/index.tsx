@@ -2952,6 +2952,82 @@ app.delete('/make-server-0ea22bba/admin/users/:userId', authMiddleware, async (c
   }
 });
 
+// Reset tournaments (criar rota que estava faltando)
+app.post('/make-server-0ea22bba/admin/reset-tournaments', async (c) => {
+  try {
+    console.log('🔄 Resetando todos os torneios...');
+    
+    // Deletar TODOS os torneios
+    const allTournaments = await kv.getByPrefix('tournament:');
+    console.log(`🗑️ Deletando ${allTournaments.length} torneios existentes...`);
+    
+    for (const tournament of allTournaments) {
+      await kv.del(tournament.id);
+    }
+    
+    // Deletar todos os matches também
+    const allMatches = await kv.getByPrefix('match:');
+    console.log(`🗑️ Deletando ${allMatches.length} partidas...`);
+    
+    for (const match of allMatches) {
+      await kv.del(match.id);
+    }
+    
+    // Criar um torneio de exemplo com ID válido usando timestamp
+    const tournamentId = `tournament:${Date.now()}`;
+    const newTournament = {
+      id: tournamentId,
+      name: 'Campeonato Municipal 2025',
+      description: 'Torneio de exemplo criado pelo sistema',
+      modalityType: 'indoor',
+      startDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 dias no futuro
+      endDate: new Date(Date.now() + 37 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 37 dias no futuro
+      location: 'Ginásio Municipal',
+      city: 'São Paulo',
+      state: 'SP',
+      maxTeams: 16,
+      registrationDeadline: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 20 dias no futuro
+      status: 'upcoming',
+      categories: ['masculino'],
+      divisions: ['Adulto'],
+      categoryData: {
+        masculino: {
+          Adulto: {
+            maxTeams: 16,
+            registeredTeams: []
+          }
+        }
+      },
+      registeredTeams: [],
+      squadRegistrations: [],
+      registeredPlayers: [],
+      organizerName: 'Sistema VolleyPro',
+      organizerAvatar: 'https://ui-avatars.com/api/?name=VolleyPro&background=0052cc&color=fff',
+      createdBy: 'system',
+      createdAt: new Date().toISOString(),
+      sponsors: []
+    };
+    
+    await kv.set(tournamentId, newTournament);
+    
+    console.log(`✅ Torneio criado com sucesso: ${tournamentId}`);
+    console.log(`📋 Dados do torneio:`, JSON.stringify({
+      id: newTournament.id,
+      name: newTournament.name,
+      status: newTournament.status
+    }, null, 2));
+    
+    return c.json({ 
+      success: true,
+      message: 'Torneios resetados com sucesso',
+      tournament: newTournament
+    });
+  } catch (error: any) {
+    console.error('❌ Error resetting tournaments:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // ============= TOURNAMENT DRAW & SCHEDULE EDITING ROUTES =============
 
 // Get registered teams for tournament draw

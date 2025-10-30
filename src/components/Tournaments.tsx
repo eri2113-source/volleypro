@@ -420,10 +420,35 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                   <div className="flex gap-2">
                     <Button variant="outline" onClick={(e) => {
                       e.stopPropagation();
-                      console.log('🎯 Clicou em Ver Detalhes Completos:', tournament.id, tournament.name);
+                      console.log('🎯 Clicou em Ver Detalhes Completos:', {
+                        originalId: tournament.id,
+                        name: tournament.name,
+                        idType: typeof tournament.id
+                      });
+                      
+                      // Validar ID antes de abrir
+                      if (!tournament.id || tournament.id === '0' || tournament.id === 'tournament:0') {
+                        toast.error('Torneio com ID inválido. Por favor, recrie o torneio.');
+                        console.error('❌ ID de torneio inválido:', tournament.id);
+                        return;
+                      }
+                      
                       // Se tem callback onViewDetails, usar ele (nova página completa)
                       if (onViewDetails) {
-                        onViewDetails(parseInt(tournament.id));
+                        // Extrair número do ID (tournament:123 -> 123)
+                        const numericId = typeof tournament.id === 'string' 
+                          ? parseInt(tournament.id.replace(/\D/g, '')) 
+                          : tournament.id;
+                        
+                        // Validar se a conversão resultou em número válido
+                        if (!numericId || isNaN(numericId) || numericId === 0) {
+                          toast.error('ID do torneio inválido. Por favor, recrie o torneio.');
+                          console.error('❌ Conversão de ID falhou:', { original: tournament.id, converted: numericId });
+                          return;
+                        }
+                        
+                        console.log('📤 Enviando ID numérico:', numericId, 'do ID original:', tournament.id);
+                        onViewDetails(numericId);
                       } else {
                         // Fallback para modal antigo
                         setSelectedTournamentId(tournament.id);
@@ -471,9 +496,29 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                     currentUserId: currentUser?.id,
                     currentUserType: currentUser?.userType
                   });
+                  
+                  // Validar ID antes de abrir
+                  if (!tournament.id || tournament.id === '0' || tournament.id === 'tournament:0') {
+                    toast.error('Torneio com ID inválido. Por favor, recrie o torneio.');
+                    console.error('❌ ID de torneio inválido:', tournament.id);
+                    return;
+                  }
+                  
                   // Se tem callback onViewDetails, usar ele (nova página completa)
                   if (onViewDetails) {
-                    onViewDetails(parseInt(tournament.id));
+                    // Extrair número do ID (tournament:123 -> 123)
+                    const numericId = typeof tournament.id === 'string' 
+                      ? parseInt(tournament.id.replace(/\D/g, '')) 
+                      : tournament.id;
+                    
+                    // Validar se a conversão resultou em número válido
+                    if (!numericId || isNaN(numericId) || numericId === 0) {
+                      toast.error('ID do torneio inválido. Por favor, recrie o torneio.');
+                      console.error('❌ Conversão de ID falhou:', { original: tournament.id, converted: numericId });
+                      return;
+                    }
+                    
+                    onViewDetails(numericId);
                   } else {
                     // Fallback para modal antigo
                     setSelectedTournamentId(tournament.id);
@@ -546,9 +591,29 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                           currentUserType: currentUser?.userType,
                           isAuthenticated
                         });
+                        
+                        // Validar ID antes de abrir
+                        if (!tournament.id || tournament.id === '0' || tournament.id === 'tournament:0') {
+                          toast.error('Torneio com ID inválido. Por favor, recrie o torneio.');
+                          console.error('❌ ID de torneio inválido:', tournament.id);
+                          return;
+                        }
+                        
                         // Se tem callback onViewDetails, usar ele (nova página completa)
                         if (onViewDetails) {
-                          onViewDetails(parseInt(tournament.id));
+                          // Extrair número do ID (tournament:123 -> 123)
+                          const numericId = typeof tournament.id === 'string' 
+                            ? parseInt(tournament.id.replace(/\D/g, '')) 
+                            : tournament.id;
+                          
+                          // Validar se a conversão resultou em número válido
+                          if (!numericId || isNaN(numericId) || numericId === 0) {
+                            toast.error('ID do torneio inválido. Por favor, recrie o torneio.');
+                            console.error('❌ Conversão de ID falhou:', { original: tournament.id, converted: numericId });
+                            return;
+                          }
+                          
+                          onViewDetails(numericId);
                         } else {
                           // Fallback para modal antigo
                           setSelectedTournamentId(tournament.id);
@@ -604,9 +669,29 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                     name: tournament.name,
                     status: tournament.status
                   });
+                  
+                  // Validar ID antes de abrir
+                  if (!tournament.id || tournament.id === '0' || tournament.id === 'tournament:0') {
+                    toast.error('Torneio com ID inválido. Por favor, recrie o torneio.');
+                    console.error('❌ ID de torneio inválido:', tournament.id);
+                    return;
+                  }
+                  
                   // Se tem callback onViewDetails, usar ele (nova página completa)
                   if (onViewDetails) {
-                    onViewDetails(parseInt(tournament.id));
+                    // Extrair número do ID (tournament:123 -> 123)
+                    const numericId = typeof tournament.id === 'string' 
+                      ? parseInt(tournament.id.replace(/\D/g, '')) 
+                      : tournament.id;
+                    
+                    // Validar se a conversão resultou em número válido
+                    if (!numericId || isNaN(numericId) || numericId === 0) {
+                      toast.error('ID do torneio inválido. Por favor, recrie o torneio.');
+                      console.error('❌ Conversão de ID falhou:', { original: tournament.id, converted: numericId });
+                      return;
+                    }
+                    
+                    onViewDetails(numericId);
                   } else {
                     // Fallback para modal antigo
                     setSelectedTournamentId(tournament.id);
