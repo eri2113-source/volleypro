@@ -1735,9 +1735,16 @@ app.get('/make-server-0ea22bba/tournaments', async (c) => {
     const status = c.req.query('status');
     const allTournaments = await kv.getByPrefix('tournament:');
     
-    let tournaments = allTournaments;
+    // 🔥 FILTRAR APENAS TORNEIOS COM UUIDs VÁLIDOS (remover IDs numéricos antigos)
+    const validTournaments = allTournaments.filter((t: any) => {
+      // UUID tem formato: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      return uuidRegex.test(t.id);
+    });
+    
+    let tournaments = validTournaments;
     if (status) {
-      tournaments = allTournaments.filter((t: any) => t.status === status);
+      tournaments = validTournaments.filter((t: any) => t.status === status);
     }
     
     // Sort by creation date, newest first
@@ -1745,7 +1752,7 @@ app.get('/make-server-0ea22bba/tournaments', async (c) => {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
     
-    console.log(`📋 Returning ${tournaments.length} tournaments`);
+    console.log(`📋 Returning ${tournaments.length} tournaments (filtered ${allTournaments.length - validTournaments.length} invalid)`);
     return c.json({ tournaments });
   } catch (error: any) {
     console.error('❌ Error getting tournaments:', error);
@@ -5090,28 +5097,8 @@ app.post('/make-server-0ea22bba/tournaments', authMiddleware, async (c) => {
   }
 });
 
-// Get all tournaments
-app.get('/make-server-0ea22bba/tournaments', async (c) => {
-  try {
-    const status = c.req.query('status');
-    const allTournaments = await kv.getByPrefix('tournament:');
-    
-    let filteredTournaments = allTournaments;
-    if (status) {
-      filteredTournaments = allTournaments.filter((t: any) => t.status === status);
-    }
-    
-    // Sort by start date
-    const sortedTournaments = filteredTournaments.sort((a: any, b: any) => {
-      return new Date(a.startDate).getTime() - new Date(b.startDate).getTime();
-    });
-    
-    return c.json({ tournaments: sortedTournaments });
-  } catch (error: any) {
-    console.error('❌ Error getting tournaments:', error);
-    return c.json({ error: error.message }, 500);
-  }
-});
+// Get all tournaments (DUPLICADO - JÁ EXISTE ACIMA)
+// ESTA ROTA NUNCA É CHAMADA PORQUE A PRIMEIRA (linha ~1733) TEM PRECEDÊNCIA
 
 // Get tournament details
 app.get('/make-server-0ea22bba/tournaments/:tournamentId', async (c) => {
