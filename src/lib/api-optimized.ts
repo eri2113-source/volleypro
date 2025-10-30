@@ -8,6 +8,7 @@
  */
 
 import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { createClient } from '../utils/supabase/client';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba`;
 
@@ -16,7 +17,6 @@ async function getAuthToken() {
   if (typeof window === 'undefined') return null;
   
   try {
-    const { createClient } = await import('../utils/supabase/client');
     const supabase = createClient();
     const { data: { session }, error } = await supabase.auth.getSession();
     

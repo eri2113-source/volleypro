@@ -1,4 +1,5 @@
 import { projectId, publicAnonKey } from '../utils/supabase/info';
+import { createClient } from '../utils/supabase/client';
 
 const API_BASE = `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba`;
 
@@ -26,7 +27,6 @@ async function getAuthToken() {
   
   try {
     // Sempre buscar da sessão do Supabase (fonte da verdade)
-    const { createClient } = await import('../utils/supabase/client');
     const supabase = createClient();
     const { data: { session }, error } = await supabase.auth.getSession();
     
@@ -93,7 +93,6 @@ async function apiCall(endpoint: string, options: RequestInit = {}, silent = fal
       if (!silent) console.log('🔄 Token inválido, tentando refresh...');
       
       try {
-        const { createClient } = await import('../utils/supabase/client');
         const supabase = createClient();
         
         // Forçar refresh da sessão
@@ -183,7 +182,6 @@ export const authApi = {
   async signIn(email: string, password: string) {
     console.log("📡 [Chrome-Optimized] Iniciando login...");
     try {
-      const { createClient } = await import('../utils/supabase/client');
       const supabase = createClient();
       
       // Limpar qualquer sessão antiga antes de fazer login
@@ -227,7 +225,6 @@ export const authApi = {
   async signOut() {
     console.log("🚪 Fazendo logout...");
     try {
-      const { createClient } = await import('../utils/supabase/client');
       const supabase = createClient();
       
       // Fazer logout do Supabase
@@ -270,7 +267,6 @@ export const authApi = {
 
   async getSession() {
     try {
-      const { createClient } = await import('../utils/supabase/client');
       const supabase = createClient();
       
       const { data, error } = await supabase.auth.getSession();
@@ -341,7 +337,6 @@ export const authApi = {
       if (cachedId) return cachedId;
       
       // Se não tiver no localStorage, buscar da sessão
-      const { createClient } = await import('../utils/supabase/client');
       const supabase = createClient();
       const { data: { session }, error } = await supabase.auth.getSession();
       

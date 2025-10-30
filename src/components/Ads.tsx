@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { masterAdminApi } from "../lib/api";
+import { createClient } from "../utils/supabase/client";
 
 export function Ads() {
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -29,7 +30,6 @@ export function Ads() {
   async function checkAdminStatus() {
     try {
       // Verificar diretamente o email do usuário logado
-      const { createClient } = await import('../utils/supabase/client');
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
       

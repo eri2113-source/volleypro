@@ -41,6 +41,7 @@ import { TournamentDetails } from "./components/TournamentDetails";
 import { authApi, userApi } from "./lib/api";
 import { showConsoleHelp } from "./utils/consoleHelp";
 import { useFigmaMakeAccess } from "./hooks/useFigmaMakeAccess";
+import { createClient } from "./utils/supabase/client";
 import { Button } from "./components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover";
 import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, Megaphone, MoreHorizontal, Flag, Camera, Video, FileText } from "lucide-react";
@@ -213,7 +214,6 @@ export default function App() {
         if (!mounted) return;
         
         // Listener para detectar mudanças de autenticação
-        const { createClient } = await import("./utils/supabase/client");
         const supabase = createClient();
         
         const { data: authListener } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
