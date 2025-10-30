@@ -19,6 +19,7 @@ import { TournamentAthleteView } from "./TournamentAthleteView";
 import { toast } from "sonner@2.0.3";
 import { LoginPrompt } from "./LoginPrompt";
 import { Trash2, Eye } from "lucide-react";
+import { projectId } from "../utils/supabase/info";
 
 interface TournamentsProps {
   isAuthenticated?: boolean;
@@ -124,7 +125,6 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
     }
 
     try {
-      const { projectId } = await import('../utils/supabase/info');
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/admin/reset-tournaments`,
         {

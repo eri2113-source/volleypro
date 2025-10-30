@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 import { Loader2, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { liveApi } from "../lib/api";
+import { projectId, publicAnonKey } from "../utils/supabase/info";
 
 export function LivesDiagnostic() {
   const [testing, setTesting] = useState(false);
@@ -118,7 +119,6 @@ export function LivesDiagnostic() {
     // Test 5: Check Supabase connection
     try {
       console.log("🔍 Test 5: Verificando Supabase...");
-      const { projectId, publicAnonKey } = await import("../utils/supabase/info");
       diagnostics.tests.push({
         name: "Configuração Supabase",
         status: "success",
