@@ -420,7 +420,14 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                   <div className="flex gap-2">
                     <Button variant="outline" onClick={(e) => {
                       e.stopPropagation();
-                      setSelectedTournamentId(tournament.id);
+                      console.log('🎯 Clicou em Ver Detalhes Completos:', tournament.id, tournament.name);
+                      // Se tem callback onViewDetails, usar ele (nova página completa)
+                      if (onViewDetails) {
+                        onViewDetails(parseInt(tournament.id));
+                      } else {
+                        // Fallback para modal antigo
+                        setSelectedTournamentId(tournament.id);
+                      }
                     }}>
                       Ver Detalhes Completos
                     </Button>
@@ -464,7 +471,13 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                     currentUserId: currentUser?.id,
                     currentUserType: currentUser?.userType
                   });
-                  setSelectedTournamentId(tournament.id);
+                  // Se tem callback onViewDetails, usar ele (nova página completa)
+                  if (onViewDetails) {
+                    onViewDetails(parseInt(tournament.id));
+                  } else {
+                    // Fallback para modal antigo
+                    setSelectedTournamentId(tournament.id);
+                  }
                 }}
               >
                 <CardHeader>
@@ -533,7 +546,13 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                           currentUserType: currentUser?.userType,
                           isAuthenticated
                         });
-                        setSelectedTournamentId(tournament.id);
+                        // Se tem callback onViewDetails, usar ele (nova página completa)
+                        if (onViewDetails) {
+                          onViewDetails(parseInt(tournament.id));
+                        } else {
+                          // Fallback para modal antigo
+                          setSelectedTournamentId(tournament.id);
+                        }
                       }}
                       disabled={!isAuthenticated}
                       className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
@@ -585,7 +604,13 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                     name: tournament.name,
                     status: tournament.status
                   });
-                  setSelectedTournamentId(tournament.id);
+                  // Se tem callback onViewDetails, usar ele (nova página completa)
+                  if (onViewDetails) {
+                    onViewDetails(parseInt(tournament.id));
+                  } else {
+                    // Fallback para modal antigo
+                    setSelectedTournamentId(tournament.id);
+                  }
                 }}
               >
                 <CardHeader>
