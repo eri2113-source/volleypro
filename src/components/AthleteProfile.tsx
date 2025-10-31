@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, MapPin, Users, Heart, MessageCircle, Share2, Trophy, BarChart3, Camera, MessageSquare } from "lucide-react";
+import { ArrowLeft, MapPin, Users, Heart, MessageCircle, Share2, Trophy, BarChart3, Camera, MessageSquare, Edit } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader } from "./ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { userApi, postApi } from "../lib/api";
+import { userApi, postApi, authApi } from "../lib/api";
 import { toast } from "sonner@2.0.3";
 import { Loader2 } from "lucide-react";
 import { ReactionDisplay } from "./ReactionPicker";
 import { ImageViewerModal } from "./ImageViewerModal";
+import { ProfileEditModal } from "./ProfileEditModal";
 
 interface AthleteProfileProps {
   athleteId: number;
@@ -44,6 +45,8 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
   const [postReactions, setPostReactions] = useState<{ [postId: string]: { [emoji: string]: number } }>({});
   const [imageViewerOpen, setImageViewerOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   const handleImageClick = (url: string, alt: string) => {
     setSelectedImage({ url, alt });
@@ -53,7 +56,19 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
   useEffect(() => {
     loadAthleteData();
     checkIfFollowing();
+    checkCurrentUser();
   }, [athleteId]);
+
+  async function checkCurrentUser() {
+    try {
+      const session = await authApi.getSession();
+      if (session?.user?.id) {
+        setCurrentUserId(session.user.id);
+      }
+    } catch (error) {
+      console.error('Erro ao verificar usuário atual:', error);
+    }
+  }
 
   async function loadAthleteData() {
     setLoadingProfile(true);
@@ -274,18 +289,32 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
             </div>
 
             <div className="flex gap-2">
-              <Button
-                onClick={handleFollowToggle}
-                variant={isFollowing ? "secondary" : "default"}
-                className={isFollowing ? "bg-white/20 text-white hover:bg-white/30" : "bg-white text-primary hover:bg-white/90"}
-              >
-                <Heart className={`h-4 w-4 mr-2 ${isFollowing ? 'fill-current' : ''}`} />
-                {isFollowing ? 'Seguindo' : 'Seguir'}
-              </Button>
-              <Button variant="secondary" className="bg-white/20 text-white hover:bg-white/30">
-                <MessageCircle className="h-4 w-4 mr-2" />
-                Mensagem
-              </Button>
+              {/* Se é o próprio perfil, mostrar botão Editar Perfil */}
+              {currentUserId && athleteId.toString() === currentUserId ? (
+                <Button
+                  onClick={() => setEditModalOpen(true)}
+                  variant="default"
+                  className="bg-white text-primary hover:bg-white/90"
+                >
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar Perfil
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    onClick={handleFollowToggle}
+                    variant={isFollowing ? "secondary" : "default"}
+                    className={isFollowing ? "bg-white/20 text-white hover:bg-white/30" : "bg-white text-primary hover:bg-white/90"}
+                  >
+                    <Heart className={`h-4 w-4 mr-2 ${isFollowing ? 'fill-current' : ''}`} />
+                    {isFollowing ? 'Seguindo' : 'Seguir'}
+                  </Button>
+                  <Button variant="secondary" className="bg-white/20 text-white hover:bg-white/30">
+                    <MessageCircle className="h-4 w-4 mr-2" />
+                    Mensagem
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -513,6 +542,17 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
           alt={selectedImage.alt}
         />
       )}
+
+      {/* Modal de edição de perfil */}
+      <ProfileEditModal
+        open={editModalOpen}
+        onClose={() => setEditModalOpen(false)}
+        onSuccess={() => {
+          setEditModalOpen(false);
+          loadAthleteData(); // Recarregar dados do perfil após edição
+          toast.success("Perfil atualizado com sucesso! 🎉");
+        }}
+      />
     </div>
   );
 }
