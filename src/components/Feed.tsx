@@ -37,6 +37,7 @@ import { postApi, authApi, userApi, masterAdminApi } from "../lib/api";
 import { uploadMediaOptimized } from "../lib/api-optimized";
 import { toast } from "sonner@2.0.3";
 import { Trash2, Shield } from "lucide-react";
+import { ImageViewerModal } from "./ImageViewerModal";
 
 interface FeedProps {
   isAuthenticated?: boolean;
@@ -89,6 +90,15 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
   
   // User plan
   const { plan: userPlan, isLoading: planLoading } = useUserPlan();
+
+  // Image viewer
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
+
+  const handleImageClick = (url: string, alt: string) => {
+    setSelectedImage({ url, alt });
+    setImageViewerOpen(true);
+  };
 
   console.log("📊 Feed - isAuthenticated:", isAuthenticated);
 
@@ -1139,8 +1149,9 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
                 <img 
                   src={post.mediaUrl} 
                   alt="Post media" 
-                  className="w-full h-auto max-h-[500px] object-contain bg-muted"
+                  className="w-full h-auto max-h-[500px] object-contain bg-muted cursor-pointer hover:opacity-90 transition-opacity"
                   loading="lazy"
+                  onClick={() => handleImageClick(post.mediaUrl, 'Post')}
                 />
               </div>
             )}
@@ -1527,6 +1538,16 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Modal de visualização de imagem */}
+      {selectedImage && (
+        <ImageViewerModal
+          open={imageViewerOpen}
+          onOpenChange={setImageViewerOpen}
+          imageUrl={selectedImage.url}
+          alt={selectedImage.alt}
+        />
+      )}
     </div>
   );
 }

@@ -9,6 +9,7 @@ import { userApi, postApi } from "../lib/api";
 import { toast } from "sonner@2.0.3";
 import { Loader2 } from "lucide-react";
 import { ReactionDisplay } from "./ReactionPicker";
+import { ImageViewerModal } from "./ImageViewerModal";
 
 interface AthleteProfileProps {
   athleteId: number;
@@ -41,6 +42,13 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
   const [userPosts, setUserPosts] = useState<any[]>([]);
   const [loadingPosts, setLoadingPosts] = useState(false);
   const [postReactions, setPostReactions] = useState<{ [postId: string]: { [emoji: string]: number } }>({});
+  const [imageViewerOpen, setImageViewerOpen] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<{ url: string; alt: string } | null>(null);
+
+  const handleImageClick = (url: string, alt: string) => {
+    setSelectedImage({ url, alt });
+    setImageViewerOpen(true);
+  };
 
   useEffect(() => {
     loadAthleteData();
@@ -211,7 +219,10 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
           </Button>
 
           <div className="flex flex-col sm:flex-row items-center gap-6">
-            <Avatar className="h-24 w-24 sm:h-32 sm:w-32 ring-4 ring-white/20 shadow-2xl">
+            <Avatar 
+              className="h-24 w-24 sm:h-32 sm:w-32 ring-4 ring-white/20 shadow-2xl cursor-pointer hover:ring-white/40 transition-all"
+              onClick={() => athlete.photoUrl && handleImageClick(athlete.photoUrl, athlete.name)}
+            >
               <AvatarImage src={athlete.photoUrl} alt={athlete.name} />
               <AvatarFallback className="text-2xl sm:text-3xl bg-white/20 text-white">
                 {athlete.name?.[0]?.toUpperCase() || 'A'}
@@ -403,7 +414,8 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
                         <img 
                           src={post.imageUrl} 
                           alt="Post" 
-                          className="w-full rounded-lg object-cover max-h-96"
+                          className="w-full rounded-lg object-cover max-h-96 cursor-pointer hover:opacity-90 transition-opacity"
+                          onClick={() => handleImageClick(post.imageUrl, 'Post')}
                         />
                       )}
                       {post.videoUrl && (
@@ -491,6 +503,16 @@ export function AthleteProfile({ athleteId, onBack }: AthleteProfileProps) {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modal de visualização de imagem */}
+      {selectedImage && (
+        <ImageViewerModal
+          open={imageViewerOpen}
+          onOpenChange={setImageViewerOpen}
+          imageUrl={selectedImage.url}
+          alt={selectedImage.alt}
+        />
+      )}
     </div>
   );
 }

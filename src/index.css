@@ -1496,6 +1496,10 @@
     max-height: 90vh;
   }
 
+  .max-h-\[95vh\] {
+    max-height: 95vh;
+  }
+
   .max-h-\[300px\] {
     max-height: 300px;
   }
@@ -1530,6 +1534,10 @@
 
   .min-h-\[60px\] {
     min-height: 60px;
+  }
+
+  .min-h-\[95vh\] {
+    min-height: 95vh;
   }
 
   .min-h-\[120px\] {
@@ -1706,6 +1714,10 @@
 
   .max-w-\[70\%\] {
     max-width: 70%;
+  }
+
+  .max-w-\[95vw\] {
+    max-width: 95vw;
   }
 
   .max-w-\[calc\(100\%-2rem\)\] {
@@ -2254,6 +2266,11 @@
   .border-dashed {
     --tw-border-style: dashed;
     border-style: dashed;
+  }
+
+  .border-none {
+    --tw-border-style: none;
+    border-style: none;
   }
 
   .border-amber-200 {
@@ -6241,6 +6258,18 @@
     @supports (color: color-mix(in lab, red, red)) {
       .hover\:ring-primary\/60:hover {
         --tw-ring-color: color-mix(in oklab, var(--primary) 60%, transparent);
+      }
+    }
+  }
+
+  @media (hover: hover) {
+    .hover\:ring-white\/40:hover {
+      --tw-ring-color: #fff6;
+    }
+
+    @supports (color: color-mix(in lab, red, red)) {
+      .hover\:ring-white\/40:hover {
+        --tw-ring-color: color-mix(in oklab, var(--color-white) 40%, transparent);
       }
     }
   }

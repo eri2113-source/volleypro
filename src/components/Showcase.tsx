@@ -99,12 +99,27 @@ export function Showcase({ onSelectAthlete }: ShowcaseProps) {
       
       // Filter only free agents (sem time atual)
       const freeAgents = (users || []).filter((u: any) => {
-        // Atleta livre = não tem currentTeam, current_team, nem team
-        const hasTeam = u.currentTeam || u.current_team || u.team;
+        // Verificar se REALMENTE tem time (não apenas string vazia ou undefined)
+        const currentTeam = u.currentTeam;
+        const current_team = u.current_team;
+        const team = u.team;
         
-        // Log para debug
+        // Só considera "tem time" se for string não vazia
+        const hasTeam = (currentTeam && currentTeam.trim()) || 
+                        (current_team && current_team.trim()) || 
+                        (team && team.trim());
+        
+        // Log detalhado para debug
+        console.log(`🔍 ${u.name}:`, {
+          currentTeam: currentTeam || 'null',
+          current_team: current_team || 'null',
+          team: team || 'null',
+          hasTeam: !!hasTeam,
+          status: hasTeam ? '🔒 COM TIME' : '✅ LIVRE'
+        });
+        
         if (hasTeam) {
-          console.log(`🔒 Atleta ${u.name} já tem time: ${hasTeam} - REMOVIDO da vitrine`);
+          console.log(`🔒 Atleta ${u.name} já tem time: "${hasTeam}" - REMOVIDO da vitrine`);
         }
         
         return !hasTeam;

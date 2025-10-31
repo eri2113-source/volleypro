@@ -1,6 +1,6 @@
 # ⚡ FAZER AGORA - 1 COMMIT ÚNICO
 
-## 🎯 11 MUDANÇAS PRONTAS EM 1 COMMIT
+## 🎯 12 MUDANÇAS PRONTAS EM 1 COMMIT
 
 ---
 
@@ -8,7 +8,7 @@
 
 ### **TÍTULO:**
 ```
-🎥🔒🔧📱📧✅👥🛡️🏪 Transmissão + Perfil + Convites + Vitrine + Segurança
+🎥🔒🖼️📱📧✅👥🛡️🏪 Transmissão + Fotos + Convites + Vitrine + UX
 ```
 
 ### **DESCRIÇÃO:**
@@ -52,11 +52,18 @@ LED MOBILE OTIMIZADO:
 - Logs de debug completos para troubleshooting
 - Tratamento de erros ao carregar imagens/vídeos
 
-VITRINE FILTRADA:
+VITRINE FILTRADA CORRIGIDA:
 - Atletas com time NÃO aparecem mais como "livre no mercado"
-- Verifica currentTeam, current_team e team
-- Logs mostram quantos foram filtrados
-- Previne convocação de atletas que já têm time
+- Verifica se REALMENTE tem time (não apenas string vazia)
+- Logs DETALHADOS mostram status de cada atleta
+- Correção: estava removendo TODOS, agora só remove quem tem time
+
+AMPLIAR FOTOS AO CLICAR:
+- Modal profissional de visualização de imagens
+- Clique na foto de perfil → abre ampliada
+- Clique em fotos de posts → abre ampliada
+- Controles: Zoom in/out, Download, Fechar
+- Indicador de zoom visual
 
 TRANSMISSÃO EXTERNA:
 - Modal de config com 4 plataformas (YouTube/Twitch/Facebook/Custom)
@@ -83,7 +90,7 @@ VERCEL REDIRECT:
 ## ✅ CHECKLIST
 
 - [ ] Abriu GitHub Desktop
-- [ ] Viu 16 arquivos modificados
+- [ ] Viu 19 arquivos modificados
 - [ ] Colou título acima
 - [ ] Colou descrição acima
 - [ ] Clicou "Commit to main"
@@ -103,11 +110,12 @@ Depois de fazer isso, você terá:
 ✅ Convites: aceitar/rejeitar funcionando corretamente
 ✅ Adicionar jogadores do elenco direto às equipes (sem convite)
 ✅ Time atual bloqueado para edição (só via convite)
-✅ Vitrine: atletas com time não aparecem mais como livres
+✅ Vitrine: filtro CORRIGIDO (só remove quem realmente tem time)
+✅ Ampliar fotos ao clicar (perfil + posts) com zoom e download
 ✅ Sistema de transmissão externa funcionando
 ✅ Perfil de times com privacidade correta
 ✅ Vercel protegido (só master e teste)
-✅ Console.logs para debug (LED + Convites + Vitrine)
+✅ Console.logs para debug (LED + Convites + Vitrine detalhado)
 ✅ Site completo salvo
 
 **Tempo total:** 2 minutos
