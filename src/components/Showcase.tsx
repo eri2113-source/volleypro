@@ -104,10 +104,10 @@ export function Showcase({ onSelectAthlete }: ShowcaseProps) {
         const current_team = u.current_team;
         const team = u.team;
         
-        // Só considera "tem time" se for string não vazia
-        const hasTeam = (currentTeam && currentTeam.trim()) || 
-                        (current_team && current_team.trim()) || 
-                        (team && team.trim());
+        // Só considera "tem time" se for string não vazia com pelo menos 2 caracteres
+        const hasTeam = (currentTeam && typeof currentTeam === 'string' && currentTeam.trim().length > 1) || 
+                        (current_team && typeof current_team === 'string' && current_team.trim().length > 1) || 
+                        (team && typeof team === 'string' && team.trim().length > 1);
         
         // Log detalhado para debug
         console.log(`🔍 ${u.name}:`, {
@@ -122,6 +122,9 @@ export function Showcase({ onSelectAthlete }: ShowcaseProps) {
           console.log(`🔒 Atleta ${u.name} já tem time: "${hasTeam}" - REMOVIDO da vitrine`);
         }
         
+        // MOSTRAR APENAS se:
+        // 1. NÃO tem time (hasTeam = false) OU
+        // 2. Clicou em "livre para o mercado" (freeAgent = true)
         return !hasTeam;
       });
       

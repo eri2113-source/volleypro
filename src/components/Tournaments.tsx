@@ -543,7 +543,7 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                       <Users className="h-4 w-4 text-muted-foreground" />
                       <div className="text-sm">
                         <p className="text-muted-foreground">Vagas</p>
-                        <p>{tournament.modalityType === 'beach' ? (tournament.registeredPlayers?.length || 0) : (tournament.registeredTeams?.length || 0)}/{tournament.maxTeams}</p>
+                        <p>{tournament.modalityType === 'beach' ? (tournament.individualRegistrations?.length || 0) : (tournament.squadRegistrations?.length || 0)}/{tournament.maxTeams}</p>
                       </div>
                     </div>
                   </div>
