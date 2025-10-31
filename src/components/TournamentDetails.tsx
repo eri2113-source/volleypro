@@ -265,7 +265,7 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/10">
       {/* Header com Painel LED Animado */}
-      <div className="relative z-0 overflow-hidden">
+      <div className="relative w-full overflow-hidden" style={{ zIndex: 1 }}>
         {ledPanelConfig ? (
           <AnimatedLEDPanel
             zones={ledPanelConfig.zones}
@@ -287,7 +287,7 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
           />
         )}
         
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent pointer-events-none" style={{ zIndex: 2 }} />
         
         {/* Botões de Gerenciamento (apenas para organizadores) */}
         {canEdit ? (

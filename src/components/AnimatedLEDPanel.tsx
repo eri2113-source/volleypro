@@ -54,7 +54,9 @@ export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
     isMobile,
     originalHeight: height,
     adjustedHeight,
-    screenWidth: typeof window !== 'undefined' ? window.innerWidth : 0
+    screenWidth: typeof window !== 'undefined' ? window.innerWidth : 0,
+    userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'undefined',
+    isPWA: typeof window !== 'undefined' && window.matchMedia('(display-mode: standalone)').matches
   });
 
   // Determinar número de slots baseado no layout
@@ -106,12 +108,19 @@ export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
     console.log('📺 LED Panel: SEM MÍDIA - Mostrando placeholder VolleyPro', { 
       height: adjustedHeight, 
       layout,
-      isMobile 
+      isMobile,
+      zones: zones ? 'defined' : 'undefined',
+      media: media ? media.length : 0
     });
     return (
       <div
-        className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-secondary/20 to-primary/20"
-        style={{ height: `${adjustedHeight}px`, minHeight: `${adjustedHeight}px` }}
+        className="relative w-full overflow-hidden bg-gradient-to-br from-primary/20 via-secondary/20 to-primary/20"
+        style={{ 
+          height: `${adjustedHeight}px`, 
+          minHeight: `${adjustedHeight}px`,
+          display: 'block',
+          visibility: 'visible'
+        }}
       >
         {/* Marca d'água VolleyPro */}
         <div className="absolute inset-0 flex items-center justify-center">
@@ -142,13 +151,19 @@ export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
     numSlots,
     isMobile,
     slotMediaCount: slotMedia.map(s => s.length),
-    totalMedia: slotMedia.reduce((sum, s) => sum + s.length, 0)
+    totalMedia: slotMedia.reduce((sum, s) => sum + s.length, 0),
+    firstSlotFirstMedia: slotMedia[0]?.[0]?.url?.substring(0, 50)
   });
 
   return (
     <div
-      className={`relative overflow-hidden grid ${gridClass} gap-0`}
-      style={{ height: `${adjustedHeight}px`, minHeight: `${adjustedHeight}px` }}
+      className={`relative w-full overflow-hidden grid ${gridClass} gap-0`}
+      style={{ 
+        height: `${adjustedHeight}px`, 
+        minHeight: `${adjustedHeight}px`,
+        display: 'grid',
+        visibility: 'visible'
+      }}
     >
       {slotMedia.map((slotMediaList, slotIndex) => (
         <AnimatedSlot

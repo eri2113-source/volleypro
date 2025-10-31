@@ -773,6 +773,10 @@
     pointer-events: none;
   }
 
+  .visible {
+    visibility: visible;
+  }
+
   .sr-only {
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
@@ -947,10 +951,6 @@
 
   .left-\[50\%\] {
     left: 50%;
-  }
-
-  .z-0 {
-    z-index: 0;
   }
 
   .z-10 {

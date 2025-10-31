@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner@2.0.3";
 import { projectId, publicAnonKey } from "../utils/supabase/info";
+import { createClient } from "../utils/supabase/client";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +59,24 @@ export function AdsManagement() {
   useEffect(() => {
     loadAds();
   }, []);
+
+  // Helper para obter token de autenticação
+  const getAuthToken = async () => {
+    try {
+      const supabase = createClient();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error || !session?.access_token) {
+        console.error('❌ Erro ao obter sessão:', error);
+        return null;
+      }
+      
+      return session.access_token;
+    } catch (error) {
+      console.error('❌ Erro ao obter token:', error);
+      return null;
+    }
+  };
 
   const loadAds = async () => {
     try {
@@ -99,19 +118,29 @@ export function AdsManagement() {
 
   const handleApprove = async (ad: Ad) => {
     try {
+      const token = await getAuthToken();
+      
+      if (!token) {
+        toast.error("❌ Você precisa estar logado como Master Admin");
+        return;
+      }
+
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/ads/approve`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${publicAnonKey}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ adId: ad.id }),
         }
       );
 
-      if (!response.ok) throw new Error("Erro ao aprovar anúncio");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Erro ao aprovar anúncio");
+      }
 
       toast.success("✅ Anúncio aprovado!", {
         description: "O anúncio já está visível no site!",
@@ -120,21 +149,28 @@ export function AdsManagement() {
       loadAds();
       setSelectedAd(null);
       setActionType(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao aprovar anúncio:", error);
-      toast.error("Erro ao aprovar anúncio");
+      toast.error(error.message || "Erro ao aprovar anúncio");
     }
   };
 
   const handleReject = async (ad: Ad) => {
     try {
+      const token = await getAuthToken();
+      
+      if (!token) {
+        toast.error("❌ Você precisa estar logado como Master Admin");
+        return;
+      }
+
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/ads/reject`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${publicAnonKey}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             adId: ad.id,
@@ -143,41 +179,54 @@ export function AdsManagement() {
         }
       );
 
-      if (!response.ok) throw new Error("Erro ao rejeitar anúncio");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Erro ao rejeitar anúncio");
+      }
 
       toast.success("Anúncio rejeitado");
       loadAds();
       setSelectedAd(null);
       setActionType(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao rejeitar anúncio:", error);
-      toast.error("Erro ao rejeitar anúncio");
+      toast.error(error.message || "Erro ao rejeitar anúncio");
     }
   };
 
   const handleDelete = async (ad: Ad) => {
     try {
+      const token = await getAuthToken();
+      
+      if (!token) {
+        toast.error("❌ Você precisa estar logado como Master Admin");
+        return;
+      }
+
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/ads/delete`,
         {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${publicAnonKey}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ adId: ad.id }),
         }
       );
 
-      if (!response.ok) throw new Error("Erro ao deletar anúncio");
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Erro ao deletar anúncio");
+      }
 
       toast.success("Anúncio deletado");
       loadAds();
       setSelectedAd(null);
       setActionType(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao deletar anúncio:", error);
-      toast.error("Erro ao deletar anúncio");
+      toast.error(error.message || "Erro ao deletar anúncio");
     }
   };
 
@@ -443,7 +492,7 @@ export function AdsManagement() {
           setActionType(null);
         }}
       >
-        <AlertDialogContent aria-describedby="ad-action-description">
+        <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
               {actionType === "approve"
@@ -452,7 +501,7 @@ export function AdsManagement() {
                 ? "Rejeitar anúncio?"
                 : "Deletar anúncio?"}
             </AlertDialogTitle>
-            <AlertDialogDescription id="ad-action-description">
+            <AlertDialogDescription>
               {actionType === "approve" &&
                 "O anúncio será publicado e ficará visível para todos os usuários."}
               {actionType === "reject" &&
