@@ -96,9 +96,23 @@ export function Showcase({ onSelectAthlete }: ShowcaseProps) {
         filters.position = selectedPosition;
       }
       const { users } = await userApi.getUsers(filters);
-      // Filter only free agents
-      const freeAgents = (users || []).filter((u: any) => u.freeAgent || !u.team);
-      console.log('✅ Atletas livres:', freeAgents.length);
+      
+      // Filter only free agents (sem time atual)
+      const freeAgents = (users || []).filter((u: any) => {
+        // Atleta livre = não tem currentTeam, current_team, nem team
+        const hasTeam = u.currentTeam || u.current_team || u.team;
+        
+        // Log para debug
+        if (hasTeam) {
+          console.log(`🔒 Atleta ${u.name} já tem time: ${hasTeam} - REMOVIDO da vitrine`);
+        }
+        
+        return !hasTeam;
+      });
+      
+      const withTeam = (users?.length || 0) - freeAgents.length;
+      console.log(`✅ Vitrine: ${freeAgents.length} livres | ${withTeam} com time | Total: ${users?.length || 0}`);
+      
       setAthletes(freeAgents);
     } catch (error) {
       console.error("❌ Error loading athletes:", error);

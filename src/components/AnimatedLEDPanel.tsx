@@ -36,6 +36,27 @@ export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
   transitionSpeed = 5,
   height = 320,
 }: AnimatedLEDPanelProps) {
+  // Detectar se é mobile
+  const isMobile = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 768; // mobile < 768px
+  }, []);
+
+  // Ajustar altura para mobile
+  const adjustedHeight = useMemo(() => {
+    if (isMobile) {
+      return Math.min(height, 240); // Max 240px no mobile
+    }
+    return height;
+  }, [isMobile, height]);
+
+  console.log('📱 LED Panel: Detecção de dispositivo', {
+    isMobile,
+    originalHeight: height,
+    adjustedHeight,
+    screenWidth: typeof window !== 'undefined' ? window.innerWidth : 0
+  });
+
   // Determinar número de slots baseado no layout
   const numSlots = useMemo(
     () => layout === "single" ? 1 : layout === "grid-2" ? 2 : layout === "grid-3" ? 3 : 4,
@@ -82,11 +103,15 @@ export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
 
   // Se não há mídia, mostra placeholder com marca d'água VolleyPro
   if (!hasAnyMedia) {
-    console.log('📺 LED Panel: SEM MÍDIA - Mostrando placeholder VolleyPro', { height, layout });
+    console.log('📺 LED Panel: SEM MÍDIA - Mostrando placeholder VolleyPro', { 
+      height: adjustedHeight, 
+      layout,
+      isMobile 
+    });
     return (
       <div
         className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-secondary/20 to-primary/20"
-        style={{ height: `${height}px`, minHeight: `${height}px` }}
+        style={{ height: `${adjustedHeight}px`, minHeight: `${adjustedHeight}px` }}
       >
         {/* Marca d'água VolleyPro */}
         <div className="absolute inset-0 flex items-center justify-center">
@@ -110,17 +135,20 @@ export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
   }
 
   console.log('📺 LED Panel: COM MÍDIA - Renderizando', { 
-    height, 
+    height: adjustedHeight,
+    originalHeight: height,
     layout, 
     gridClass,
     numSlots,
-    slotMediaCount: slotMedia.map(s => s.length)
+    isMobile,
+    slotMediaCount: slotMedia.map(s => s.length),
+    totalMedia: slotMedia.reduce((sum, s) => sum + s.length, 0)
   });
 
   return (
     <div
       className={`relative overflow-hidden grid ${gridClass} gap-0`}
-      style={{ height: `${height}px`, minHeight: `${height}px` }}
+      style={{ height: `${adjustedHeight}px`, minHeight: `${adjustedHeight}px` }}
     >
       {slotMedia.map((slotMediaList, slotIndex) => (
         <AnimatedSlot
@@ -222,6 +250,7 @@ const AnimatedSlot = memo(function AnimatedSlot({
 
   // Se não há mídia neste slot - Marca d'água VolleyPro
   if (!shuffledMedia || shuffledMedia.length === 0) {
+    console.log('📺 Slot vazio - mostrando marca d\'água');
     return (
       <div className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-secondary/10 to-primary/10 flex items-center justify-center">
         {/* Marca d'água VolleyPro SVG inline */}
@@ -240,6 +269,14 @@ const AnimatedSlot = memo(function AnimatedSlot({
   }
 
   const currentMedia = shuffledMedia[currentIndex];
+
+  console.log('📺 Slot renderizando mídia:', {
+    currentIndex,
+    total: shuffledMedia.length,
+    type: currentMedia.type,
+    url: currentMedia.url.substring(0, 50) + '...',
+    hasLink: !!currentMedia.link
+  });
 
   // ⚡ OTIMIZADO: Variantes de animação memoizadas
   const variants = useMemo(() => {
@@ -306,6 +343,10 @@ const AnimatedSlot = memo(function AnimatedSlot({
               className="w-full h-full object-cover"
               loading="lazy" // ⚡ Lazy loading
               decoding="async" // ⚡ Decodificação assíncrona
+              onLoad={() => console.log('✅ [LED] Imagem carregada:', currentMedia.url.substring(0, 50))}
+              onError={(e) => {
+                console.error('❌ [LED] Erro ao carregar imagem:', currentMedia.url);
+              }}
               style={{ 
                 willChange: "transform",
                 backfaceVisibility: "hidden", // ⚡ Performance
@@ -322,6 +363,10 @@ const AnimatedSlot = memo(function AnimatedSlot({
               playsInline
               preload="metadata" // ⚡ Só carrega metadados
               onEnded={handleVideoEnded}
+              onLoadedData={() => console.log('✅ [LED] Vídeo carregado:', currentMedia.url.substring(0, 50))}
+              onError={(e) => {
+                console.error('❌ [LED] Erro ao carregar vídeo:', currentMedia.url);
+              }}
               style={{ 
                 willChange: "transform",
                 backfaceVisibility: "hidden",

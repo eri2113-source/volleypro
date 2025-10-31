@@ -1,6 +1,6 @@
 # ⚡ FAZER AGORA - 1 COMMIT ÚNICO
 
-## 🎯 9 MUDANÇAS PRONTAS EM 1 COMMIT
+## 🎯 11 MUDANÇAS PRONTAS EM 1 COMMIT
 
 ---
 
@@ -8,7 +8,7 @@
 
 ### **TÍTULO:**
 ```
-🎥🔒🔧📱📧✅👥🛡️ Transmissão + Perfil + Convites + Elenco + Segurança
+🎥🔒🔧📱📧✅👥🛡️🏪 Transmissão + Perfil + Convites + Vitrine + Segurança
 ```
 
 ### **DESCRIÇÃO:**
@@ -46,6 +46,18 @@ TIME ATUAL BLOQUEADO:
 - Aviso educativo sobre como funciona o sistema
 - Previne atletas se adicionando manualmente em times
 
+LED MOBILE OTIMIZADO:
+- Detecção automática de mobile (tela < 768px)
+- Altura ajustada automaticamente (240px no mobile vs 320px desktop)
+- Logs de debug completos para troubleshooting
+- Tratamento de erros ao carregar imagens/vídeos
+
+VITRINE FILTRADA:
+- Atletas com time NÃO aparecem mais como "livre no mercado"
+- Verifica currentTeam, current_team e team
+- Logs mostram quantos foram filtrados
+- Previne convocação de atletas que já têm time
+
 TRANSMISSÃO EXTERNA:
 - Modal de config com 4 plataformas (YouTube/Twitch/Facebook/Custom)
 - Player incorporado com badge "AO VIVO" pulsante
@@ -71,7 +83,7 @@ VERCEL REDIRECT:
 ## ✅ CHECKLIST
 
 - [ ] Abriu GitHub Desktop
-- [ ] Viu 14 arquivos modificados
+- [ ] Viu 16 arquivos modificados
 - [ ] Colou título acima
 - [ ] Colou descrição acima
 - [ ] Clicou "Commit to main"
@@ -86,15 +98,16 @@ VERCEL REDIRECT:
 Depois de fazer isso, você terá:
 
 ✅ Menu "Feed" (em vez de "Alimentar")
-✅ Painel LED funcionando no mobile (patrocinadores visíveis)
+✅ Painel LED otimizado para mobile (altura ajustada + debug completo)
 ✅ Convites: envio com mensagens claras (explica quando falta CPF)
 ✅ Convites: aceitar/rejeitar funcionando corretamente
 ✅ Adicionar jogadores do elenco direto às equipes (sem convite)
 ✅ Time atual bloqueado para edição (só via convite)
+✅ Vitrine: atletas com time não aparecem mais como livres
 ✅ Sistema de transmissão externa funcionando
 ✅ Perfil de times com privacidade correta
 ✅ Vercel protegido (só master e teste)
-✅ Console.logs para debug (LED + Convites)
+✅ Console.logs para debug (LED + Convites + Vitrine)
 ✅ Site completo salvo
 
 **Tempo total:** 2 minutos
