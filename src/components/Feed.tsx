@@ -873,7 +873,14 @@ export function Feed({ isAuthenticated = false, onLoginPrompt, onSelectAthlete }
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-secondary to-primary"></div>
         <CardHeader>
           <div className="flex items-start gap-4">
-            <Avatar className="h-12 w-12 ring-2 ring-primary/40 shadow-lg hover:ring-primary/60 transition-all">
+            <Avatar 
+              className={`h-12 w-12 ring-2 ring-primary/40 shadow-lg hover:ring-primary/60 transition-all ${currentUser?.id && onSelectAthlete ? 'cursor-pointer' : ''}`}
+              onClick={() => {
+                if (currentUser?.id && onSelectAthlete) {
+                  onSelectAthlete(currentUser.id);
+                }
+              }}
+            >
               {currentUser?.photoUrl ? (
                 <AvatarImage 
                   src={currentUser.photoUrl} 
