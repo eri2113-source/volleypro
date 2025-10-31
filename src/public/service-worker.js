@@ -1,9 +1,13 @@
 // VolleyPro Service Worker
-// Versão: 1.0.0
+// Versão dinâmica baseada em timestamp
 
-const CACHE_NAME = 'volleypro-v1.0.0';
-const RUNTIME_CACHE = 'volleypro-runtime';
-const IMAGE_CACHE = 'volleypro-images';
+const BUILD_TIMESTAMP = '__BUILD_TIMESTAMP__'; // Será substituído no build
+const CACHE_VERSION = `volleypro-${BUILD_TIMESTAMP || Date.now()}`;
+const CACHE_NAME = CACHE_VERSION;
+const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`;
+const IMAGE_CACHE = `${CACHE_VERSION}-images`;
+
+console.log('🚀 [SW] Versão do cache:', CACHE_VERSION);
 
 // Recursos essenciais para cache (shell da aplicação)
 const ESSENTIAL_RESOURCES = [

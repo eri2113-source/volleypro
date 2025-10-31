@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node generate-build-timestamp.js",
     "build": "vite build",
+    "postbuild": "node post-build-restore.js",
     "preview": "vite preview"
   },
   "dependencies": {

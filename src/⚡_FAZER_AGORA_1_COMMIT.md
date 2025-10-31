@@ -1,6 +1,6 @@
 # ⚡ FAZER AGORA - 1 COMMIT ÚNICO
 
-## 🎯 12 MUDANÇAS PRONTAS EM 1 COMMIT
+## 🎯 18 MUDANÇAS PRONTAS EM 1 COMMIT
 
 ---
 
@@ -8,7 +8,7 @@
 
 ### **TÍTULO:**
 ```
-🎥🔒🖼️📱📧✅👥🛡️🏪 Transmissão + Fotos + Convites + Vitrine + UX
+🔄📱🖼️🎥🏪 Atualização Automática + Fotos + Vitrine + Transmissão
 ```
 
 ### **DESCRIÇÃO:**
@@ -65,6 +65,15 @@ AMPLIAR FOTOS AO CLICAR:
 - Controles: Zoom in/out, Download, Fechar
 - Indicador de zoom visual
 
+ATUALIZAÇÃO AUTOMÁTICA CELULARES:
+- Sistema de versionamento automático com timestamp
+- VersionChecker: verifica nova versão a cada 20s
+- Banner com countdown automático (10s desktop)
+- ForceUpdateBanner: fullscreen para mobile (15s)
+- Limpa cache e força reload automaticamente
+- Scripts prebuild/postbuild no package.json
+- Service Worker com versão dinâmica
+
 TRANSMISSÃO EXTERNA:
 - Modal de config com 4 plataformas (YouTube/Twitch/Facebook/Custom)
 - Player incorporado com badge "AO VIVO" pulsante
@@ -90,7 +99,7 @@ VERCEL REDIRECT:
 ## ✅ CHECKLIST
 
 - [ ] Abriu GitHub Desktop
-- [ ] Viu 19 arquivos modificados
+- [ ] Viu 24 arquivos modificados
 - [ ] Colou título acima
 - [ ] Colou descrição acima
 - [ ] Clicou "Commit to main"

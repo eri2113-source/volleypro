@@ -32,6 +32,8 @@ import { ErrorBoundary } from "./components/ErrorBoundary";
 import { PWAManager } from "./components/PWAManager";
 import { PWAInstallPrompt } from "./components/PWAInstallPrompt";
 import { OfflineIndicator } from "./components/OfflineIndicator";
+import { VersionChecker } from "./components/VersionChecker";
+import { ForceUpdateBanner } from "./components/ForceUpdateBanner";
 import { IconGenerator } from "./components/IconGenerator";
 import { PWATestPanel } from "./components/PWATestPanel";
 import { MigrationNotice } from "./components/MigrationNotice";
@@ -793,6 +795,8 @@ export default function App() {
       <PWAManager />
       <PWAInstallPrompt />
       <OfflineIndicator />
+      <VersionChecker />
+      <ForceUpdateBanner />
       <Toaster />
     </>
   );
