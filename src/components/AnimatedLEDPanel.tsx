@@ -36,10 +36,27 @@ export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
   transitionSpeed = 5,
   height = 320,
 }: AnimatedLEDPanelProps) {
-  // Detectar se é mobile
-  const isMobile = useMemo(() => {
+  // Detectar se é mobile - MELHORADO
+  const [isMobile, setIsMobile] = useState(() => {
     if (typeof window === 'undefined') return false;
-    return window.innerWidth < 768; // mobile < 768px
+    return window.innerWidth < 768;
+  });
+
+  // Atualizar detecção de mobile em tempo real
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleResize);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
   }, []);
 
   // Ajustar altura para mobile
@@ -86,16 +103,22 @@ export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
     return result;
   }, [zones, media, numSlots]);
 
-  // Classes de grid (memoizado)
+  // Classes de grid (memoizado) - MOBILE FIRST!
   const gridClass = useMemo(() => {
+    // No mobile, SEMPRE mostrar 1 coluna em carrossel horizontal
+    if (isMobile) {
+      return "grid-cols-1"; // Mobile: sempre 1 coluna
+    }
+    
+    // Desktop: grid normal
     const gridClasses = {
       single: "grid-cols-1",
-      "grid-2": "grid-cols-1 sm:grid-cols-2",
-      "grid-3": "grid-cols-1 sm:grid-cols-2 md:grid-cols-3",
-      "grid-4": "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
+      "grid-2": "grid-cols-2",
+      "grid-3": "grid-cols-3",
+      "grid-4": "grid-cols-4",
     };
     return gridClasses[layout];
-  }, [layout]);
+  }, [layout, isMobile]);
 
   // Verificar se há alguma mídia
   const hasAnyMedia = useMemo(
@@ -152,28 +175,48 @@ export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
     isMobile,
     slotMediaCount: slotMedia.map(s => s.length),
     totalMedia: slotMedia.reduce((sum, s) => sum + s.length, 0),
-    firstSlotFirstMedia: slotMedia[0]?.[0]?.url?.substring(0, 50)
+    firstSlotFirstMedia: slotMedia[0]?.[0]?.url?.substring(0, 50),
+    windowWidth: typeof window !== 'undefined' ? window.innerWidth : 0,
+    devicePixelRatio: typeof window !== 'undefined' ? window.devicePixelRatio : 0
   });
 
   return (
     <div
-      className={`relative w-full overflow-hidden grid ${gridClass} gap-0`}
+      className={`relative w-full overflow-hidden ${isMobile ? 'flex' : 'grid'} ${!isMobile ? gridClass : ''} gap-0`}
       style={{ 
         height: `${adjustedHeight}px`, 
         minHeight: `${adjustedHeight}px`,
-        display: 'grid',
-        visibility: 'visible'
+        maxHeight: `${adjustedHeight}px`,
+        display: isMobile ? 'flex' : 'grid',
+        visibility: 'visible',
+        backgroundColor: '#000',
+        position: 'relative',
+        width: '100%',
+        flexDirection: isMobile ? 'row' : undefined,
+        overflowX: isMobile ? 'auto' : 'hidden',
+        WebkitOverflowScrolling: 'touch',
       }}
     >
       {slotMedia.map((slotMediaList, slotIndex) => (
-        <AnimatedSlot
+        <div
           key={slotIndex}
-          media={slotMediaList}
-          animationType={animationType}
-          randomOrder={randomOrder}
-          autoPlay={autoPlay}
-          transitionSpeed={transitionSpeed}
-        />
+          style={{
+            width: isMobile ? '100%' : undefined,
+            height: isMobile ? '100%' : undefined,
+            minWidth: isMobile ? '100%' : undefined,
+            minHeight: isMobile ? '100%' : undefined,
+            flex: isMobile ? '0 0 100%' : undefined,
+            position: 'relative',
+          }}
+        >
+          <AnimatedSlot
+            media={slotMediaList}
+            animationType={animationType}
+            randomOrder={randomOrder}
+            autoPlay={autoPlay}
+            transitionSpeed={transitionSpeed}
+          />
+        </div>
       ))}
     </div>
   );
@@ -335,7 +378,17 @@ const AnimatedSlot = memo(function AnimatedSlot({
   }, [animationType, transitionSpeed]);
 
   return (
-    <div className="relative overflow-hidden bg-black">
+    <div 
+      className="relative overflow-hidden bg-black"
+      style={{
+        width: '100%',
+        height: '100%',
+        minWidth: '100%',
+        minHeight: '100%',
+        display: 'block',
+        position: 'relative',
+      }}
+    >
       <AnimatePresence mode="wait">
         <motion.div
           key={currentMedia.id}
@@ -347,7 +400,9 @@ const AnimatedSlot = memo(function AnimatedSlot({
           onClick={handleClick}
           style={{ 
             cursor: currentMedia.link ? "pointer" : "default",
-            willChange: "transform, opacity" // ⚡ GPU acceleration
+            willChange: "transform, opacity",
+            width: '100%',
+            height: '100%',
           }}
         >
           {currentMedia.type === "image" ? (
@@ -356,15 +411,19 @@ const AnimatedSlot = memo(function AnimatedSlot({
               src={currentMedia.url}
               alt={currentMedia.name || "LED Media"}
               className="w-full h-full object-cover"
-              loading="lazy" // ⚡ Lazy loading
-              decoding="async" // ⚡ Decodificação assíncrona
+              loading="eager"
+              decoding="async"
               onLoad={() => console.log('✅ [LED] Imagem carregada:', currentMedia.url.substring(0, 50))}
               onError={(e) => {
                 console.error('❌ [LED] Erro ao carregar imagem:', currentMedia.url);
               }}
               style={{ 
                 willChange: "transform",
-                backfaceVisibility: "hidden", // ⚡ Performance
+                backfaceVisibility: "hidden",
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
               }}
             />
           ) : (

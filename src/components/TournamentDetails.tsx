@@ -265,18 +265,36 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-primary/10">
       {/* Header com Painel LED Animado */}
-      <div className="relative w-full overflow-hidden" style={{ zIndex: 1 }}>
+      <div 
+        className="relative w-full overflow-hidden block" 
+        style={{ 
+          zIndex: 1,
+          minHeight: '240px',
+          height: 'auto',
+          display: 'block',
+          visibility: 'visible',
+          backgroundColor: '#000',
+        }}
+      >
         {ledPanelConfig ? (
-          <AnimatedLEDPanel
-            zones={ledPanelConfig.zones}
-            media={ledPanelConfig.media} // Retrocompatibilidade
-            layout={ledPanelConfig.layout}
-            animationType={ledPanelConfig.animationType}
-            randomOrder={ledPanelConfig.randomOrder}
-            autoPlay={ledPanelConfig.autoPlay}
-            transitionSpeed={ledPanelConfig.transitionSpeed}
-            height={320}
-          />
+          <div style={{ 
+            width: '100%', 
+            height: '100%', 
+            minHeight: '240px',
+            display: 'block',
+            position: 'relative',
+          }}>
+            <AnimatedLEDPanel
+              zones={ledPanelConfig.zones}
+              media={ledPanelConfig.media} // Retrocompatibilidade
+              layout={ledPanelConfig.layout}
+              animationType={ledPanelConfig.animationType}
+              randomOrder={ledPanelConfig.randomOrder}
+              autoPlay={ledPanelConfig.autoPlay}
+              transitionSpeed={ledPanelConfig.transitionSpeed}
+              height={320}
+            />
+          </div>
         ) : (
           <TournamentSponsorsPanel
             sponsors={tournament.sponsors || []}
