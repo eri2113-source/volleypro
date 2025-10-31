@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "./ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "./ui/dialog";
 import { X, ZoomIn, ZoomOut, Download } from "lucide-react";
 import { Button } from "./ui/button";
 import { useState } from "react";
@@ -38,6 +38,14 @@ export function ImageViewerModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
+        {/* Accessibility - Hidden but present */}
+        <DialogHeader className="sr-only">
+          <DialogTitle>Visualizar Imagem</DialogTitle>
+          <DialogDescription>
+            Use os controles de zoom e download para interagir com a imagem
+          </DialogDescription>
+        </DialogHeader>
+        
         {/* Header com controles */}
         <div className="absolute top-4 right-4 z-50 flex gap-2">
           <Button
