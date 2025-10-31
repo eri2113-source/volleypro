@@ -47,8 +47,23 @@ export const AnimatedLEDPanel = memo(function AnimatedLEDPanel({
     if (typeof window === 'undefined') return;
     
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+      const newIsMobile = window.innerWidth < 768;
+      console.log('📱 [LED] Resize detectado:', {
+        width: window.innerWidth,
+        isMobile: newIsMobile,
+        userAgent: navigator.userAgent.substring(0, 50)
+      });
+      setIsMobile(newIsMobile);
     };
+    
+    // Log inicial
+    console.log('📱 [LED] Inicialização:', {
+      width: window.innerWidth,
+      height: window.innerHeight,
+      isMobile: window.innerWidth < 768,
+      userAgent: navigator.userAgent.substring(0, 50),
+      devicePixelRatio: window.devicePixelRatio
+    });
     
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleResize);

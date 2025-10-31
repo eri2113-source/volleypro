@@ -171,15 +171,15 @@ export function Athletes({ onSelectAthlete }: AthletesProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
           {filteredAthletes.map((athlete) => (
           <Card 
             key={athlete.id} 
-            className="overflow-hidden hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer border-2 hover:border-primary/50" 
+            className="overflow-hidden hover:shadow-xl hover:scale-105 transition-all cursor-pointer group" 
             onClick={() => onSelectAthlete(athlete.id)}
           >
             <CardContent className="p-0">
-              {/* Imagem do Atleta com Overlay */}
+              {/* Imagem do Atleta - COMPACTO */}
               <div className="relative aspect-[3/4] bg-gradient-to-br from-primary/10 to-secondary/10">
                 <Avatar className="w-full h-full rounded-none">
                   {(athlete.photo_url || athlete.photoUrl || athlete.avatar_url || athlete.avatarUrl || athlete.profile_picture || athlete.picture) && (
@@ -194,115 +194,66 @@ export function Athletes({ onSelectAthlete }: AthletesProps) {
                       }
                       alt={athlete.name}
                       className="object-cover"
-                      onError={(e) => {
-                        console.error('❌ Erro ao carregar imagem do atleta:', athlete.name, {
-                          photo_url: athlete.photo_url,
-                          photoUrl: athlete.photoUrl,
-                          avatar_url: athlete.avatar_url,
-                          avatarUrl: athlete.avatarUrl
-                        });
-                        e.currentTarget.style.display = 'none';
-                      }}
-                      onLoad={() => {
-                        console.log('✅ Imagem carregada com sucesso:', athlete.name);
-                      }}
                     />
                   )}
-                  <AvatarFallback className="rounded-none text-6xl bg-gradient-to-br from-primary/20 to-secondary/20">
+                  <AvatarFallback className="rounded-none text-3xl bg-gradient-to-br from-primary/20 to-secondary/20">
                     {athlete.name?.[0] || "A"}
                   </AvatarFallback>
                 </Avatar>
                 
-                {/* Badge Verificado */}
+                {/* Badge Verificado - MENOR */}
                 {athlete.verified && (
-                  <div className="absolute top-3 right-3">
-                    <Badge className="bg-green-500 text-white gap-1 shadow-lg">
-                      <CheckCircle2 className="h-3 w-3" />
-                      Verificado
+                  <div className="absolute top-1 right-1">
+                    <Badge className="bg-green-500 text-white text-xs px-1 py-0">
+                      <CheckCircle2 className="h-2 w-2" />
                     </Badge>
                   </div>
                 )}
 
-                {/* Badge "Disponível" se for free agent */}
+                {/* Badge "Disponível" - MENOR */}
                 {athlete.freeAgent && (
-                  <div className="absolute top-3 left-3">
-                    <Badge className="bg-orange-500 text-white gap-1 shadow-lg">
-                      Disponível
+                  <div className="absolute top-1 left-1">
+                    <Badge className="bg-orange-500 text-white text-xs px-1 py-0">
+                      Livre
                     </Badge>
                   </div>
                 )}
 
-                {/* Overlay com Nome e Seguidores */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/60 to-transparent p-4">
-                  <h3 className="text-white mb-1">{athlete.name}</h3>
-                  <div className="flex items-center gap-1 text-white/90 text-sm">
-                    <Users className="h-4 w-4" />
-                    <span>{(athlete.followers || 0).toLocaleString('pt-BR')} seguidores</span>
+                {/* Overlay com Nome - COMPACTO */}
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-2">
+                  <h3 className="text-white text-xs font-semibold line-clamp-2 mb-0.5">{athlete.name}</h3>
+                  <div className="flex items-center gap-0.5 text-white/80 text-xs">
+                    <Users className="h-2 w-2" />
+                    <span>{(athlete.followers || 0).toLocaleString('pt-BR')}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Informações do Atleta */}
-              <div className="p-4 space-y-3">
-                {/* Badges de Info */}
-                <div className="flex flex-wrap gap-2">
-                  {athlete.position && (
-                    <Badge variant="secondary" className="text-xs">
+              {/* Info Compacta */}
+              <div className="p-2 space-y-1 bg-muted/30">
+                {/* Posição */}
+                {athlete.position && (
+                  <div className="text-center">
+                    <Badge className="bg-primary text-white text-xs px-2 py-0">
                       {athlete.position}
                     </Badge>
-                  )}
-                  {athlete.age && (
-                    <Badge variant="secondary" className="text-xs">
-                      {athlete.age} anos
-                    </Badge>
-                  )}
-                  {athlete.city && (
-                    <Badge variant="secondary" className="text-xs">
-                      {athlete.city}
-                    </Badge>
-                  )}
+                  </div>
+                )}
+                
+                {/* Altura e Idade */}
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  {athlete.height && <span>{formatHeight(athlete.height)}</span>}
+                  {athlete.height && athlete.age && <span>•</span>}
+                  {athlete.age && <span>{athlete.age}a</span>}
                 </div>
-
-                {/* Informações */}
-                <div className="space-y-2 text-sm">
-                  {athlete.height && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Altura:</span>
-                      <span>{formatHeight(athlete.height)}</span>
-                    </div>
-                  )}
-                  {athlete.team && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Time:</span>
-                      <span className="truncate ml-2">{athlete.team}</span>
-                    </div>
-                  )}
-                  {!athlete.team && (
-                    <div className="flex items-center justify-center gap-1 text-orange-500 py-1">
-                      <MapPin className="h-3 w-3" />
-                      <span className="text-xs">Livre no mercado</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Botões de Ação */}
-                <div className="flex gap-2 pt-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleFollow(athlete.id.toString());
-                    }}
-                    disabled={!isAuthenticated}
-                  >
-                    Seguir
-                  </Button>
-                  <Button size="sm" className="flex-1 bg-primary hover:bg-primary/90">
-                    Ver Perfil
-                  </Button>
-                </div>
+                
+                {/* Cidade */}
+                {athlete.city && (
+                  <div className="flex items-center justify-center gap-1 text-xs text-muted-foreground">
+                    <MapPin className="h-2 w-2" />
+                    <span className="truncate">{athlete.city}</span>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

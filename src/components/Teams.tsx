@@ -1,6 +1,6 @@
 import { Search, CheckCircle2, Users, Trophy, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader } from "./ui/card";
-import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
@@ -130,79 +130,66 @@ export function Teams({ onSelectTeam }: TeamsProps) {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {filteredTeams.map((team) => (
             <Card 
               key={team.id} 
-              className="hover:shadow-lg transition-shadow cursor-pointer" 
+              className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer group" 
               onClick={() => {
                 console.log('🏐 Time clicado:', team.id, team.name);
                 onSelectTeam(team.id);
               }}
             >
-            <CardHeader>
-              <div className="flex items-start gap-3">
-                <Avatar className="h-14 w-14">
-                  <AvatarFallback className="bg-primary text-primary-foreground">
+              <CardContent className="p-4 flex flex-col items-center text-center space-y-3">
+                {/* Escudo/Avatar GRANDE */}
+                <Avatar className="h-24 w-24 ring-4 ring-primary/20 group-hover:ring-primary/40 transition-all">
+                  {(team.photo_url || team.photoUrl || team.avatar_url || team.avatarUrl || team.profile_picture || team.picture) && (
+                    <AvatarImage 
+                      src={
+                        team.photo_url || 
+                        team.photoUrl || 
+                        team.avatar_url || 
+                        team.avatarUrl || 
+                        team.profile_picture || 
+                        team.picture
+                      }
+                      alt={team.name}
+                      className="object-cover"
+                    />
+                  )}
+                  <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white text-2xl">
                     {team?.name 
                       ? team.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
                       : 'TM'}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3>{team?.name || 'Time'}</h3>
+
+                {/* Nome do Time */}
+                <div className="w-full">
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <h3 className="text-sm font-semibold line-clamp-2">{team?.name || 'Time'}</h3>
                     {team?.verified && (
-                      <CheckCircle2 className="h-4 w-4 text-blue-500" />
+                      <CheckCircle2 className="h-3 w-3 text-blue-500 flex-shrink-0" />
                     )}
                   </div>
-                  <div className="flex items-center gap-1 text-muted-foreground text-sm">
+                  <div className="flex items-center justify-center gap-1 text-muted-foreground text-xs">
                     <MapPin className="h-3 w-3" />
-                    {team?.city || 'Não informado'}
+                    <span className="line-clamp-1">{team?.city || 'Brasil'}</span>
                   </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Fundado em:</span>
-                <span>{team?.founded || '-'}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <Trophy className="h-4 w-4" />
-                  <span>Títulos:</span>
+
+                {/* Estatísticas Compactas */}
+                <div className="w-full flex items-center justify-around text-xs border-t pt-2">
+                  <div className="flex flex-col items-center">
+                    <Trophy className="h-3 w-3 text-primary mb-1" />
+                    <span className="font-semibold">{team?.championships || 0}</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <Users className="h-3 w-3 text-primary mb-1" />
+                    <span className="font-semibold">{Array.isArray(team.roster) ? team.roster.length : 0}</span>
+                  </div>
                 </div>
-                <span>{team?.championships || 0}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <Users className="h-4 w-4" />
-                  <span>Jogadores:</span>
-                </div>
-                <span>{Array.isArray(team.players) ? team.players.length : 0}</span>
-              </div>
-              <div className="text-muted-foreground text-sm">
-                {(team.followers || 0).toLocaleString()} seguidores
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleFollow(team.id.toString());
-                  }}
-                  disabled={!isAuthenticated}
-                >
-                  Seguir
-                </Button>
-                <Button size="sm" className="flex-1">
-                  Ver perfil
-                </Button>
-              </div>
-            </CardContent>
+              </CardContent>
           </Card>
         ))}
         </div>

@@ -37,11 +37,11 @@ export function ImageViewerModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none">
+      <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 bg-black/95 border-none" aria-describedby="image-viewer-description">
         {/* Accessibility - Hidden but present */}
         <DialogHeader className="sr-only">
           <DialogTitle>Visualizar Imagem</DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="image-viewer-description">
             Use os controles de zoom e download para interagir com a imagem
           </DialogDescription>
         </DialogHeader>
