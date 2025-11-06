@@ -198,6 +198,7 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
               <SelectContent>
                 <SelectItem value="single_elimination">🏆 Eliminação Simples</SelectItem>
                 <SelectItem value="double_elimination">💪 Eliminação Dupla (Repescagem)</SelectItem>
+                <SelectItem value="groups">🔲 Chaves (Grupos)</SelectItem>
                 <SelectItem value="round_robin">🔄 Todos contra Todos</SelectItem>
                 <SelectItem value="swiss">♟️ Sistema Suíço</SelectItem>
               </SelectContent>
@@ -205,6 +206,7 @@ export function CreateTournamentModal({ open, onClose, onSuccess }: CreateTourna
             <p className="text-xs text-muted-foreground">
               {format === 'single_elimination' && '⚡ Bracket estilo playoff - quem perde está eliminado'}
               {format === 'double_elimination' && '💪 Segunda chance - chave de perdedores'}
+              {format === 'groups' && '🔲 Times divididos em grupos - melhores avançam para playoffs'}
               {format === 'round_robin' && '🔄 Cada participante joga contra todos os outros'}
               {format === 'swiss' && '♟️ Pareamentos baseados em performance - sem eliminação'}
             </p>
