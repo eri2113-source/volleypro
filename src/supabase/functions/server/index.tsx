@@ -2677,6 +2677,268 @@ app.post('/make-server-0ea22bba/invitations/:invitationId/reject', authMiddlewar
   }
 });
 
+// ============= TEAM REQUESTS (Athlete requests to join team) =============
+
+// Create team request (athlete requests to join a team)
+app.post('/make-server-0ea22bba/teams/:teamId/request', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const teamId = c.req.param('teamId');
+    const { message } = await c.req.json();
+    
+    console.log('📩 SOLICITAÇÃO PARA TIME - Início:', { athleteId: userId, teamId });
+    
+    // Get athlete info
+    const athlete = await kv.get(`user:${userId}`);
+    if (!athlete || athlete.userType !== 'athlete') {
+      return c.json({ error: 'Only athletes can request to join teams' }, 403);
+    }
+    
+    // Get team info
+    const team = await kv.get(`user:${teamId}`);
+    if (!team || team.userType !== 'team') {
+      return c.json({ error: 'Team not found' }, 404);
+    }
+    
+    // Check if athlete already has a team
+    if (athlete.currentTeam) {
+      return c.json({ 
+        error: 'Você já faz parte de um time. Saia do time atual antes de solicitar participar de outro.',
+        currentTeam: athlete.currentTeam
+      }, 400);
+    }
+    
+    // Check if there's already a pending request
+    const existingRequests = await kv.getByPrefix('teamrequest:');
+    const pendingRequest = existingRequests.find((req: any) => 
+      req.athleteId === userId && 
+      req.teamId === teamId && 
+      req.status === 'pending'
+    );
+    
+    if (pendingRequest) {
+      return c.json({ error: 'Você já enviou uma solicitação para este time' }, 400);
+    }
+    
+    // Create request
+    const requestId = `teamrequest:${crypto.randomUUID()}`;
+    const request = {
+      id: requestId,
+      athleteId: userId,
+      athleteName: athlete.name,
+      athletePosition: athlete.position || 'Não definida',
+      athleteHeight: athlete.height,
+      athleteAge: athlete.age,
+      athletePhotoUrl: athlete.photoUrl,
+      athleteCpf: athlete.cpf,
+      teamId: teamId,
+      teamName: team.name,
+      message: message || `Olá! Gostaria de fazer parte do ${team.name}.`,
+      status: 'pending', // pending, accepted, rejected
+      createdAt: new Date().toISOString()
+    };
+    
+    await kv.set(requestId, request);
+    
+    console.log('✅ Solicitação criada:', request);
+    
+    return c.json({ 
+      success: true,
+      request,
+      message: `Solicitação enviada para ${team.name}!`
+    });
+  } catch (error: any) {
+    console.error('❌ Error creating team request:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get requests for a team (team sees who wants to join)
+app.get('/make-server-0ea22bba/teams/requests', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const allRequests = await kv.getByPrefix('teamrequest:');
+    
+    const teamRequests = allRequests.filter((req: any) => 
+      req.teamId === userId && req.status === 'pending'
+    );
+    
+    console.log(`📩 ${teamRequests.length} solicitações pendentes para o time ${userId}`);
+    
+    return c.json({ requests: teamRequests });
+  } catch (error: any) {
+    console.error('❌ Error getting team requests:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get requests sent by athlete
+app.get('/make-server-0ea22bba/athlete/requests', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const allRequests = await kv.getByPrefix('teamrequest:');
+    
+    const athleteRequests = allRequests.filter((req: any) => 
+      req.athleteId === userId
+    );
+    
+    return c.json({ requests: athleteRequests });
+  } catch (error: any) {
+    console.error('❌ Error getting athlete requests:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Accept team request (team accepts athlete)
+app.post('/make-server-0ea22bba/teams/requests/:requestId/accept', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const requestId = c.req.param('requestId');
+    
+    console.log('✅ ACEITAR SOLICITAÇÃO - Início:', { teamId: userId, requestId });
+    
+    const request = await kv.get(requestId);
+    
+    if (!request) {
+      return c.json({ error: 'Request not found' }, 404);
+    }
+    
+    if (request.teamId !== userId) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    if (request.status !== 'pending') {
+      return c.json({ error: 'Request already processed' }, 400);
+    }
+    
+    // Get athlete
+    const athlete = await kv.get(`user:${request.athleteId}`);
+    if (!athlete) {
+      return c.json({ error: 'Athlete not found' }, 404);
+    }
+    
+    // Check if athlete already joined another team
+    if (athlete.currentTeam) {
+      request.status = 'rejected';
+      request.rejectedReason = 'Atleta já entrou em outro time';
+      request.rejectedAt = new Date().toISOString();
+      await kv.set(requestId, request);
+      
+      return c.json({ 
+        error: 'Este atleta já faz parte de outro time',
+        currentTeam: athlete.currentTeam
+      }, 400);
+    }
+    
+    // Update request status
+    request.status = 'accepted';
+    request.acceptedAt = new Date().toISOString();
+    await kv.set(requestId, request);
+    
+    // Update athlete's current team
+    athlete.currentTeam = request.teamName;
+    await kv.set(`user:${request.athleteId}`, athlete);
+    
+    // Add athlete to team roster
+    const teamPlayers = await kv.get(`team:${userId}:players`) || [];
+    const newPlayer = {
+      id: request.athleteId,
+      name: athlete.name,
+      position: athlete.position || 'Posição não definida',
+      number: teamPlayers.length + 1,
+      age: athlete.age,
+      height: athlete.height,
+      photoUrl: athlete.photoUrl,
+      cpf: athlete.cpf,
+      addedAt: new Date().toISOString(),
+      teamId: userId
+    };
+    
+    teamPlayers.push(newPlayer);
+    await kv.set(`team:${userId}:players`, teamPlayers);
+    
+    console.log(`✅✅✅ SOLICITAÇÃO ACEITA!`, {
+      athlete: athlete.name,
+      team: request.teamName
+    });
+    
+    return c.json({ 
+      success: true,
+      athlete,
+      message: `${athlete.name} agora faz parte do time!`
+    });
+  } catch (error: any) {
+    console.error('❌ Error accepting team request:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Reject team request
+app.post('/make-server-0ea22bba/teams/requests/:requestId/reject', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const requestId = c.req.param('requestId');
+    
+    const request = await kv.get(requestId);
+    
+    if (!request) {
+      return c.json({ error: 'Request not found' }, 404);
+    }
+    
+    if (request.teamId !== userId) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    if (request.status !== 'pending') {
+      return c.json({ error: 'Request already processed' }, 400);
+    }
+    
+    request.status = 'rejected';
+    request.rejectedAt = new Date().toISOString();
+    await kv.set(requestId, request);
+    
+    console.log(`❌ Solicitação rejeitada:`, {
+      athlete: request.athleteName,
+      team: request.teamName
+    });
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('❌ Error rejecting team request:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Cancel team request (athlete cancels their own request)
+app.delete('/make-server-0ea22bba/teams/requests/:requestId', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const requestId = c.req.param('requestId');
+    
+    const request = await kv.get(requestId);
+    
+    if (!request) {
+      return c.json({ error: 'Request not found' }, 404);
+    }
+    
+    if (request.athleteId !== userId) {
+      return c.json({ error: 'Unauthorized' }, 403);
+    }
+    
+    await kv.del(requestId);
+    
+    console.log(`🗑️ Solicitação cancelada pelo atleta:`, {
+      athlete: request.athleteName,
+      team: request.teamName
+    });
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('❌ Error canceling team request:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // Leave team (athlete leaves current team)
 app.post('/make-server-0ea22bba/teams/leave', authMiddleware, async (c) => {
   try {

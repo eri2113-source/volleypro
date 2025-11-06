@@ -33,7 +33,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./ui/alert-dialog";
-import { userApi, teamRosterApi } from "../lib/api";
+import { userApi, teamRosterApi, teamRequestApi, authApi } from "../lib/api";
 import { toast } from "sonner@2.0.3";
 import { formatHeight } from "../utils/formatters";
 import { TeamSettingsPanel } from "./TeamSettingsPanel";
@@ -116,6 +116,9 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
   const [isFollowing, setIsFollowing] = useState(false);
   const [isOwner, setIsOwner] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [currentUserType, setCurrentUserType] = useState<string | null>(null);
+  const [currentUserHasTeam, setCurrentUserHasTeam] = useState(false);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
   
   // Estados de edição
   const [editMode, setEditMode] = useState(false);
@@ -158,20 +161,50 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
     loadTeamPlayers();
     loadFormerPlayers();
     checkIfFollowing();
-    
-    const userData = localStorage.getItem('volleypro_user');
-    if (userData) {
-      const user = JSON.parse(userData);
-      setCurrentUserId(user.id);
-      const ownerStatus = user.id === teamId.toString();
-      console.log('👤 Verificando propriedade do time:', {
-        userId: user.id,
-        teamId: teamId.toString(),
-        isOwner: ownerStatus
-      });
-      setIsOwner(ownerStatus);
-    }
+    checkCurrentUser();
+    checkPendingRequest();
   }, [teamId]);
+
+  async function checkCurrentUser() {
+    try {
+      const session = await authApi.getSession();
+      if (session?.user?.id) {
+        setCurrentUserId(session.user.id);
+        const ownerStatus = session.user.id === teamId.toString();
+        setIsOwner(ownerStatus);
+        
+        // Buscar dados do usuário para saber o tipo
+        const userData = await userApi.getCurrentUser();
+        setCurrentUserType(userData.profile.userType);
+        setCurrentUserHasTeam(!!userData.profile.currentTeam);
+        
+        console.log('👤 Dados do usuário:', {
+          userId: session.user.id,
+          userType: userData.profile.userType,
+          hasTeam: !!userData.profile.currentTeam,
+          isOwner: ownerStatus
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao verificar usuário:', error);
+    }
+  }
+
+  async function checkPendingRequest() {
+    try {
+      const session = await authApi.getSession();
+      if (!session) return;
+      
+      const { requests } = await teamRequestApi.getAthleteRequests();
+      const pending = requests.find((req: any) => 
+        req.teamId === teamId.toString() && req.status === 'pending'
+      );
+      
+      setHasPendingRequest(!!pending);
+    } catch (error) {
+      console.error('Erro ao verificar solicitações:', error);
+    }
+  }
 
   async function loadTeamProfile() {
     setLoading(true);
@@ -296,6 +329,53 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
     } catch (error) {
       console.error('Erro ao seguir/deixar de seguir:', error);
       toast.error('Erro ao processar ação');
+    }
+  }
+
+  async function handleRequestToJoin() {
+    try {
+      if (!currentUserId) {
+        toast.error('Faça login para solicitar participar do time');
+        return;
+      }
+
+      if (currentUserType !== 'athlete') {
+        toast.error('Apenas atletas podem solicitar participar de times');
+        return;
+      }
+
+      if (currentUserHasTeam) {
+        toast.error('Você já faz parte de um time. Saia do time atual antes de solicitar participar de outro.');
+        return;
+      }
+
+      const message = `Olá! Gostaria de fazer parte do ${team?.name}. Tenho muito interesse em contribuir com a equipe.`;
+      
+      await teamRequestApi.createRequest(teamId.toString(), message);
+      
+      setHasPendingRequest(true);
+      toast.success(`Solicitação enviada para ${team?.name}!`);
+    } catch (error: any) {
+      console.error('Erro ao enviar solicitação:', error);
+      toast.error(error.message || 'Erro ao enviar solicitação');
+    }
+  }
+
+  async function handleCancelRequest() {
+    try {
+      const { requests } = await teamRequestApi.getAthleteRequests();
+      const pending = requests.find((req: any) => 
+        req.teamId === teamId.toString() && req.status === 'pending'
+      );
+      
+      if (pending) {
+        await teamRequestApi.cancelRequest(pending.id);
+        setHasPendingRequest(false);
+        toast.success('Solicitação cancelada');
+      }
+    } catch (error) {
+      console.error('Erro ao cancelar solicitação:', error);
+      toast.error('Erro ao cancelar solicitação');
     }
   }
 
@@ -662,14 +742,47 @@ export function TeamProfile({ teamId, onBack }: TeamProfileProps) {
 
               {/* Botões de Ação */}
               {!isOwner && (
-                <Button
-                  onClick={handleFollow}
-                  variant={isFollowing ? "outline" : "default"}
-                  className={isFollowing ? "" : "bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white border-0"}
-                >
-                  <Heart className={`h-4 w-4 mr-2 ${isFollowing ? 'fill-current' : ''}`} />
-                  {isFollowing ? 'Seguindo' : 'Seguir'}
-                </Button>
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    onClick={handleFollow}
+                    variant={isFollowing ? "outline" : "default"}
+                    className={isFollowing ? "" : "bg-gradient-to-r from-orange-500 to-blue-500 hover:from-orange-600 hover:to-blue-600 text-white border-0"}
+                  >
+                    <Heart className={`h-4 w-4 mr-2 ${isFollowing ? 'fill-current' : ''}`} />
+                    {isFollowing ? 'Seguindo' : 'Seguir'}
+                  </Button>
+
+                  {/* Botão Solicitar Participar (apenas para atletas sem time) */}
+                  {currentUserType === 'athlete' && !currentUserHasTeam && !hasPendingRequest && (
+                    <Button
+                      onClick={handleRequestToJoin}
+                      className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0"
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Solicitar Participar
+                    </Button>
+                  )}
+
+                  {/* Botão Cancelar Solicitação (se já enviou) */}
+                  {currentUserType === 'athlete' && hasPendingRequest && (
+                    <Button
+                      onClick={handleCancelRequest}
+                      variant="outline"
+                      className="border-yellow-500 text-yellow-600 hover:bg-yellow-50"
+                    >
+                      <Clock className="h-4 w-4 mr-2" />
+                      Solicitação Pendente
+                    </Button>
+                  )}
+
+                  {/* Aviso para atletas que já têm time */}
+                  {currentUserType === 'athlete' && currentUserHasTeam && (
+                    <Badge variant="outline" className="px-4 py-2 text-sm">
+                      <Shield className="h-4 w-4 mr-2" />
+                      Você já faz parte de um time
+                    </Badge>
+                  )}
+                </div>
               )}
 
               {isOwner && (

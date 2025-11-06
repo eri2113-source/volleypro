@@ -953,6 +953,48 @@ export const teamRosterApi = {
   },
 };
 
+// Team Request APIs (Athletes requesting to join teams)
+export const teamRequestApi = {
+  // Create team request (athlete requests to join a team)
+  async createRequest(teamId: string, message?: string) {
+    return apiCall(`/teams/${teamId}/request`, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    });
+  },
+
+  // Get requests for a team (team sees who wants to join)
+  async getTeamRequests() {
+    return apiCall('/teams/requests');
+  },
+
+  // Get requests sent by athlete
+  async getAthleteRequests() {
+    return apiCall('/athlete/requests');
+  },
+
+  // Accept team request (team accepts athlete)
+  async acceptRequest(requestId: string) {
+    return apiCall(`/teams/requests/${requestId}/accept`, {
+      method: 'POST',
+    });
+  },
+
+  // Reject team request
+  async rejectRequest(requestId: string) {
+    return apiCall(`/teams/requests/${requestId}/reject`, {
+      method: 'POST',
+    });
+  },
+
+  // Cancel team request (athlete cancels their own request)
+  async cancelRequest(requestId: string) {
+    return apiCall(`/teams/requests/${requestId}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
 // Team Categories Management APIs
 export const teamCategoryApi = {
   // Get all categories and squads for a team
