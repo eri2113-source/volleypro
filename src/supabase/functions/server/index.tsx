@@ -3645,6 +3645,92 @@ app.post('/make-server-0ea22bba/tournaments', authMiddleware, async (c) => {
   }
 });
 
+// Save tournament category formats
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/category-formats', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const { categories } = await c.req.json();
+    
+    console.log('🎯 Salvando formatos das categorias:', { tournamentId, categories });
+    
+    // Validações
+    if (!categories || !Array.isArray(categories)) {
+      return c.json({ error: 'Categories array is required' }, 400);
+    }
+    
+    // Buscar torneio
+    const tournament = await kv.get(tournamentId);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    // Verificar permissões
+    const canEdit = tournament.createdBy === userId || 
+                    tournament.organizingTeam === userId ||
+                    (tournament.organizingTeamMembers && tournament.organizingTeamMembers.includes(userId));
+    
+    if (!canEdit) {
+      return c.json({ error: 'You do not have permission to edit this tournament' }, 403);
+    }
+    
+    // Validar categorias
+    for (const cat of categories) {
+      if (!cat.name || !cat.format) {
+        return c.json({ error: 'Each category must have name and format' }, 400);
+      }
+      
+      if (!['groups', 'round_robin'].includes(cat.format)) {
+        return c.json({ error: 'Invalid format. Must be "groups" or "round_robin"' }, 400);
+      }
+      
+      if (cat.format === 'groups') {
+        if (!cat.numGroups || cat.numGroups < 1) {
+          return c.json({ error: `Category ${cat.name}: numGroups must be at least 1` }, 400);
+        }
+        
+        if (cat.advancingPerGroup && cat.advancingPerGroup > cat.teamsPerGroup) {
+          return c.json({ error: `Category ${cat.name}: advancingPerGroup cannot exceed teamsPerGroup` }, 400);
+        }
+      }
+    }
+    
+    // Salvar configuração
+    tournament.categoryFormats = categories;
+    tournament.updatedAt = new Date().toISOString();
+    await kv.set(tournamentId, tournament);
+    
+    console.log(`✅ Formatos das categorias salvos para: ${tournamentId}`);
+    
+    return c.json({ 
+      success: true,
+      categoryFormats: categories
+    });
+  } catch (error: any) {
+    console.error('❌ Error saving category formats:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
+// Get tournament category formats
+app.get('/make-server-0ea22bba/tournaments/:tournamentId/category-formats', async (c) => {
+  try {
+    const tournamentId = c.req.param('tournamentId');
+    
+    const tournament = await kv.get(tournamentId);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    return c.json({ 
+      categoryFormats: tournament.categoryFormats || []
+    });
+  } catch (error: any) {
+    console.error('❌ Error getting category formats:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // Reset tournaments (criar rota que estava faltando)
 app.post('/make-server-0ea22bba/admin/reset-tournaments', async (c) => {
   try {

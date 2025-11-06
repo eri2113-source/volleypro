@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guia de Inscrição - Torneio LMV | VolleyPro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #f77062 0%, #fe5196 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header .subtitle {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .info-bar {
+            background: #2d3748;
+            color: white;
+            padding: 20px;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .info-item {
+            text-align: center;
+        }
+        
+        .info-item .icon {
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+        
+        .info-item .label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        .info-item .value {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 50px;
+        }
+        
+        .section-title {
+            font-size: 2.5em;
+            color: #2d3748;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #f77062;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .section-title .emoji {
+            font-size: 1.2em;
+        }
+        
+        .steps {
+            display: grid;
+            gap: 25px;
+        }
+        
+        .step {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 30px;
+            color: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .step:hover {
+            transform: translateY(-5px);
+        }
+        
+        .step-number {
+            background: white;
+            color: #667eea;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .step-title {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .step-content {
+            font-size: 1.1em;
+            line-height: 1.8;
+            opacity: 0.95;
+        }
+        
+        .step-content ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .step-content li {
+            padding: 8px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        
+        .step-content li:before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .athlete-steps .step {
+            background: linear-gradient(135deg, #f77062 0%, #fe5196 100%);
+        }
+        
+        .athlete-steps .step-number {
+            color: #f77062;
+        }
+        
+        .alert-box {
+            background: #fff5f5;
+            border-left: 5px solid #fc8181;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 10px;
+        }
+        
+        .alert-box.success {
+            background: #f0fff4;
+            border-left-color: #68d391;
+        }
+        
+        .alert-box h3 {
+            color: #c53030;
+            margin-bottom: 10px;
+            font-size: 1.3em;
+        }
+        
+        .alert-box.success h3 {
+            color: #276749;
+        }
+        
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .contact-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 25px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .contact-card .icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+        }
+        
+        .contact-card .number {
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .cta-button {
+            background: linear-gradient(135deg, #f77062 0%, #fe5196 100%);
+            color: white;
+            padding: 20px 50px;
+            font-size: 1.5em;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 30px 0;
+            box-shadow: 0 10px 30px rgba(247, 112, 98, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(247, 112, 98, 0.6);
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .prize-box {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            padding: 30px;
+            border-radius: 15px;
+            margin: 30px 0;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .prize-box h3 {
+            font-size: 2em;
+            color: #2d3748;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .prizes {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .prize-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .prize-item .place {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        
+        .prize-item .amount {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #2d3748;
+            margin: 10px 0;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+            }
+            
+            .step:hover {
+                transform: none;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .section-title {
+                font-size: 1.8em;
+            }
+            
+            .step-title {
+                font-size: 1.4em;
+            }
+            
+            .info-bar {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🏐 TORNEIO LMV</h1>
+            <p class="subtitle">Liga Municipal de Vôlei</p>
+        </div>
+        
+        <!-- Info Bar -->
+        <div class="info-bar">
+            <div class="info-item">
+                <div class="icon">📅</div>
+                <div class="label">Data</div>
+                <div class="value">07-09/11/2025</div>
+            </div>
+            <div class="info-item">
+                <div class="icon">📍</div>
+                <div class="label">Local</div>
+                <div class="value">Aparecida de Goiânia</div>
+            </div>
+            <div class="info-item">
+                <div class="icon">💰</div>
+                <div class="label">Taxa</div>
+                <div class="value">R$ 400,00</div>
+            </div>
+            <div class="info-item">
+                <div class="icon">🏆</div>
+                <div class="label">Prêmios</div>
+                <div class="value">R$ 850,00</div>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div class="content">
+            
+            <!-- Prizes -->
+            <div class="prize-box">
+                <h3>🏆 PREMIAÇÃO</h3>
+                <div class="prizes">
+                    <div class="prize-item">
+                        <div class="place">🥇</div>
+                        <div class="amount">R$ 550,00</div>
+                        <div>+ Troféu + Medalhas</div>
+                    </div>
+                    <div class="prize-item">
+                        <div class="place">🥈</div>
+                        <div class="amount">R$ 300,00</div>
+                        <div>+ Troféu + Medalhas</div>
+                    </div>
+                    <div class="prize-item">
+                        <div class="place">🥉</div>
+                        <div class="amount">Troféu</div>
+                        <div>+ Medalhas</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section: Team Leaders -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="emoji">👥</span>
+                    VOCÊ É LÍDER DE TIME?
+                </h2>
+                
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-title">CRIAR CONTA NO VOLLEYPRO</div>
+                        <div class="step-content">
+                            <ul>
+                                <li>Acesse: <strong>voleypro.net</strong></li>
+                                <li>Clique em "Cadastrar"</li>
+                                <li>Escolha: "Time/Equipe"</li>
+                                <li>Preencha: Nome, E-mail, Senha</li>
+                                <li>Cidade: Aparecida de Goiânia - GO</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-title">COMPLETAR PERFIL DO TIME</div>
+                        <div class="step-content">
+                            <ul>
+                                <li>Adicionar foto/logo do time</li>
+                                <li>Escolher categoria (Masculino/Feminino)</li>
+                                <li>Informar presidente/técnico</li>
+                                <li>Adicionar telefone de contato</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-title">ADICIONAR JOGADORES</div>
+                        <div class="step-content">
+                            <p><strong>OPÇÃO A:</strong> Buscar por CPF (se atleta tem conta)</p>
+                            <p><strong>OPÇÃO B:</strong> Adicionar manualmente</p>
+                            <p>⚠️ <strong>Mínimo 6 jogadores</strong></p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-title">INSCREVER NO TORNEIO LMV</div>
+                        <div class="step-content">
+                            <ul>
+                                <li>Menu → "Torneios"</li>
+                                <li>Encontrar: "Liga Municipal de Vôlei - LMV"</li>
+                                <li>Clicar em "Inscrever Time"</li>
+                                <li>Escolher categoria correta</li>
+                                <li>Confirmar inscrição</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">5</div>
+                        <div class="step-title">PAGAR TAXA DE R$ 400,00</div>
+                        <div class="step-content">
+                            <p>Entre em contato com a organização:</p>
+                            <p>📱 (62) 99311-2622</p>
+                            <p>📱 (62) 98560-9353</p>
+                            <p>📱 (62) 99490-0395</p>
+                            <p>📱 (62) 92000-4301</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">6</div>
+                        <div class="step-title">CONFIRMAR INSCRIÇÃO</div>
+                        <div class="step-content">
+                            <ul>
+                                <li>Verificar time na lista de inscritos</li>
+                                <li>Confirmar todos os jogadores</li>
+                                <li>Definir titulares e capitão</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section: Athletes -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="emoji">🏃</span>
+                    VOCÊ É ATLETA?
+                </h2>
+                
+                <div class="steps athlete-steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-title">CRIAR CONTA DE ATLETA</div>
+                        <div class="step-content">
+                            <ul>
+                                <li>Acesse: <strong>voleypro.net</strong></li>
+                                <li>Clique em "Cadastrar"</li>
+                                <li>Escolha: "Atleta"</li>
+                                <li>Preencha: Nome, <strong>CPF</strong>, E-mail, Senha</li>
+                                <li>⚠️ <strong>CPF é obrigatório!</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-title">COMPLETAR PERFIL</div>
+                        <div class="step-content">
+                            <ul>
+                                <li>Adicionar foto de perfil</li>
+                                <li>Informar posição (Levantador, Ponteiro, etc.)</li>
+                                <li>Altura e lateralidade</li>
+                                <li>Escrever biografia</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-title">ENTRAR EM UM TIME</div>
+                        <div class="step-content">
+                            <p><strong>OPÇÃO A:</strong> Aguardar convite de um time</p>
+                            <p>→ Time busca seu CPF e te convida</p>
+                            <p>→ Você aceita o convite</p>
+                            <br>
+                            <p><strong>OPÇÃO B:</strong> Solicitar participar</p>
+                            <p>→ Menu "Times" → Escolher time</p>
+                            <p>→ Clicar "Solicitar Participar"</p>
+                            <p>→ Aguardar aprovação</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-title">VERIFICAR INSCRIÇÃO</div>
+                        <div class="step-content">
+                            <ul>
+                                <li>Menu → "Torneios" → LMV</li>
+                                <li>Verificar se seu time está inscrito</li>
+                                <li>Confirmar que você está no elenco</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Alert Box -->
+            <div class="alert-box">
+                <h3>⚠️ IMPORTANTE</h3>
+                <p><strong>❌ Atletas NÃO podem se inscrever sozinhos</strong></p>
+                <p>Este torneio é por <strong>TIMES</strong>, não individual.</p>
+                <p>Você precisa fazer parte de um time inscrito!</p>
+            </div>
+            
+            <div class="alert-box success">
+                <h3>✅ OBRIGATÓRIO</h3>
+                <p>✓ <strong>Times:</strong> Mínimo 6 jogadores no elenco</p>
+                <p>✓ <strong>Categoria:</strong> Masculino OU Feminino (escolher correta!)</p>
+                <p>✓ <strong>Pagamento:</strong> R$ 400,00 por time</p>
+                <p>✓ <strong>Prazo:</strong> Até 06/11/2025</p>
+            </div>
+            
+            <!-- Contacts -->
+            <div class="section">
+                <h2 class="section-title">
+                    <span class="emoji">📞</span>
+                    CONTATOS
+                </h2>
+                
+                <div class="contact-grid">
+                    <div class="contact-card">
+                        <div class="icon">📱</div>
+                        <div class="number">(62) 99311-2622</div>
+                    </div>
+                    <div class="contact-card">
+                        <div class="icon">📱</div>
+                        <div class="number">(62) 98560-9353</div>
+                    </div>
+                    <div class="contact-card">
+                        <div class="icon">📱</div>
+                        <div class="number">(62) 99490-0395</div>
+                    </div>
+                    <div class="contact-card">
+                        <div class="icon">📱</div>
+                        <div class="number">(62) 92000-4301</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CTA -->
+            <div class="text-center">
+                <a href="https://voleypro.net" class="cta-button">
+                    🏐 INSCREVER AGORA
+                </a>
+                <p style="margin-top: 20px; font-size: 1.2em; color: #2d3748;">
+                    <strong>BOA SORTE NO TORNEIO! 🏆</strong>
+                </p>
+            </div>
+            
+        </div>
+    </div>
+</body>
+</html>
