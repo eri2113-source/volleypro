@@ -57,25 +57,22 @@ export function Athletes({ onSelectAthlete }: AthletesProps) {
       if (positionFilter !== 'all') {
         filters.position = positionFilter;
       }
+      
+      console.log('🔍 Carregando atletas com filtros:', filters);
       const { users } = await userApi.getUsers(filters);
       
       // Debug: Verificar dados dos atletas
-      console.log('📊 Atletas carregados:', users);
+      console.log('📊 Atletas retornados da API:', users?.length || 0);
       if (users && users.length > 0) {
         console.log('📸 Exemplo de atleta:', users[0]);
-        console.log('📸 Campos de foto disponíveis:', {
-          photo_url: users[0].photo_url,
-          photoUrl: users[0].photoUrl,
-          avatar_url: users[0].avatar_url,
-          avatarUrl: users[0].avatarUrl,
-          profile_picture: users[0].profile_picture,
-          picture: users[0].picture
-        });
+        console.log('📍 Posições disponíveis:', users.map((u: any) => u.position).filter(Boolean));
+      } else {
+        console.warn('⚠️ Nenhum atleta encontrado no banco de dados');
       }
       
       setAthletes(users || []);
     } catch (error) {
-      console.error("Error loading athletes:", error);
+      console.error("❌ Erro ao carregar atletas:", error);
       setAthletes([]);
       toast.error("Erro ao carregar atletas");
     } finally {
@@ -108,7 +105,14 @@ export function Athletes({ onSelectAthlete }: AthletesProps) {
       return false;
     }
     
-    const matchesSearch = athlete.name.toLowerCase().includes(searchQuery.toLowerCase());
+    // 🔍 Busca em nome, nickname, posição e cidade
+    const searchLower = searchQuery.toLowerCase();
+    const matchesSearch = !searchQuery || 
+      athlete.name?.toLowerCase().includes(searchLower) ||
+      athlete.nickname?.toLowerCase().includes(searchLower) ||
+      athlete.position?.toLowerCase().includes(searchLower) ||
+      athlete.city?.toLowerCase().includes(searchLower);
+    
     return matchesSearch;
   });
 
@@ -160,13 +164,27 @@ export function Athletes({ onSelectAthlete }: AthletesProps) {
         <Card className="col-span-full">
           <CardContent className="flex flex-col items-center justify-center py-12 space-y-4">
             <div className="text-6xl">🏐</div>
-            <div className="text-center space-y-2">
+            <div className="text-center space-y-3">
               <h3 className="text-xl font-semibold">Nenhum atleta encontrado</h3>
               <p className="text-muted-foreground">
-                {searchQuery || positionFilter !== 'all' 
-                  ? 'Tente ajustar os filtros de busca' 
-                  : 'Seja o primeiro atleta a se cadastrar no VolleyPro!'}
+                {athletes.length === 0 
+                  ? 'Ainda não há atletas cadastrados no sistema. Seja o primeiro!' 
+                  : searchQuery || positionFilter !== 'all'
+                  ? 'Tente ajustar os filtros de busca'
+                  : 'Tente ajustar os filtros'}
               </p>
+              {(searchQuery || positionFilter !== 'all') && (
+                <div className="text-sm text-muted-foreground space-y-1">
+                  {searchQuery && <p>🔍 Buscando por: "{searchQuery}"</p>}
+                  {positionFilter !== 'all' && <p>📍 Filtrando por posição: {positionFilter}</p>}
+                  <p className="mt-2 text-primary cursor-pointer hover:underline" onClick={() => {
+                    setSearchQuery('');
+                    setPositionFilter('all');
+                  }}>
+                    Limpar filtros
+                  </p>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
