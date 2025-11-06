@@ -596,8 +596,10 @@ function ProfileEditModalContent({
   }
 
   // Desktop: usar Dialog
-  return (
-    <Dialog open={open} onOpenChange={handleClose}>
+  // 🛡️ Proteção contra erros de removeChild
+  try {
+    return (
+      <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden" aria-describedby="profile-edit-description">
         <div className="shrink-0 p-6 pb-4 border-b bg-background/95 backdrop-blur-sm">
           <DialogHeader>
@@ -674,7 +676,12 @@ function ProfileEditModalContent({
         </div>
       </DialogContent>
     </Dialog>
-  );
+    );
+  } catch (error) {
+    // 🔴 Em caso de erro, retornar null ao invés de criar novos elementos
+    console.error("🔴 Erro ao renderizar ProfileEditModal:", error);
+    return null;
+  }
 }
 
 // Componente principal com ErrorBoundary

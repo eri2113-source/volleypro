@@ -239,27 +239,29 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
     }
   };
 
-  return (
-    <>
-      <ForgotPasswordModal
-        open={showForgotPassword && !loading}
-        onClose={() => setShowForgotPassword(false)}
-      />
-      
-      {!showForgotPassword && (
-      <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto" aria-describedby="auth-description">
-        <DialogHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
-              <Shield className="h-6 w-6 text-white" />
+  // 🛡️ Proteção contra erros de removeChild - não criar novos elementos no DOM
+  try {
+    return (
+      <>
+        <ForgotPasswordModal
+          open={showForgotPassword && !loading}
+          onClose={() => setShowForgotPassword(false)}
+        />
+        
+        {!showForgotPassword && (
+        <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto" aria-describedby="auth-description">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-secondary">
+                <Shield className="h-6 w-6 text-white" />
+              </div>
+              <DialogTitle>VolleyPro</DialogTitle>
             </div>
-            <DialogTitle>VolleyPro</DialogTitle>
-          </div>
-          <DialogDescription id="auth-description">
-            Entre ou crie sua conta para acessar a rede social do vôlei
-          </DialogDescription>
-        </DialogHeader>
+            <DialogDescription id="auth-description">
+              Entre ou crie sua conta para acessar a rede social do vôlei
+            </DialogDescription>
+          </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "signin" | "signup")} className="mt-6">
           <TabsList className="grid w-full grid-cols-2">
@@ -403,9 +405,14 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
             </p>
           </TabsContent>
         </Tabs>
-      </DialogContent>
-    </Dialog>
-      )}
-    </>
-  );
+        </DialogContent>
+      </Dialog>
+        )}
+      </>
+    );
+  } catch (error) {
+    // 🔴 Em caso de erro, retornar null ao invés de criar novos elementos
+    console.error("🔴 Erro ao renderizar AuthModal:", error);
+    return null;
+  }
 }

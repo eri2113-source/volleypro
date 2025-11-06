@@ -432,6 +432,12 @@ app.post('/make-server-0ea22bba/auth/signup', async (c) => {
 
     if (error) {
       console.log('Signup error:', error);
+      
+      // Detectar erro de email já cadastrado e retornar mensagem amigável
+      if (error.message?.includes('already') || error.message?.includes('duplicate') || error.code === '23505') {
+        return c.json({ error: 'User already registered' }, 400);
+      }
+      
       return c.json({ error: error.message }, 400);
     }
 

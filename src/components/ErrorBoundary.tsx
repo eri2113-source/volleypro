@@ -26,6 +26,15 @@ export class ErrorBoundary extends React.Component<Props, State> {
     console.error("🔴 ErrorBoundary capturou erro:", error, errorInfo);
     console.error("📍 Stack trace:", error.stack);
     console.error("📍 Component stack:", errorInfo.componentStack);
+    
+    // 🛡️ Detectar erros de removeChild (conflitos de portal)
+    if (error?.message?.includes('removeChild') || error?.message?.includes('portal')) {
+      console.error("⚠️ ERRO DE PORTAL DETECTADO - Pode ser necessário recarregar a página");
+      // Limpar states que podem estar causando conflito
+      setTimeout(() => {
+        this.setState({ hasError: false, error: null });
+      }, 100);
+    }
   }
 
   render() {
