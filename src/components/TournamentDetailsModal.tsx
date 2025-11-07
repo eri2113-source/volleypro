@@ -520,7 +520,7 @@ export function TournamentDetailsModal({
             
             {canRegister && (
               <Button 
-                onClick={() => {
+                onClick={async () => {
                   console.log('\n🎯 ====== BOTÃO INSCREVER CLICADO ======');
                   console.log('📊 Estado atual:', {
                     tournamentId,
@@ -531,15 +531,44 @@ export function TournamentDetailsModal({
                     hasTournament: !!tournament,
                     modalityType: tournament?.modalityType
                   });
-                  console.log('✅ Abrindo modal de seleção de equipes...');
-                  setShowSquadSelection(true);
-                  console.log('✅ showSquadSelection = true');
+                  
+                  // 🚨 SOLUÇÃO DE EMERGÊNCIA: INSCREVER DIRETAMENTE
+                  console.log('🚨 INSCREVENDO DIRETAMENTE - EMERGÊNCIA LMV');
+                  
+                  try {
+                    setLoading(true);
+                    
+                    console.log('📝 Chamando API de inscrição...');
+                    await tournamentApi.registerSquad(tournamentId, currentUserId!, null);
+                    
+                    console.log('✅ SUCESSO! Time inscrito!');
+                    
+                    toast.success(`${currentUserTeamName || 'Time'} inscrito com sucesso!`, {
+                      description: 'Inscrição realizada no torneio LMV',
+                      duration: 5000
+                    });
+                    
+                    // Recarregar detalhes
+                    await loadTournamentDetails();
+                    
+                    if (onRegistrationSuccess) {
+                      onRegistrationSuccess();
+                    }
+                  } catch (error: any) {
+                    console.error('❌ ERRO ao inscrever:', error);
+                    toast.error('Erro ao inscrever time', {
+                      description: error.message || 'Tente novamente',
+                      duration: 7000
+                    });
+                  } finally {
+                    setLoading(false);
+                  }
                 }} 
                 disabled={loading}
                 className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
               >
                 <CheckCircle2 className="h-4 w-4 mr-2" />
-                Inscrever Meu Time
+                {loading ? 'Inscrevendo...' : 'Inscrever Meu Time'}
               </Button>
             )}
 
