@@ -149,15 +149,33 @@ export function TournamentDetailsModal({
       setTeams(tm || []);
 
       // Load current user team name (sempre carregar para times, não apenas se já inscrito)
+      console.log('🔍 Verificando se deve carregar nome do time:', {
+        currentUserId,
+        userType,
+        shouldLoad: currentUserId && userType === 'team'
+      });
+      
       if (currentUserId && userType === 'team') {
         try {
+          console.log('📥 Carregando dados do usuário atual...');
           const currentUserData = await userApi.getCurrentUser();
+          console.log('✅ Dados do usuário recebidos:', {
+            hasProfile: !!currentUserData.profile,
+            profileType: currentUserData.profile?.userType,
+            profileName: currentUserData.profile?.name
+          });
+          
           if (currentUserData.profile && currentUserData.profile.userType === 'team') {
             setCurrentUserTeamName(currentUserData.profile.name);
+            console.log('✅ Nome do time definido:', currentUserData.profile.name);
+          } else {
+            console.warn('⚠️ Perfil não é de um time');
           }
         } catch (err) {
-          console.warn('⚠️ Erro ao carregar dados do usuário:', err);
+          console.error('❌ Erro ao carregar dados do usuário:', err);
         }
+      } else {
+        console.warn('⚠️ NÃO vai carregar nome do time - condições não atendidas');
       }
 
       // Load standings if ongoing
@@ -503,13 +521,19 @@ export function TournamentDetailsModal({
             {canRegister && (
               <Button 
                 onClick={() => {
-                  console.log('🎯 Inscrever button clicked - Opening squad selection:', {
+                  console.log('\n🎯 ====== BOTÃO INSCREVER CLICADO ======');
+                  console.log('📊 Estado atual:', {
                     tournamentId,
                     currentUserId,
                     userType,
-                    isRegistered
+                    isRegistered,
+                    currentUserTeamName,
+                    hasTournament: !!tournament,
+                    modalityType: tournament?.modalityType
                   });
+                  console.log('✅ Abrindo modal de seleção de equipes...');
                   setShowSquadSelection(true);
+                  console.log('✅ showSquadSelection = true');
                 }} 
                 disabled={loading}
                 className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
@@ -1115,10 +1139,43 @@ export function TournamentDetailsModal({
       )}
 
       {/* Squad Selection Modal - For teams with multiple squads */}
+      {(() => {
+        console.log('\n🔍 ====== VERIFICAÇÃO RENDER MODAL ======');
+        console.log('📊 Condições para renderizar:', {
+          showSquadSelection,
+          hasCurrentUserId: !!currentUserId,
+          currentUserId,
+          hasTournament: !!tournament,
+          tournamentId: tournament?.id,
+          willRender: showSquadSelection && currentUserId && tournament
+        });
+        
+        if (showSquadSelection && currentUserId && tournament) {
+          console.log('✅ TODAS AS CONDIÇÕES OK - Renderizando TournamentSquadSelectionModal');
+          console.log('📋 Props do modal:', {
+            open: showSquadSelection,
+            tournamentId,
+            tournamentName: tournament.name,
+            teamId: currentUserId,
+            teamName: currentUserTeamName || 'Seu Time',
+            modalityType: tournament.modalityType || 'indoor'
+          });
+        } else {
+          console.warn('❌ MODAL NÃO VAI RENDERIZAR - Falta:', {
+            showSquadSelection: showSquadSelection ? '✅' : '❌ FALSE',
+            currentUserId: currentUserId ? '✅' : '❌ NULL/UNDEFINED',
+            tournament: tournament ? '✅' : '❌ NULL/UNDEFINED'
+          });
+        }
+        
+        return null;
+      })()}
+      
       {showSquadSelection && currentUserId && tournament && (
         <TournamentSquadSelectionModal
           open={showSquadSelection}
           onClose={() => {
+            console.log('🚪 Fechando TournamentSquadSelectionModal');
             setShowSquadSelection(false);
             // ✅ RECARREGAR ao fechar modal
             loadTournamentDetails();
