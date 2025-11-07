@@ -12,7 +12,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: 'dist',
+    outDir: 'build', // ✅ MUDADO PARA BUILD - COMPATÍVEL COM VERCEL
     sourcemap: false,
     chunkSizeWarningLimit: 1000,
     minify: 'esbuild',
