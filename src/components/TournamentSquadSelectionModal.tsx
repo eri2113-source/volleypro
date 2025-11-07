@@ -40,6 +40,9 @@ export function TournamentSquadSelectionModal({
   modalityType = 'indoor',
   onSquadSelected
 }: TournamentSquadSelectionModalProps) {
+  console.log('🎪 TournamentSquadSelectionModal COMPONENT RENDERIZADO');
+  console.log('   Props recebidas:', { open, tournamentId, teamId, teamName });
+  
   const [loading, setLoading] = useState(true);
   const [squads, setSquads] = useState<TeamSquad[]>([]);
   const [selectedSquadId, setSelectedSquadId] = useState("");
@@ -48,23 +51,44 @@ export function TournamentSquadSelectionModal({
   const [hasCategories, setHasCategories] = useState<boolean | null>(null);
 
   useEffect(() => {
+    console.log('\n🎬 ===== useEffect TournamentSquadSelectionModal DISPARADO =====');
+    console.log('   open:', open);
+    console.log('   teamId:', teamId);
+    console.log('   tournamentId:', tournamentId);
+    console.log('   teamName:', teamName);
+    
     if (open) {
+      console.log('✅ Modal ABERTO, carregando dados...');
       loadSquadsAndRegistrations();
+    } else {
+      console.log('❌ Modal FECHADO, não carrega');
     }
   }, [open, teamId, tournamentId]);
 
   async function loadSquadsAndRegistrations() {
+    console.log('\n🔄 ===== loadSquadsAndRegistrations INICIADA =====');
+    console.log('   teamId:', teamId);
+    console.log('   teamName:', teamName);
+    console.log('   tournamentId:', tournamentId);
+    console.log('   ⏰ Timestamp:', new Date().toISOString());
+    
     setLoading(true);
+    console.log('   ⏳ Loading = TRUE');
+    
     try {
       // 1. Verificar se time tem categorias
       let hasCategoriesCreated = false;
       
       try {
+        console.log('📂 Buscando categorias do time...');
         const categoriesResponse = await teamCategoryApi.getCategories(teamId);
         const categories = categoriesResponse.categories || [];
         hasCategoriesCreated = categories && categories.length > 0;
         setHasCategories(hasCategoriesCreated);
+        console.log('   Tem categorias?', hasCategoriesCreated);
+        console.log('   Total:', categories.length);
       } catch (error) {
+        console.log('⚠️ Erro ao buscar categorias (normal se não tiver)');
         setHasCategories(false);
       }
 
@@ -92,11 +116,25 @@ export function TournamentSquadSelectionModal({
       
       // 4. INSCRIÇÃO AUTOMÁTICA para times sem categorias
       if (!hasCategoriesCreated) {
-        setLoading(true);
+        console.log('\n🎯 ===== INSCRIÇÃO AUTOMÁTICA INICIADA =====');
+        console.log('   teamId:', teamId);
+        console.log('   tournamentId:', tournamentId);
+        console.log('   teamName:', teamName);
+        console.log('   ⏰ Hora:', new Date().toLocaleTimeString());
+        
+        // Loading já está TRUE desde o início, não precisa setar novamente
+        console.log('   ⏳ Loading já está TRUE');
         
         try {
-          // Inscrever como TIME COMPLETO (squadId = null)
-          await tournamentApi.registerSquad(tournamentId, teamId, null);
+          console.log('\n📞 ===== CHAMANDO tournamentApi.registerSquad =====');
+          console.log('   Parâmetros:', { tournamentId, teamId, squadId: null });
+          console.log('   ⏰ Antes da chamada:', new Date().toLocaleTimeString());
+          
+          const result = await tournamentApi.registerSquad(tournamentId, teamId, null);
+          
+          console.log('\n✅ ===== API RETORNOU SUCESSO =====');
+          console.log('   Resultado:', result);
+          console.log('   ⏰ Depois da chamada:', new Date().toLocaleTimeString());
           
           toast.success(`${teamName} inscrito com sucesso!`, {
             description: 'Time completo registrado no torneio',
@@ -113,23 +151,31 @@ export function TournamentSquadSelectionModal({
             createdAt: new Date().toISOString()
           });
           
-          // Aguardar 500ms para ver toast
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Aguardar 1.5s para ver o toast
+          await new Promise(resolve => setTimeout(resolve, 1500));
           
-          // Fechar modal
+          // Fechar modal APENAS se sucesso
           setLoading(false);
           onClose();
         } catch (error: any) {
+          console.error('❌ ERRO NA INSCRIÇÃO AUTOMÁTICA:', error);
+          console.error('   Message:', error.message);
+          console.error('   Stack:', error.stack);
+          
           toast.error('Erro ao inscrever time', {
             description: error.message || 'Tente novamente',
             duration: 8000
           });
           
+          // NÃO FECHAR O MODAL em caso de erro
           setLoading(false);
+          // Não chamar onClose() para deixar usuário ver o erro
         }
         
         return;
       }
+      
+      console.log('ℹ️ Time TEM categorias, mostrando modal de seleção');
       
     } catch (error: any) {
       toast.error('Erro ao carregar dados', {
@@ -212,24 +258,34 @@ export function TournamentSquadSelectionModal({
     onClose();
   }
 
+  console.log('🎨 RENDERIZANDO MODAL');
+  console.log('   loading:', loading);
+  console.log('   hasCategories:', hasCategories);
+  console.log('   squads:', squads.length);
+  
   if (loading) {
+    console.log('⏳ Mostrando tela de LOADING');
     return (
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="max-w-2xl" aria-describedby="squad-selection-description">
           <DialogHeader>
-            <DialogTitle>Inscrever Equipe</DialogTitle>
+            <DialogTitle>Inscrevendo Time</DialogTitle>
             <DialogDescription id="squad-selection-description">
-              Carregando equipes...
+              Processando inscrição no torneio...
             </DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="text-center space-y-4">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
+              <p className="text-sm text-muted-foreground">⚡ Aguarde, registrando seu time...</p>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
     );
   }
 
+  console.log('✅ Mostrando CONTEÚDO PRINCIPAL do modal');
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" aria-describedby="squad-selection-description">

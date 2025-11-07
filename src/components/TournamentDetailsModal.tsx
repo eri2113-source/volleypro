@@ -363,11 +363,20 @@ export function TournamentDetailsModal({
     tournament.registeredTeams?.some((team: any) => team.players?.some((p: any) => p.id === currentUserId))
   );
   
+  // 🚨 LOG CRÍTICO ANTES DE CALCULAR canRegister
+  console.log('🚨 VERIFICANDO CONDIÇÕES PARA INSCRIÇÃO:');
+  console.log('   1. É vôlei de QUADRA (!isBeachTournament):', !isBeachTournament);
+  console.log('   2. Usuário é TIME (userType === "team"):', userType === 'team', '| userType atual:', userType);
+  console.log('   3. Status é UPCOMING (tournament.status === "upcoming"):', tournament.status === 'upcoming', '| Status atual:', tournament.status);
+  console.log('   4. NÃO está inscrito (!isRegistered):', !isRegistered, '| isRegistered:', isRegistered);
+  
   // Para torneios de AREIA: qualquer atleta pode se inscrever formando dupla
   // Para torneios de QUADRA: apenas times podem se inscrever
   const canRegister = !isBeachTournament && userType === 'team' && tournament.status === 'upcoming' && !isRegistered;
   const canRegisterBeach = isBeachTournament && userType === 'athlete' && tournament.status === 'upcoming';
   const canUnregister = userType === 'team' && tournament.status === 'upcoming' && isRegistered;
+  
+  console.log('🎯 RESULTADO FINAL: canRegister =', canRegister);
 
   // Debug log SUPER DETALHADO
   console.log('🔍 ====== TOURNAMENT DETAILS DEBUG ======');
@@ -525,6 +534,17 @@ export function TournamentDetailsModal({
               </>
             )}
             
+            {(() => {
+              console.log('🎨 RENDER: canRegister =', canRegister);
+              if (!canRegister) {
+                console.log('❌ BOTÃO INSCREVER NÃO APARECE! Checando:');
+                console.log('   ✓ isRegistered:', isRegistered);
+                console.log('   ✓ tournament.status:', tournament.status, '(precisa ser "upcoming")');
+                console.log('   ✓ userType:', userType, '(precisa ser "team")');
+              }
+              return null;
+            })()}
+            
             {canRegister && (
               <Button 
                 onClick={() => {
@@ -550,6 +570,20 @@ export function TournamentDetailsModal({
                 <CheckCircle2 className="h-5 w-5 mr-2" />
                 ✅ INSCREVER AGORA
               </Button>
+            )}
+            
+            {!canRegister && !isRegistered && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p className="text-yellow-800 font-medium">⚠️ Inscrições não disponíveis</p>
+                <div className="text-sm text-yellow-700 mt-2">
+                  {tournament.status !== 'upcoming' && (
+                    <div>• Status do torneio: <strong>{tournament.status}</strong> (precisa ser "upcoming")</div>
+                  )}
+                  {userType !== 'team' && (
+                    <div>• Tipo de conta: <strong>{userType}</strong> (precisa ser "team")</div>
+                  )}
+                </div>
+              </div>
             )}
 
             {canRegisterBeach && (

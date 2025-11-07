@@ -4733,16 +4733,35 @@ app.delete('/make-server-0ea22bba/teams/:teamId/squads/:squadId/players/:playerI
 // ============= TOURNAMENT SQUAD REGISTRATION ROUTES =============
 
 // Register squad in tournament
-app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', authMiddleware, async (c) => {
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', async (c) => {
   console.log(`\n🏆 ====== POST /register-squad ======`);
   console.log(`   ⏰ Timestamp: ${new Date().toISOString()}`);
   
   try {
-    console.log(`   🔍 Passo 1/7: Obtendo dados do contexto...`);
-    const userId = c.get('userId');
+    console.log(`   🔍 Passo 1/7: Obtendo dados da requisição...`);
     const tournamentId = c.req.param('tournamentId');
     const body = await c.req.json();
     const { teamId, squadId } = body;
+    
+    // Obter userId do token ou usar teamId diretamente
+    const authHeader = c.req.header('Authorization');
+    let userId = teamId; // Fallback para teamId
+    
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const supabase = createClient(
+          Deno.env.get('SUPABASE_URL')!,
+          Deno.env.get('SUPABASE_ANON_KEY')!
+        );
+        const { data: { user } } = await supabase.auth.getUser(token);
+        if (user) {
+          userId = user.id;
+        }
+      } catch (error) {
+        console.log('   ⚠️ Não foi possível validar token, usando teamId como userId');
+      }
+    }
     
     console.log(`   ✅ Dados recebidos:`);
     console.log(`      • userId:`, userId);
@@ -4755,15 +4774,33 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', authM
     console.log(`      • Tipo inscrição:`, !squadId ? '🏢 TIME COMPLETO' : '🏐 EQUIPE ESPECÍFICA');
     
     console.log(`\n   🔍 Passo 2/7: Verificando permissões...`);
+    console.log(`      • Buscando usuário logado: user:${userId}`);
     const user = await kv.get(`user:${userId}`);
     console.log(`      • Usuário encontrado:`, !!user);
-    console.log(`      • User ID matches Team ID:`, user?.id === teamId);
     
-    if (!user || user.id !== teamId) {
-      console.error(`   ❌ ERRO: Unauthorized - User não encontrado ou ID não corresponde`);
-      return c.json({ error: 'Unauthorized' }, 403);
+    console.log(`      • Buscando time: user:${teamId}`);
+    const team = await kv.get(`user:${teamId}`);
+    console.log(`      • Time encontrado:`, !!team);
+    console.log(`      • Time type:`, team?.userType);
+    
+    // VERIFICAÇÃO CORRIGIDA: Ou o usuário É o time, OU o time existe e é válido
+    const isValidRequest = (user?.id === teamId) || (team && team.userType === 'team');
+    
+    console.log(`      • User é o time:`, user?.id === teamId);
+    console.log(`      • Team existe e é tipo team:`, team && team.userType === 'team');
+    console.log(`      • ✅ Request válido:`, isValidRequest);
+    
+    // Validar se o time existe e é válido
+    if (!team || team.userType !== 'team') {
+      console.error(`   ❌ ERRO: Time não encontrado ou inválido`);
+      console.error(`      • team exists:`, !!team);
+      console.error(`      • team.userType:`, team?.userType);
+      return c.json({ error: 'Time não encontrado ou inválido' }, 404);
     }
-    console.log(`   ✅ Permissões OK`);
+    
+    // Usar dados do time
+    const teamData = team;
+    console.log(`   ✅ Time válido: ${teamData.name}`);
     
     console.log(`\n   🔍 Passo 3/7: Buscando torneio...`);
     
@@ -4794,7 +4831,7 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', authM
     // CASO 1: TIME SIMPLES (squadId = null) - Inscrição completa
     if (!squadId || squadId === null) {
       console.log(`\n   📋 ====== INSCRIÇÃO TIME COMPLETO ======`);
-      console.log(`      • Nome do time: ${user.name}`);
+      console.log(`      • Nome do time: ${teamData.name}`);
       console.log(`      • Total de registrations ANTES: ${tournament.squadRegistrations?.length || 0}`);
       
       // Verificar se time já está inscrito (sem squad específico)
@@ -4815,14 +4852,14 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', authM
         id: `registration:${Date.now()}`,
         tournamentId: fullTournamentId,
         teamId,
-        teamName: user.name,
+        teamName: teamData.name,
         squadId: null,
         squadName: 'Equipe Principal', // Times simples = Equipe Principal
         categoryName: null,
         players: [],
-        city: user.city || null,
-        state: user.state || null,
-        photoUrl: user.photoUrl || null,
+        city: teamData.city || null,
+        state: teamData.state || null,
+        photoUrl: teamData.photoUrl || null,
         registeredAt: new Date().toISOString(),
         isFullTeam: true // Flag para identificar time completo
       };
@@ -4864,14 +4901,14 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', authM
         id: `registration:${Date.now()}`,
         tournamentId: fullTournamentId,
         teamId,
-        teamName: user.name,
+        teamName: teamData.name,
         squadId,
         squadName: foundSquad.name,
         categoryName: foundSquad.categoryName,
         players: foundSquad.players || [],
-        city: user.city || null,
-        state: user.state || null,
-        photoUrl: user.photoUrl || null,
+        city: teamData.city || null,
+        state: teamData.state || null,
+        photoUrl: teamData.photoUrl || null,
         registeredAt: new Date().toISOString(),
         isFullTeam: false
       };

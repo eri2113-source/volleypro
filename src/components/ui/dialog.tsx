@@ -39,6 +39,18 @@ const DialogContent = React.forwardRef<
   // Ensure aria-describedby is always set to suppress Radix UI warning
   const ariaDescribedBy = props['aria-describedby'] || 'dialog-description';
   
+  // Check if children contains DialogDescription
+  const hasDescription = React.Children.toArray(children).some((child: any) => 
+    child?.type?.displayName === 'DialogDescription' ||
+    child?.props?.id === ariaDescribedBy ||
+    (React.isValidElement(child) && child.props?.children && 
+      React.Children.toArray(child.props.children).some((nested: any) =>
+        nested?.type?.displayName === 'DialogDescription' ||
+        nested?.props?.id === ariaDescribedBy
+      )
+    )
+  );
+  
   return (
   <DialogPortal>
     <DialogOverlay />
@@ -53,6 +65,12 @@ const DialogContent = React.forwardRef<
       aria-describedby={ariaDescribedBy}
     >
       {children}
+      {/* Fallback hidden description if none provided */}
+      {!hasDescription && (
+        <DialogPrimitive.Description id={ariaDescribedBy} className="sr-only">
+          Dialog content
+        </DialogPrimitive.Description>
+      )}
       <DialogPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
         <XIcon />
         <span className="sr-only">Close</span>
