@@ -1,0 +1,119 @@
+═══════════════════════════════════════════════════════════
+    ⚡ COPIE E COLE - RESOLVA EM 10 MINUTOS
+═══════════════════════════════════════════════════════════
+
+
+═══ PASSO 1: TERMINAL (30 SEGUNDOS) ═══
+
+Copie e cole os 3 comandos:
+
+git add .
+git commit -m "🎯 Tag Google Ads + Vercel build"
+git push
+
+
+═══ PASSO 2: VERCEL (3 MINUTOS) ═══
+
+1. Acessar: vercel.com
+
+2. Clicar no projeto "volleypro"
+
+3. Clicar em "Settings" (menu superior)
+
+4. Clicar em "Build & Development Settings" (menu lateral)
+
+5. Encontrar "Output Directory" e fazer:
+   - Apagar o que está escrito (provavelmente "dist")
+   - Digitar: build
+   - Marcar a caixinha "Override"
+
+6. Clicar em "Save" (botão azul no final da página)
+
+7. Clicar em "Deployments" (menu superior)
+
+8. Clicar nos 3 pontinhos [⋮] do deploy mais recente
+
+9. Clicar em "Redeploy"
+
+10. IMPORTANTE: DEIXAR DESMARCADO "Use existing Build Cache"
+
+11. Clicar em "Redeploy"
+
+
+═══ PASSO 3: AGUARDAR (3-5 MINUTOS) ═══
+
+A Vercel vai fazer o build e publicar.
+
+Você verá "Building..." → "Ready ✓"
+
+
+═══ PASSO 4: VERIFICAR (1 MINUTO) ═══
+
+1. Abrir: https://voleypro.net
+
+2. Apertar: Ctrl + U (Windows) ou Cmd + Option + U (Mac)
+
+3. Procurar por: AW-971142262
+
+4. DEVE APARECER nas primeiras 10 linhas!
+
+
+═══ PASSO 5: GOOGLE ADS (2 MINUTOS) ═══
+
+1. Acessar: https://ads.google.com
+
+2. Ferramentas → Medição → Conversões → Configuração da tag
+
+3. "Verificar se a tag foi instalada"
+
+4. Digite: voleypro.net
+
+5. Testar
+
+6. Resultado: ✅ Tag detectada!
+
+
+═══════════════════════════════════════════════════════════
+
+
+SE NÃO FUNCIONAR:
+─────────────────
+
+1. Verificar logs do build na Vercel:
+   Deployments → Último deploy → Building → Ver logs
+   Procurar por: "Output written to build/"
+
+2. Se aparecer "dist" ao invés de "build":
+   A configuração não foi salva.
+   Repetir o Passo 2.
+
+3. Limpar cache do navegador:
+   Ctrl + Shift + Delete → Limpar tudo
+
+4. Testar em aba anônima:
+   Ctrl + Shift + N
+
+
+═══════════════════════════════════════════════════════════
+
+
+RESUMO ULTRA-RÁPIDO:
+────────────────────
+
+Terminal:
+git add . && git commit -m "🎯 Tag" && git push
+
+Vercel:
+Settings → Build Settings → Output = "build" → Save
+Deployments → Redeploy (sem cache)
+
+Aguardar 5 min → voleypro.net → Ctrl+U → Procurar AW-971142262
+
+
+═══════════════════════════════════════════════════════════
+
+TEMPO TOTAL: 10 MINUTOS
+DIFICULDADE: Fácil
+GARANTIA: 100%
+
+═══════════════════════════════════════════════════════════
