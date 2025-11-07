@@ -1,0 +1,217 @@
+═══════════════════════════════════════════════════════════════
+    🎯 ONDE CONFIGURAR NA VERCEL - VISUAL PASSO A PASSO
+═══════════════════════════════════════════════════════════════
+
+PASSO 1: ACESSE
+───────────────
+https://vercel.com
+
+
+PASSO 2: CLIQUE NO SEU PROJETO
+───────────────────────────────
+
+┌─────────────────────────────────────────────────────────┐
+│  Vercel                                                 │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  📦 volleypro                    ← CLIQUE AQUI!        │
+│     https://voleypro.net                                │
+│     Production                                          │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+
+
+PASSO 3: CLIQUE EM "SETTINGS"
+──────────────────────────────
+
+┌─────────────────────────────────────────────────────────┐
+│  [Overview] [Deployments] [Settings] [Analytics]       │
+│                             ^^^^^^^^                    │
+│                         CLIQUE AQUI!                    │
+└─────────────────────────────────────────────────────────┘
+
+
+PASSO 4: MENU LATERAL - "BUILD & DEVELOPMENT SETTINGS"
+───────────────────────────────────────────────────────
+
+┌────────────────────┬────────────────────────────────────┐
+│  Settings          │                                    │
+├────────────────────┤                                    │
+│  General           │                                    │
+│  Domains           │                                    │
+│  Git               │                                    │
+│  Environment Vars  │                                    │
+│  ▶ Build & Dev     │  ← CLIQUE AQUI!                   │
+│  Functions         │                                    │
+│  Cron Jobs         │                                    │
+│  Storage           │                                    │
+│  Edge Config       │                                    │
+│  Security          │                                    │
+│  Team              │                                    │
+└────────────────────┴────────────────────────────────────┘
+
+
+PASSO 5: CONFIGURAR OUTPUT DIRECTORY
+─────────────────────────────────────
+
+┌─────────────────────────────────────────────────────────┐
+│  🔧 Build & Development Settings                       │
+├─────────────────────────────────────────────────────────┤
+│                                                         │
+│  Framework Preset                                       │
+│  ┌────────────────────────────────────┐                │
+│  │ Vite                         [▼]  │                │
+│  └────────────────────────────────────┘                │
+│                                                         │
+│  Build Command                                          │
+│  ┌────────────────────────────────────┐                │
+│  │ npm run build                      │                │
+│  └────────────────────────────────────┘                │
+│  ☐ Override                                            │
+│                                                         │
+│  Output Directory                ← IMPORTANTE!         │
+│  ┌────────────────────────────────────┐                │
+│  │ build                              │ ← DIGITE AQUI! │
+│  └────────────────────────────────────┘                │
+│  ☑ Override                          ← MARQUE AQUI!   │
+│                                                         │
+│  Install Command                                        │
+│  ┌────────────────────────────────────┐                │
+│  │ npm install                        │                │
+│  └────────────────────────────────────┘                │
+│  ☐ Override                                            │
+│                                                         │
+│  ┌────────┐                                            │
+│  │  Save  │                          ← CLIQUE AQUI!   │
+│  └────────┘                                            │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+
+
+PASSO 6: FORÇAR NOVO DEPLOY
+────────────────────────────
+
+Opção A - Via Interface:
+┌─────────────────────────────────────────────────────────┐
+│  [Overview] [Deployments] [Settings] [Analytics]       │
+│             ^^^^^^^^^^^^                                │
+│             CLIQUE AQUI!                                │
+└─────────────────────────────────────────────────────────┘
+
+Depois:
+┌─────────────────────────────────────────────────────────┐
+│  Deployments                                            │
+├─────────────────────────────────────────────────────────┤
+│  Production                                             │
+│  ┌─────────────────────────────────────┬──────┐        │
+│  │ 6a7d2f1 - Update...      Ready  [⋮] │      │        │
+│  └─────────────────────────────────────┴──────┘        │
+│                                          ^^^            │
+│                                    CLIQUE NOS 3 PONTOS! │
+└─────────────────────────────────────────────────────────┘
+
+Menu que abre:
+┌──────────────────────────────┐
+│  View Deployment             │
+│  View Build Logs             │
+│  ▶ Redeploy                  │ ← CLIQUE AQUI!
+│  Instant Rollback            │
+│  Delete                      │
+└──────────────────────────────┘
+
+Dialog que abre:
+┌──────────────────────────────────────────────┐
+│  Redeploy to Production                      │
+├──────────────────────────────────────────────┤
+│                                              │
+│  ☐ Use existing Build Cache                 │
+│                                              │
+│  ⚠️ DEIXE DESMARCADO! (sem cache)           │
+│                                              │
+│  ┌──────────┐                               │
+│  │ Redeploy │            ← CLIQUE AQUI!     │
+│  └──────────┘                               │
+│                                              │
+└──────────────────────────────────────────────┘
+
+
+Opção B - Via Terminal:
+─────────────────────────
+git commit --allow-empty -m "🔄 Force rebuild"
+git push
+
+
+PASSO 7: AGUARDAR BUILD (2-3 MINUTOS)
+──────────────────────────────────────
+
+┌─────────────────────────────────────────────────────────┐
+│  Building...                                            │
+│  ████████████████████░░░░░░░░ 75%                      │
+│                                                         │
+│  Running "npm run build"                                │
+│  vite v5.0.0 building for production...                 │
+│  ✓ built in 45.23s                                      │
+│  ✓ Output written to build/                            │
+│                                                         │
+└─────────────────────────────────────────────────────────┘
+
+
+PASSO 8: VERIFICAR NO SITE
+───────────────────────────
+
+1. Abrir: https://voleypro.net
+2. Apertar: Ctrl + U (ver código-fonte)
+3. Procurar: AW-971142262
+
+DEVE APARECER:
+──────────────
+<head>
+  <!-- Google tag (gtag.js) - Google Ads -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-971142262"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'AW-971142262');
+  </script>
+  <!-- End Google Ads Tag -->
+
+
+PASSO 9: TESTAR NO CONSOLE (F12)
+─────────────────────────────────
+
+console.log(window.dataLayer);
+// ✅ Deve mostrar: Array [...]
+
+console.log(typeof gtag);
+// ✅ Deve mostrar: "function"
+
+
+PASSO 10: VERIFICAR NO GOOGLE ADS
+──────────────────────────────────
+
+https://ads.google.com
+→ Ferramentas
+→ Medição
+→ Conversões
+→ Configuração da tag
+→ "Verificar se a tag foi instalada"
+→ Digite: voleypro.net
+→ Testar
+
+RESULTADO:
+─────────
+✅ Tag do Google detectada!
+✅ ID: AW-971142262
+✅ Status: Ativa
+
+
+═══════════════════════════════════════════════════════════════
+                    ✅ PRONTO! TAG FUNCIONANDO!
+═══════════════════════════════════════════════════════════════
+
+TEMPO TOTAL: 5-7 minutos
+STATUS: Tag instalada corretamente
+PRÓXIMO: Criar conversões no Google Ads
+
+═══════════════════════════════════════════════════════════════

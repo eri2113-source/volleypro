@@ -1,0 +1,179 @@
+═══════════════════════════════════════════════════════════════
+    🎯 COPIAR E COLAR - SOLUÇÃO COMPLETA TAG GOOGLE ADS
+═══════════════════════════════════════════════════════════════
+
+
+PASSO 1: TERMINAL - COPIE E COLE
+─────────────────────────────────
+
+git add .
+git commit -m "🎯 Tag Google Ads + Vercel build config"
+git push
+
+
+PASSO 2: NAVEGADOR - ACESSE
+────────────────────────────
+
+https://vercel.com
+
+
+PASSO 3: CLIQUE EM SEQUÊNCIA
+─────────────────────────────
+
+1. Clique no projeto "volleypro"
+2. Clique em "Settings" (menu superior)
+3. Clique em "Build & Development Settings" (menu lateral)
+
+
+PASSO 4: ENCONTRE E ALTERE
+───────────────────────────
+
+Procure por:
+┌─────────────────────────────────┐
+│  Output Directory               │
+│  ┌───────────────────────────┐  │
+│  │ dist                      │  │ ← ESTÁ ASSIM
+│  └───────────────────────────┘  │
+│  ☐ Override                     │
+└─────────────────────────────────┘
+
+Mude para:
+┌─────────────────────────────────┐
+│  Output Directory               │
+│  ┌───────────────────────────┐  │
+│  │ build                     │  │ ← DIGITE "build"
+│  └───────────────────────────┘  │
+│  ☑ Override                     │ ← MARQUE ESTA CAIXA!
+└─────────────────────────────────┘
+
+
+PASSO 5: SALVAR
+────────────────
+
+Clique no botão azul "Save" no final da página
+
+
+PASSO 6: FORÇAR NOVO DEPLOY
+────────────────────────────
+
+Opção A - Interface (Recomendado):
+───────────────────────────────────
+1. Clique em "Deployments" (menu superior)
+2. Clique nos 3 pontinhos [⋮] do deploy mais recente
+3. Clique em "Redeploy"
+4. DESMARQUE "Use existing Build Cache"
+5. Clique em "Redeploy"
+
+Opção B - Terminal:
+───────────────────
+git commit --allow-empty -m "🔄 Force rebuild"
+git push
+
+
+PASSO 7: AGUARDAR 3 MINUTOS
+────────────────────────────
+
+Vercel vai fazer o build...
+████████████████████ 100%
+✓ Build complete!
+
+
+PASSO 8: TESTAR
+───────────────
+
+1. Abra: https://voleypro.net
+
+2. Aperte: Ctrl + U (Windows) ou Cmd + Option + U (Mac)
+
+3. Procure por: AW-971142262
+
+4. DEVE APARECER nas primeiras 10 linhas:
+
+   <head>
+     <!-- Google tag (gtag.js) - Google Ads -->
+     <script async src="https://www.googletagmanager.com/gtag/js?id=AW-971142262"></script>
+     <script>
+       window.dataLayer = window.dataLayer || [];
+       function gtag(){dataLayer.push(arguments);}
+       gtag('js', new Date());
+       gtag('config', 'AW-971142262');
+     </script>
+
+
+PASSO 9: CONSOLE (F12)
+──────────────────────
+
+Copie e cole no console:
+
+console.log(window.dataLayer);
+
+Resultado esperado:
+Array(3) [Object, Object, Object] ✅
+
+Copie e cole:
+
+console.log(typeof gtag);
+
+Resultado esperado:
+"function" ✅
+
+
+PASSO 10: GOOGLE ADS
+─────────────────────
+
+1. Acesse: https://ads.google.com
+
+2. Vá em: Ferramentas e configurações → Medição → Conversões
+
+3. Clique em: "Configuração da tag"
+
+4. Clique em: "Verificar se a tag foi instalada"
+
+5. Digite: voleypro.net
+
+6. Clique em: "Testar"
+
+7. Resultado esperado:
+   ✅ Tag do Google detectada!
+   ✅ ID: AW-971142262
+   ✅ Status: Ativa e funcionando
+
+
+═══════════════════════════════════════════════════════════════
+                         ✅ PRONTO!
+═══════════════════════════════════════════════════════════════
+
+SE NÃO FUNCIONAR:
+─────────────────
+
+1. Limpar cache do navegador (Ctrl + Shift + Delete)
+2. Abrir em aba anônima (Ctrl + Shift + N)
+3. Verificar logs do build na Vercel:
+   Deployments → Último deploy → Building → Ver logs
+4. Procurar por: "Output written to build/"
+
+
+CHECKLIST:
+──────────
+☐ Commit feito
+☐ Push enviado
+☐ Vercel Settings acessado
+☐ Output Directory = "build"
+☐ Override marcado
+☐ Save clicado
+☐ Redeploy sem cache feito
+☐ Aguardou 3 minutos
+☐ Site acessado
+☐ Código-fonte mostra tag
+☐ Console mostra dataLayer
+☐ Google Ads detecta tag
+
+
+TEMPO TOTAL: 5-7 MINUTOS
+STATUS: Solução garantida! ✅
+
+
+═══════════════════════════════════════════════════════════════
+Data: 07/11/2025
+Arquivo: 🎯_COPIAR_COLAR_SOLUCAO.txt
+═══════════════════════════════════════════════════════════════
