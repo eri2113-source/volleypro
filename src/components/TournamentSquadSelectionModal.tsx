@@ -166,38 +166,11 @@ export function TournamentSquadSelectionModal({
       
       // 4. QUARTO: Decidir se inscreve automaticamente ou mostra lista
       
-      // CASO 1: Time SEM categorias → Inscreve automaticamente
+      // CASO 1: Time SEM categorias → MOSTRAR OPÇÃO DE INSCREVER (não automático)
       if (!hasCategoriesCreated) {
         console.log('\n🏢 ====== TIME SEM CATEGORIAS ======');
-        console.log('   ✅ Inscrevendo automaticamente como TIME COMPLETO...');
-        
-        try {
-          // Inscrever como TIME COMPLETO (squadId = null)
-          await tournamentApi.registerSquad(tournamentId, teamId, null);
-          
-          toast.success(`${teamName} inscrito com sucesso!`, {
-            description: 'Time completo registrado no torneio'
-          });
-          
-          console.log('✅ Inscrição TIME COMPLETO realizada!');
-          
-          // Fechar modal e notificar sucesso
-          onClose();
-          onSquadSelected({
-            id: 'full-team',
-            name: teamName,
-            categoryName: null,
-            players: [],
-            active: true,
-            createdAt: new Date().toISOString()
-          });
-        } catch (error: any) {
-          console.error('❌ Erro ao inscrever time completo:', error);
-          toast.error('Erro ao inscrever time', {
-            description: error.message || 'Tente novamente'
-          });
-        }
-        
+        console.log('   ℹ️ Mostrando opção de inscrever time completo...');
+        // NÃO inscrever automaticamente - deixar usuário clicar no botão
         setLoading(false);
         return;
       }
@@ -254,8 +227,17 @@ export function TournamentSquadSelectionModal({
 
     setRegistering(true);
     try {
+      console.log('🎯 Iniciando inscrição de EQUIPE:', {
+        tournamentId,
+        teamId,
+        squadId: selectedSquad.id,
+        squadName: selectedSquad.name
+      });
+      
       // Validar jogadores únicos (apenas se tiver jogadores)
       if (selectedSquad.players && selectedSquad.players.length > 0) {
+        console.log(`   🔍 Validando ${selectedSquad.players.length} jogadores...`);
+        
         const { valid, conflicts } = await tournamentApi.validateSquadPlayers(
           tournamentId,
           teamId,
@@ -265,16 +247,20 @@ export function TournamentSquadSelectionModal({
 
         if (!valid && conflicts && conflicts.length > 0) {
           const conflictNames = conflicts.map((c: any) => c.playerName).join(', ');
+          console.error('❌ Conflito de jogadores:', conflicts);
           toast.error(`Jogador(es) já inscrito(s) em outra equipe: ${conflictNames}`, {
             description: "Um jogador não pode participar em duas equipes do mesmo torneio"
           });
           setRegistering(false);
           return;
         }
+        
+        console.log('   ✅ Validação de jogadores OK');
       }
 
       // Registrar equipe
-      await tournamentApi.registerSquad(tournamentId, teamId, selectedSquad.id);
+      const result = await tournamentApi.registerSquad(tournamentId, teamId, selectedSquad.id);
+      console.log('✅ Inscrição realizada com sucesso:', result);
 
       const playerCount = selectedSquad.players?.length || 0;
       toast.success(`${selectedSquad.name} inscrita com sucesso!`, {
@@ -286,20 +272,21 @@ export function TournamentSquadSelectionModal({
       // Callback com a equipe selecionada
       onSquadSelected(selectedSquad);
 
-      // Atualizar lista
-      await loadSquadsAndRegistrations();
-      
       // Limpar seleção
       setSelectedSquadId("");
       
+      // Aguardar 800ms para usuário ver o toast
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
       // ✅ FECHAR MODAL após sucesso
-      setTimeout(() => {
-        onClose();
-      }, 500); // Delay para usuário ver toast de sucesso
+      onClose();
       
     } catch (error: any) {
       console.error('❌ Erro ao registrar equipe:', error);
-      toast.error(error.message || "Erro ao inscrever equipe");
+      console.error('   Detalhes:', error.message);
+      toast.error(error.message || "Erro ao inscrever equipe", {
+        description: "Tente novamente ou contate o suporte"
+      });
     } finally {
       setRegistering(false);
     }
@@ -419,22 +406,44 @@ export function TournamentSquadSelectionModal({
                               <Button 
                                 onClick={async () => {
                                   try {
+                                    console.log('🎯 Iniciando inscrição de TIME COMPLETO:', {
+                                      tournamentId,
+                                      teamId,
+                                      teamName
+                                    });
+                                    
                                     setRegistering(true);
+                                    
                                     // Inscrever time completo (sem squad específico)
-                                    await tournamentApi.registerSquad(tournamentId, teamId, null);
+                                    const result = await tournamentApi.registerSquad(tournamentId, teamId, null);
+                                    
+                                    console.log('✅ Inscrição realizada com sucesso:', result);
                                     
                                     toast.success(`${teamName} inscrito com sucesso!`, {
                                       description: "Time completo registrado no torneio"
                                     });
 
-                                    // Callback
-                                    onSquadSelected({ id: teamId, name: teamName } as any);
+                                    // Callback para atualizar parent
+                                    onSquadSelected({ 
+                                      id: 'full-team', 
+                                      name: teamName,
+                                      categoryName: null,
+                                      players: [],
+                                      active: true,
+                                      createdAt: new Date().toISOString()
+                                    } as any);
+                                    
+                                    // Aguardar 800ms para usuário ver o toast
+                                    await new Promise(resolve => setTimeout(resolve, 800));
                                     
                                     // Fechar modal
                                     handleClose();
                                   } catch (error: any) {
                                     console.error('❌ Erro ao inscrever time:', error);
-                                    toast.error(error.message || "Erro ao inscrever time");
+                                    console.error('   Detalhes:', error.message);
+                                    toast.error(error.message || "Erro ao inscrever time", {
+                                      description: "Tente novamente ou contate o suporte"
+                                    });
                                   } finally {
                                     setRegistering(false);
                                   }

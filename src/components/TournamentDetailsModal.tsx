@@ -118,6 +118,10 @@ export function TournamentDetailsModal({
       return;
     }
 
+    console.log('\n🔄 ===== RECARREGANDO DETALHES DO TORNEIO =====');
+    console.log(`   • tournamentId: ${tournamentId}`);
+    console.log(`   • currentUserId: ${currentUserId}`);
+    
     setLoading(true);
     try {
       const { tournament: t, matches: m, teams: tm } = await tournamentApi.getTournamentDetails(tournamentId);
@@ -129,13 +133,15 @@ export function TournamentDetailsModal({
         return;
       }
 
-      console.log('🔍 DEBUG Frontend - Dados recebidos:', {
+      console.log('📊 Dados recebidos do backend:', {
         tournamentId: t?.id,
         tournamentName: t?.name,
         modalityType: t?.modalityType,
-        teamsReceived: tm?.length,
-        teamsSample: tm?.slice(0, 2),
-        registeredTeamsInTournament: t?.registeredTeams?.length
+        status: t?.status,
+        teamsCount: tm?.length,
+        registeredTeamsLegacy: t?.registeredTeams?.length || 0,
+        squadRegistrations: t?.squadRegistrations?.length || 0,
+        teamsSample: tm?.slice(0, 3)
       });
       
       setTournament(t);
@@ -1113,9 +1119,12 @@ export function TournamentDetailsModal({
         <TournamentSquadSelectionModal
           open={showSquadSelection}
           onClose={() => {
+            console.log('🔄 Squad Selection Modal fechado - Recarregando torneio...');
             setShowSquadSelection(false);
-            // ✅ RECARREGAR ao fechar modal
-            loadTournamentDetails();
+            // ✅ RECARREGAR ao fechar modal - com pequeno delay para garantir que dados foram salvos
+            setTimeout(() => {
+              loadTournamentDetails();
+            }, 300);
           }}
           tournamentId={tournamentId}
           tournamentName={tournament.name}
@@ -1124,11 +1133,13 @@ export function TournamentDetailsModal({
           modalityType={tournament.modalityType || 'indoor'}
           onSquadSelected={(squad) => {
             console.log('✅ Squad selected:', squad);
-            // Recarregar detalhes do torneio após inscrição
-            loadTournamentDetails();
-            if (onRegistrationSuccess) {
-              onRegistrationSuccess();
-            }
+            // Recarregar detalhes do torneio após inscrição (com delay)
+            setTimeout(() => {
+              loadTournamentDetails();
+              if (onRegistrationSuccess) {
+                onRegistrationSuccess();
+              }
+            }, 300);
           }}
         />
       )}
