@@ -166,11 +166,43 @@ export function TournamentSquadSelectionModal({
       
       // 4. QUARTO: Decidir se inscreve automaticamente ou mostra lista
       
-      // CASO 1: Time SEM categorias → MOSTRAR OPÇÃO DE INSCREVER (não automático)
+      // CASO 1: Time SEM categorias → Inscreve automaticamente
       if (!hasCategoriesCreated) {
         console.log('\n🏢 ====== TIME SEM CATEGORIAS ======');
-        console.log('   ℹ️ Mostrando opção de inscrever time completo...');
-        // NÃO inscrever automaticamente - deixar usuário clicar no botão
+        console.log('   ✅ Inscrevendo automaticamente como TIME COMPLETO...');
+        
+        try {
+          // Inscrever como TIME COMPLETO (squadId = null)
+          await tournamentApi.registerSquad(tournamentId, teamId, null);
+          
+          toast.success(`${teamName} inscrito com sucesso!`, {
+            description: 'Time completo registrado no torneio'
+          });
+          
+          console.log('✅ Inscrição TIME COMPLETO realizada!');
+          
+          // Callback
+          onSquadSelected({
+            id: 'full-team',
+            name: teamName,
+            categoryName: null,
+            players: [],
+            active: true,
+            createdAt: new Date().toISOString()
+          });
+          
+          // Aguardar 500ms para ver toast
+          await new Promise(resolve => setTimeout(resolve, 500));
+          
+          // Fechar modal
+          onClose();
+        } catch (error: any) {
+          console.error('❌ Erro ao inscrever time completo:', error);
+          toast.error('Erro ao inscrever time', {
+            description: error.message || 'Tente novamente'
+          });
+        }
+        
         setLoading(false);
         return;
       }

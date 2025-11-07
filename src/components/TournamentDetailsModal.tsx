@@ -1119,12 +1119,9 @@ export function TournamentDetailsModal({
         <TournamentSquadSelectionModal
           open={showSquadSelection}
           onClose={() => {
-            console.log('🔄 Squad Selection Modal fechado - Recarregando torneio...');
             setShowSquadSelection(false);
-            // ✅ RECARREGAR ao fechar modal - com pequeno delay para garantir que dados foram salvos
-            setTimeout(() => {
-              loadTournamentDetails();
-            }, 300);
+            // ✅ RECARREGAR ao fechar modal
+            loadTournamentDetails();
           }}
           tournamentId={tournamentId}
           tournamentName={tournament.name}
@@ -1133,13 +1130,11 @@ export function TournamentDetailsModal({
           modalityType={tournament.modalityType || 'indoor'}
           onSquadSelected={(squad) => {
             console.log('✅ Squad selected:', squad);
-            // Recarregar detalhes do torneio após inscrição (com delay)
-            setTimeout(() => {
-              loadTournamentDetails();
-              if (onRegistrationSuccess) {
-                onRegistrationSuccess();
-              }
-            }, 300);
+            // Recarregar detalhes do torneio após inscrição
+            loadTournamentDetails();
+            if (onRegistrationSuccess) {
+              onRegistrationSuccess();
+            }
           }}
         />
       )}
