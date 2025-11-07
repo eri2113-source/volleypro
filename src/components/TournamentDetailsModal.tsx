@@ -521,74 +521,22 @@ export function TournamentDetailsModal({
             {canRegister && (
               <Button 
                 onClick={async () => {
-                  // 🚨 VERSÃO 14:30 - INSCRICAO DIRETA LMV - BUILD FORÇADO
-                  console.log('\n');
-                  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                  console.log('🎯 ====== BOTÃO INSCREVER CLICADO [VERSÃO 14:30] ======');
-                  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                  console.log('📊 Estado atual:', {
-                    tournamentId,
-                    currentUserId,
-                    userType,
-                    isRegistered,
-                    currentUserTeamName,
-                    hasTournament: !!tournament,
-                    modalityType: tournament?.modalityType
-                  });
-                  console.log('\n🚨 MODO: INSCRICÃO DIRETA (SEM MODAL)');
-                  console.log('🚨 EMERGÊNCIA: TORNEIO LMV HOJE');
-                  console.log('\n');
-                  
                   try {
                     setLoading(true);
-                    
-                    console.log('⏳ PASSO 1: Preparando inscrição...');
-                    console.log('📝 PASSO 2: Chamando API registerSquad...');
-                    console.log('   → Tournament ID:', tournamentId);
-                    console.log('   → Team ID:', currentUserId);
-                    console.log('   → Squad ID: null (time completo)');
-                    
                     await tournamentApi.registerSquad(tournamentId, currentUserId!, null);
                     
-                    console.log('\n✅ ===== SUCESSO! TIME INSCRITO! =====');
-                    console.log('✅ Time:', currentUserTeamName);
-                    console.log('✅ Torneio:', tournamentId);
-                    console.log('\n');
-                    
-                    toast.success(`🎉 ${currentUserTeamName || 'Time'} inscrito com sucesso!`, {
-                      description: 'Sua inscrição no torneio LMV foi confirmada!',
-                      duration: 5000
-                    });
-                    
-                    // Recarregar detalhes
-                    console.log('🔄 Recarregando detalhes do torneio...');
+                    toast.success(`${currentUserTeamName || 'Time'} inscrito com sucesso!`);
                     await loadTournamentDetails();
                     
                     if (onRegistrationSuccess) {
-                      console.log('✅ Callback de sucesso executado');
                       onRegistrationSuccess();
                     }
-                    
-                    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                    console.log('✅ PROCESSO COMPLETO!');
-                    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
                   } catch (error: any) {
-                    console.log('\n');
-                    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                    console.error('❌ ERRO AO INSCREVER TIME');
-                    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                    console.error('Erro completo:', error);
-                    console.error('Mensagem:', error.message);
-                    console.error('Stack:', error.stack);
-                    console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-                    
-                    toast.error('❌ Erro ao inscrever time', {
-                      description: error.message || 'Tente novamente ou entre em contato',
-                      duration: 7000
+                    toast.error('Erro ao inscrever', {
+                      description: error.message || 'Tente novamente'
                     });
                   } finally {
                     setLoading(false);
-                    console.log('🏁 Loading finalizado\n');
                   }
                 }} 
                 disabled={loading}
