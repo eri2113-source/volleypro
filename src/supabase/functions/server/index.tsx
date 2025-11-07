@@ -1,6 +1,7 @@
 import { Hono } from 'npm:hono';
 import { cors } from 'npm:hono/cors';
 import { logger } from 'npm:hono/logger';
+import { addTournamentEditorRoutes } from './tournament-editor-routes.tsx';
 
 // Multiple layers of Figma Make detection
 const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
@@ -414,6 +415,10 @@ async function optionalAuthMiddleware(c: any, next: any) {
   
   await next();
 }
+
+// ============= TOURNAMENT EDITOR ROUTES =============
+// Rotas para edição manual de torneios (partidas, chaveamento, etc)
+addTournamentEditorRoutes(app, kv, authMiddleware);
 
 // ============= AUTH ROUTES =============
 

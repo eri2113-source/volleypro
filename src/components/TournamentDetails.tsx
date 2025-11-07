@@ -12,6 +12,8 @@ import { AnimatedLEDPanel } from "./AnimatedLEDPanel";
 import { LEDPanelConfigModal } from "./LEDPanelConfigModal";
 import { TournamentStreamConfigModal } from "./TournamentStreamConfigModal";
 import { TournamentStreamPlayer } from "./TournamentStreamPlayer";
+import { TournamentMatchesManager } from "./TournamentMatchesManager";
+import { TournamentBracketEditor } from "./TournamentBracketEditor";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -37,7 +39,8 @@ import {
   Filter,
   Settings,
   Shield,
-  Video
+  Video,
+  Edit
 } from "lucide-react";
 
 interface TournamentDetailsProps {
@@ -542,7 +545,7 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
       {/* Tabs de Navegação */}
       <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 h-auto gap-2 bg-transparent">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 h-auto gap-2 bg-transparent">
             <TabsTrigger 
               value="overview" 
               className="data-[state=active]:bg-primary data-[state=active]:text-white"
@@ -585,6 +588,15 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
               <Users className="h-4 w-4 mr-2" />
               Sorteio
             </TabsTrigger>
+            {(canEdit || isOrganizer) && (
+              <TabsTrigger 
+                value="edit"
+                className="data-[state=active]:bg-primary data-[state=active]:text-white"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Editar
+              </TabsTrigger>
+            )}
           </TabsList>
 
           {/* Conteúdo das Tabs */}
@@ -756,6 +768,45 @@ export function TournamentDetails({ tournamentId, onBack }: TournamentDetailsPro
               division={selectedDivision}
             />
           </TabsContent>
+
+          {/* Aba de Edição - Apenas para Organizadores */}
+          {(canEdit || isOrganizer) && (
+            <TabsContent value="edit">
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Edit className="h-5 w-5" />
+                      Edição Manual do Torneio
+                    </CardTitle>
+                    <CardDescription>
+                      Edite partidas, tabelas e chaveamento manualmente
+                    </CardDescription>
+                  </CardHeader>
+                </Card>
+
+                {/* Editor de Partidas */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Gerenciar Partidas</h3>
+                  <TournamentMatchesManager
+                    tournamentId={tournamentId}
+                    category={selectedCategory}
+                    division={selectedDivision}
+                  />
+                </div>
+
+                {/* Editor de Chaveamento */}
+                <div>
+                  <h3 className="text-lg font-semibold mb-4">Editar Chaveamento</h3>
+                  <TournamentBracketEditor
+                    tournamentId={tournamentId}
+                    category={selectedCategory}
+                    division={selectedDivision}
+                  />
+                </div>
+              </div>
+            </TabsContent>
+          )}
         </Tabs>
       </div>
 
