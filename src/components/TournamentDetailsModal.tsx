@@ -520,30 +520,11 @@ export function TournamentDetailsModal({
             
             {canRegister && (
               <Button 
-                onClick={async () => {
-                  try {
-                    setLoading(true);
-                    await tournamentApi.registerSquad(tournamentId, currentUserId!, null);
-                    
-                    toast.success(`${currentUserTeamName || 'Time'} inscrito com sucesso!`);
-                    await loadTournamentDetails();
-                    
-                    if (onRegistrationSuccess) {
-                      onRegistrationSuccess();
-                    }
-                  } catch (error: any) {
-                    toast.error('Erro ao inscrever', {
-                      description: error.message || 'Tente novamente'
-                    });
-                  } finally {
-                    setLoading(false);
-                  }
-                }} 
-                disabled={loading}
+                onClick={() => setShowSquadSelection(true)}
                 className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
               >
                 <CheckCircle2 className="h-4 w-4 mr-2" />
-                {loading ? 'Inscrevendo...' : 'Inscrever Meu Time'}
+                Inscrever Meu Time
               </Button>
             )}
 
