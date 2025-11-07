@@ -142,8 +142,8 @@ export function TournamentDetailsModal({
       setMatches(m || []);
       setTeams(tm || []);
 
-      // Load current user team name if registered
-      if (currentUserId && t.registeredTeams?.includes(currentUserId)) {
+      // Load current user team name (sempre carregar para times, não apenas se já inscrito)
+      if (currentUserId && userType === 'team') {
         try {
           const currentUserData = await userApi.getCurrentUser();
           if (currentUserData.profile && currentUserData.profile.userType === 'team') {

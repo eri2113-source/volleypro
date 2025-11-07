@@ -428,6 +428,17 @@ app.post('/make-server-0ea22bba/auth/signup', async (c) => {
     const kvStore = await initializeKV();
     const { email, password, name, userType, position, city, nickname } = await c.req.json();
     
+    // ⚠️ VALIDAÇÃO: Bloquear domínios obviamente falsos/temporários
+    const invalidDomains = ['test.com', 'fake.com', 'exemplo.com', 'temp.com', 'temporario.com', 'teste.com'];
+    const emailDomain = email.split('@')[1]?.toLowerCase();
+    
+    if (invalidDomains.includes(emailDomain)) {
+      console.log('⚠️ Blocked fake email domain:', emailDomain);
+      return c.json({ 
+        error: 'Email inválido. Use um email real (Gmail, Outlook, etc).' 
+      }, 400);
+    }
+    
     const { data, error } = await supabaseClient.auth.admin.createUser({
       email,
       password,

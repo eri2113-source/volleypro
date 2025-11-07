@@ -19,32 +19,25 @@ export function DebugPanel() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 5000);
       
-      const response = await fetch(`${API_BASE}/auth/signup`, {
-        method: 'POST',
+      // ✅ MUDANÇA: Usar endpoint de health check ao invés de criar usuários fake
+      const response = await fetch(`${API_BASE}/users`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${publicAnonKey}`,
         },
-        body: JSON.stringify({
-          email: 'test@test.com',
-          password: 'test123',
-          name: 'Test',
-          userType: 'athlete',
-        }),
         signal: controller.signal,
       });
       
       clearTimeout(timeoutId);
       
-      const data = await response.json();
-      
       if (response.ok) {
-        setStatus("✅ Backend está funcionando! (Este email já existe ou foi criado)");
+        setStatus("✅ Backend está funcionando!");
       } else {
-        setStatus(`⚠️ Backend respondeu com erro: ${data.error || 'Erro desconhecido'}`);
+        setStatus(`⚠️ Backend respondeu com status: ${response.status}`);
       }
       
-      console.log("Backend response:", data);
+      console.log("Backend response status:", response.status);
     } catch (error: any) {
       console.error("Backend test error:", error);
       

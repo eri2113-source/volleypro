@@ -363,6 +363,10 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
                 disabled={loading}
                 autoComplete="email"
               />
+              <p className="text-xs text-amber-600 dark:text-amber-500 flex items-start gap-1">
+                <AlertCircle className="h-3 w-3 shrink-0 mt-0.5" />
+                <span>⚠️ Use email REAL. Emails falsos podem causar bloqueio.</span>
+              </p>
             </div>
 
             <div className="space-y-2">
