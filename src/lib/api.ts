@@ -632,10 +632,30 @@ export const tournamentApi = {
   // Squad-based registration (multiple squads from same team)
   // squadId can be null for simple teams (full team registration)
   async registerSquad(tournamentId: string, teamId: string, squadId: string | null) {
-    return apiCall(`/tournaments/${tournamentId}/register-squad`, {
-      method: 'POST',
-      body: JSON.stringify({ teamId, squadId }),
+    console.log('\n🚀 ===== API: registerSquad CHAMADA =====');
+    console.log('   📊 Parâmetros:', {
+      tournamentId,
+      teamId,
+      squadId: squadId || 'TIME COMPLETO (null)',
+      endpoint: `/tournaments/${tournamentId}/register-squad`
     });
+    
+    try {
+      const result = await apiCall(`/tournaments/${tournamentId}/register-squad`, {
+        method: 'POST',
+        body: JSON.stringify({ teamId, squadId }),
+      });
+      
+      console.log('✅ API: Inscrição retornou sucesso:', result);
+      return result;
+    } catch (error: any) {
+      console.error('❌ API: Erro na inscrição:', {
+        message: error.message,
+        status: error.status,
+        details: error
+      });
+      throw error;
+    }
   },
 
   async getTeamRegistrations(tournamentId: string, teamId: string) {

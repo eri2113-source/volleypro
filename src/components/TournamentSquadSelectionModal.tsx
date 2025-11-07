@@ -169,17 +169,26 @@ export function TournamentSquadSelectionModal({
       // CASO 1: Time SEM categorias → Inscreve automaticamente
       if (!hasCategoriesCreated) {
         console.log('\n🏢 ====== TIME SEM CATEGORIAS ======');
+        console.log('   • Nome do time:', teamName);
+        console.log('   • Team ID:', teamId);
+        console.log('   • Tournament ID:', tournamentId);
         console.log('   ✅ Inscrevendo automaticamente como TIME COMPLETO...');
         
         try {
+          console.log('   🔄 Chamando tournamentApi.registerSquad...');
+          
           // Inscrever como TIME COMPLETO (squadId = null)
-          await tournamentApi.registerSquad(tournamentId, teamId, null);
+          const result = await tournamentApi.registerSquad(tournamentId, teamId, null);
+          
+          console.log('   ✅ Resposta da API:', result);
           
           toast.success(`${teamName} inscrito com sucesso!`, {
-            description: 'Time completo registrado no torneio'
+            description: 'Time completo registrado no torneio',
+            duration: 5000
           });
           
           console.log('✅ Inscrição TIME COMPLETO realizada!');
+          console.log('   🔔 Toast exibido');
           
           // Callback
           onSquadSelected({
@@ -191,15 +200,26 @@ export function TournamentSquadSelectionModal({
             createdAt: new Date().toISOString()
           });
           
+          console.log('   ✅ Callback executado');
+          
           // Aguardar 500ms para ver toast
+          console.log('   ⏳ Aguardando 500ms...');
           await new Promise(resolve => setTimeout(resolve, 500));
           
           // Fechar modal
+          console.log('   🚪 Fechando modal...');
           onClose();
+          console.log('   ✅ Modal fechado');
         } catch (error: any) {
-          console.error('❌ Erro ao inscrever time completo:', error);
+          console.error('\n❌ ====== ERRO AO INSCREVER TIME ======');
+          console.error('   • Mensagem:', error.message);
+          console.error('   • Status:', error.status);
+          console.error('   • Erro completo:', error);
+          console.error('   • Stack:', error.stack);
+          
           toast.error('Erro ao inscrever time', {
-            description: error.message || 'Tente novamente'
+            description: error.message || 'Tente novamente',
+            duration: 8000
           });
         }
         
