@@ -174,21 +174,31 @@ export function TournamentSquadSelectionModal({
         console.log('   • Tournament ID:', tournamentId);
         console.log('   ✅ Inscrevendo automaticamente como TIME COMPLETO...');
         
+        setLoading(true);
+        
         try {
-          console.log('   🔄 Chamando tournamentApi.registerSquad...');
+          console.log('   🔄 Passo 1/5: Chamando tournamentApi.registerSquad...');
+          console.log('   📋 Parâmetros:', {
+            tournamentId,
+            teamId,
+            squadId: null
+          });
           
           // Inscrever como TIME COMPLETO (squadId = null)
           const result = await tournamentApi.registerSquad(tournamentId, teamId, null);
           
-          console.log('   ✅ Resposta da API:', result);
+          console.log('   ✅ Passo 2/5: Resposta da API recebida:', result);
+          
+          if (result && result.registration) {
+            console.log('   ✅ Passo 3/5: Registration criada:', result.registration);
+          }
           
           toast.success(`${teamName} inscrito com sucesso!`, {
             description: 'Time completo registrado no torneio',
             duration: 5000
           });
           
-          console.log('✅ Inscrição TIME COMPLETO realizada!');
-          console.log('   🔔 Toast exibido');
+          console.log('   ✅ Passo 4/5: Toast exibido');
           
           // Callback
           onSquadSelected({
@@ -200,30 +210,38 @@ export function TournamentSquadSelectionModal({
             createdAt: new Date().toISOString()
           });
           
-          console.log('   ✅ Callback executado');
+          console.log('   ✅ Passo 5/5: Callback executado');
           
-          // Aguardar 500ms para ver toast
-          console.log('   ⏳ Aguardando 500ms...');
-          await new Promise(resolve => setTimeout(resolve, 500));
+          // Aguardar 800ms para ver toast
+          console.log('   ⏳ Aguardando 800ms...');
+          await new Promise(resolve => setTimeout(resolve, 800));
           
           // Fechar modal
           console.log('   🚪 Fechando modal...');
+          setLoading(false);
           onClose();
-          console.log('   ✅ Modal fechado');
+          console.log('   ✅ Modal fechado - INSCRIÇÃO COMPLETA! 🎉');
         } catch (error: any) {
           console.error('\n❌ ====== ERRO AO INSCREVER TIME ======');
           console.error('   • Mensagem:', error.message);
           console.error('   • Status:', error.status);
+          console.error('   • Response:', error.response);
           console.error('   • Erro completo:', error);
           console.error('   • Stack:', error.stack);
+          
+          // Tentar extrair mais detalhes do erro
+          if (error.response) {
+            console.error('   • Response data:', await error.response.text?.());
+          }
           
           toast.error('Erro ao inscrever time', {
             description: error.message || 'Tente novamente',
             duration: 8000
           });
+          
+          setLoading(false);
         }
         
-        setLoading(false);
         return;
       }
       

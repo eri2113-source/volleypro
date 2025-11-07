@@ -115,13 +115,13 @@ export function TournamentMatchEditor({ match, teams, onSave, onClose }: Tournam
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" aria-describedby="match-editor-description">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Edit2 className="w-5 h-5" />
             Editar Partida
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription id="match-editor-description">
             Edite todos os detalhes da partida manualmente
           </DialogDescription>
         </DialogHeader>

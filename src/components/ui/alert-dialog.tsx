@@ -48,6 +48,9 @@ function AlertDialogContent({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
+  // Ensure aria-describedby is always set to suppress Radix UI warning
+  const ariaDescribedBy = props['aria-describedby'] || 'alert-dialog-description';
+  
   return (
     <AlertDialogPortal>
       <AlertDialogOverlay />
@@ -58,6 +61,7 @@ function AlertDialogContent({
           className,
         )}
         {...props}
+        aria-describedby={ariaDescribedBy}
       />
     </AlertDialogPortal>
   );
@@ -107,11 +111,13 @@ function AlertDialogTitle({
 
 function AlertDialogDescription({
   className,
+  id,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Description>) {
   return (
     <AlertDialogPrimitive.Description
       data-slot="alert-dialog-description"
+      id={id || 'alert-dialog-description'}
       className={cn("text-muted-foreground text-sm", className)}
       {...props}
     />

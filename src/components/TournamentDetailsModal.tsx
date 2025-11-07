@@ -106,6 +106,13 @@ export function TournamentDetailsModal({
 
   useEffect(() => {
     if (open && tournamentId && tournamentId !== '') {
+      console.log('🚀 ====== MODAL ABERTO ======');
+      console.log('📋 Props recebidas:', {
+        tournamentId,
+        currentUserId,
+        userType,
+        hasOnRegistrationSuccess: !!onRegistrationSuccess
+      });
       loadTournamentDetails();
     }
   }, [open, tournamentId]);
@@ -520,7 +527,23 @@ export function TournamentDetailsModal({
             
             {canRegister && (
               <Button 
-                onClick={() => setShowSquadSelection(true)}
+                onClick={() => {
+                  console.log('🟢 ====== BOTÃO VERDE CLICADO ======');
+                  console.log('📊 Estado ANTES:', {
+                    showSquadSelection,
+                    currentUserId,
+                    userType,
+                    hasTournament: !!tournament,
+                    tournamentId: tournament?.id
+                  });
+                  setShowSquadSelection(true);
+                  console.log('✅ setShowSquadSelection(true) executado');
+                  
+                  // Forçar re-render depois de 100ms para garantir
+                  setTimeout(() => {
+                    console.log('🔄 Depois de 100ms - showSquadSelection deveria estar true');
+                  }, 100);
+                }}
                 className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
                 size="lg"
               >

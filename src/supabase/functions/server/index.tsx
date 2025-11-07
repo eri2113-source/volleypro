@@ -4735,45 +4735,67 @@ app.delete('/make-server-0ea22bba/teams/:teamId/squads/:squadId/players/:playerI
 // Register squad in tournament
 app.post('/make-server-0ea22bba/tournaments/:tournamentId/register-squad', authMiddleware, async (c) => {
   console.log(`\n🏆 ====== POST /register-squad ======`);
+  console.log(`   ⏰ Timestamp: ${new Date().toISOString()}`);
   
   try {
+    console.log(`   🔍 Passo 1/7: Obtendo dados do contexto...`);
     const userId = c.get('userId');
     const tournamentId = c.req.param('tournamentId');
     const body = await c.req.json();
     const { teamId, squadId } = body;
     
-    console.log(`   • userId:`, userId);
-    console.log(`   • tournamentId:`, tournamentId);
-    console.log(`   • teamId:`, teamId);
-    console.log(`   • squadId:`, squadId);
-    console.log(`   • squadId é null:`, squadId === null);
-    console.log(`   • squadId é undefined:`, squadId === undefined);
-    console.log(`   • !squadId:`, !squadId);
-    console.log(`   • Tipo inscrição:`, !squadId ? '🏢 TIME COMPLETO' : '🏐 EQUIPE ESPECÍFICA');
+    console.log(`   ✅ Dados recebidos:`);
+    console.log(`      • userId:`, userId);
+    console.log(`      • tournamentId:`, tournamentId);
+    console.log(`      • teamId:`, teamId);
+    console.log(`      • squadId:`, squadId);
+    console.log(`      • squadId === null:`, squadId === null);
+    console.log(`      • squadId === undefined:`, squadId === undefined);
+    console.log(`      • !squadId:`, !squadId);
+    console.log(`      • Tipo inscrição:`, !squadId ? '🏢 TIME COMPLETO' : '🏐 EQUIPE ESPECÍFICA');
     
+    console.log(`\n   🔍 Passo 2/7: Verificando permissões...`);
     const user = await kv.get(`user:${userId}`);
+    console.log(`      • Usuário encontrado:`, !!user);
+    console.log(`      • User ID matches Team ID:`, user?.id === teamId);
+    
     if (!user || user.id !== teamId) {
+      console.error(`   ❌ ERRO: Unauthorized - User não encontrado ou ID não corresponde`);
       return c.json({ error: 'Unauthorized' }, 403);
     }
+    console.log(`   ✅ Permissões OK`);
+    
+    console.log(`\n   🔍 Passo 3/7: Buscando torneio...`);
     
     const fullTournamentId = tournamentId.startsWith('tournament:') ? tournamentId : `tournament:${tournamentId}`;
+    console.log(`      • fullTournamentId:`, fullTournamentId);
+    
     const tournament = await kv.get(fullTournamentId);
+    console.log(`      • Torneio encontrado:`, !!tournament);
+    
     if (!tournament) {
+      console.error(`   ❌ ERRO: Torneio não encontrado no KV`);
       return c.json({ error: 'Torneio não encontrado' }, 404);
     }
+    console.log(`   ✅ Torneio encontrado: ${tournament.name}`);
     
+    console.log(`\n   🔍 Passo 4/7: Inicializando arrays de inscrição...`);
     // Inicializar registrations se não existir
     if (!tournament.squadRegistrations) {
       tournament.squadRegistrations = [];
+      console.log(`      • Array squadRegistrations criado`);
+    } else {
+      console.log(`      • Array squadRegistrations já existe (${tournament.squadRegistrations.length} itens)`);
     }
     
     let registration;
     
+    console.log(`\n   🔍 Passo 5/7: Processando inscrição...`);
     // CASO 1: TIME SIMPLES (squadId = null) - Inscrição completa
     if (!squadId || squadId === null) {
-      console.log(`\n📋 ====== INSCRIÇÃO TIME COMPLETO ======`);
-      console.log(`   • Nome do time: ${user.name}`);
-      console.log(`   • Total de registrations: ${tournament.squadRegistrations?.length || 0}`);
+      console.log(`\n   📋 ====== INSCRIÇÃO TIME COMPLETO ======`);
+      console.log(`      • Nome do time: ${user.name}`);
+      console.log(`      • Total de registrations ANTES: ${tournament.squadRegistrations?.length || 0}`);
       
       // Verificar se time já está inscrito (sem squad específico)
       const alreadyRegistered = tournament.squadRegistrations.find(

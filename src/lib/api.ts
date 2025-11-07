@@ -640,20 +640,27 @@ export const tournamentApi = {
       endpoint: `/tournaments/${tournamentId}/register-squad`
     });
     
+    console.log('   🔐 Obtendo token de autenticação...');
+    const token = await getAuthToken();
+    console.log('   🔑 Token obtido:', token ? `${token.substring(0, 20)}...` : 'NULL/UNDEFINED');
+    
     try {
+      console.log('   🌐 Fazendo requisição POST...');
       const result = await apiCall(`/tournaments/${tournamentId}/register-squad`, {
         method: 'POST',
         body: JSON.stringify({ teamId, squadId }),
       });
       
-      console.log('✅ API: Inscrição retornou sucesso:', result);
+      console.log('✅ API: Inscrição retornou sucesso!');
+      console.log('   📦 Resultado:', result);
       return result;
     } catch (error: any) {
-      console.error('❌ API: Erro na inscrição:', {
-        message: error.message,
-        status: error.status,
-        details: error
-      });
+      console.error('❌ API: Erro na inscrição!');
+      console.error('   • Message:', error.message);
+      console.error('   • Status:', error.status);
+      console.error('   • Code:', error.code);
+      console.error('   • NeedsRefresh:', error.needsRefresh);
+      console.error('   • Detalhes completos:', error);
       throw error;
     }
   },
