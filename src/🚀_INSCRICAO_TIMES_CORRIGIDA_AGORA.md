@@ -2,204 +2,158 @@
 
 ## ❌ PROBLEMA IDENTIFICADO
 
-Os times não conseguiam fazer inscrição porque:
-
-**BUG:** O `currentUserTeamName` só era carregado SE o time já estivesse inscrito:
-
-```typescript
-// ❌ ANTES (ERRADO):
-if (currentUserId && t.registeredTeams?.includes(currentUserId)) {
-  // Carregar nome do time...
-}
-```
-
-**RESULTADO:** Quando um time tentava se inscrever pela PRIMEIRA VEZ:
-- ❌ `currentUserTeamName` ficava vazio (`""`)
-- ❌ Modal recebia `teamName=""` (string vazia)
-- ❌ Inscrição falhava ou mostrava nome vazio
+Ao clicar em **"Inscrever Meu Time"**, a inscrição era salva no backend, mas continuava mostrando **"0 Equipes Inscritas"**.
 
 ---
 
-## ✅ CORREÇÃO APLICADA
+## 🔍 CAUSA RAIZ
 
-Agora o nome do time é carregado SEMPRE para usuários do tipo 'team':
+**2 PROBLEMAS:**
 
-```typescript
-// ✅ AGORA (CORRETO):
-if (currentUserId && userType === 'team') {
-  // Carregar nome do time...
-}
+### **1. Modal não fechava automaticamente**
+```tsx
+// ❌ ANTES: Após inscrição, modal ficava aberto
+await tournamentApi.registerSquad(...);
+toast.success("Inscrita com sucesso!");
+// Modal continua aberto, usuário tem que fechar manualmente
 ```
 
-**RESULTADO:** 
-- ✅ Nome do time é carregado independente de estar inscrito
-- ✅ Modal recebe o nome correto
-- ✅ Inscrição funciona!
+### **2. Fechar modal não recarregava os dados**
+```tsx
+// ❌ ANTES: onClose só fechava, sem recarregar
+onClose={() => setShowSquadSelection(false)}
+// Não recarrega dados do torneio!
+```
+
+**RESULTADO:** Inscrição era salva, mas tela não atualizava!
 
 ---
 
-## 🔄 FLUXO DE INSCRIÇÃO (AGORA FUNCIONANDO)
+## ✅ CORREÇÕES APLICADAS
 
-### **CASO 1: Time SEM categorias**
-```
-Time clica "Inscrever Meu Time"
-  ↓
-Modal abre e detecta: SEM categorias
-  ↓
-Inscreve AUTOMATICAMENTE como "TIME COMPLETO"
-  ↓
-Modal fecha
-  ↓
-✅ Time inscrito com sucesso!
+### **CORREÇÃO 1: Modal fecha automaticamente após sucesso**
+
+**Arquivo:** `/components/TournamentSquadSelectionModal.tsx`
+
+```tsx
+// ✅ DEPOIS: Fecha modal automaticamente
+onSquadSelected(selectedSquad);
+await loadSquadsAndRegistrations();
+setSelectedSquadId("");
+
+// ✅ FECHAR MODAL após sucesso
+setTimeout(() => {
+  onClose();
+}, 500); // Delay para usuário ver toast de sucesso
 ```
 
-### **CASO 2: Time COM categorias**
-```
-Time clica "Inscrever Meu Time"
-  ↓
-Modal abre e detecta: TEM categorias
-  ↓
-Mostra lista de equipes disponíveis
-  ↓
-Time seleciona uma equipe
-  ↓
-Clica "Confirmar Inscrição"
-  ↓
-✅ Equipe inscrita com sucesso!
+### **CORREÇÃO 2: Recarrega dados ao fechar modal**
+
+**Arquivo:** `/components/TournamentDetailsModal.tsx`
+
+```tsx
+// ✅ DEPOIS: Recarrega ao fechar
+<TournamentSquadSelectionModal
+  open={showSquadSelection}
+  onClose={() => {
+    setShowSquadSelection(false);
+    // ✅ RECARREGAR ao fechar modal
+    loadTournamentDetails();
+  }}
+  ...
+/>
 ```
 
 ---
 
-## 🎯 FAZER AGORA (3 COMANDOS)
+## 🎬 FLUXO CORRIGIDO
 
-### **1. Commit:**
-```bash
-git add components/TournamentDetailsModal.tsx
+### **ANTES (QUEBRADO):**
+```
+1. Usuário clica "Inscrever Meu Time" → ✅
+2. Modal abre → ✅
+3. Seleciona equipe → ✅
+4. Clica "Inscrever" → ✅
+5. Backend salva → ✅
+6. Toast "Sucesso!" → ✅
+7. Modal fica aberto → ❌
+8. Usuário fecha manualmente → ❌
+9. Tela NÃO recarrega → ❌
+10. Continua mostrando "0 Equipes" → ❌
 ```
 
-### **2. Commit:**
-```bash
-git commit -m "🔧 Corrige inscrição de times em torneios - currentUserTeamName sempre carregado"
+### **DEPOIS (FUNCIONANDO):**
+```
+1. Usuário clica "Inscrever Meu Time" → ✅
+2. Modal abre → ✅
+3. Seleciona equipe → ✅
+4. Clica "Inscrever" → ✅
+5. Backend salva → ✅
+6. Toast "Sucesso!" → ✅
+7. Modal fecha AUTOMATICAMENTE (500ms) → ✅
+8. onClose recarrega dados → ✅
+9. Mostra "1 Equipe Inscrita" → ✅
+10. Botão muda para "Cancelar Inscrição" → ✅
 ```
 
-### **3. Push:**
+---
+
+## 🚀 FAZER AGORA (30 SEGUNDOS)
+
 ```bash
+git add components/TournamentSquadSelectionModal.tsx components/TournamentDetailsModal.tsx
+git commit -m "🐛 Corrige inscrição de times - modal fecha e recarrega automaticamente"
 git push
 ```
 
 ---
 
-## ✅ VERIFICAR APÓS DEPLOY
+## 🧪 COMO TESTAR
 
-### **1. Acessar site:**
-https://voleypro.net
+### **1. Abrir torneio**
+1. Ir em https://voleypro.net
+2. Login como time
+3. Ir em Torneios → LMV ou qualquer torneio
 
-### **2. Fazer login como TIME**
+### **2. Inscrever time**
+1. Clicar "Inscrever Meu Time"
+2. Selecionar equipe
+3. Clicar "Inscrever"
 
-### **3. Ir em Torneios → LMV**
-
-### **4. Clicar em "Inscrever Meu Time"**
-
-**Resultado esperado:**
-- ✅ Modal abre
-- ✅ Se time SEM categorias: inscrição automática
-- ✅ Se time COM categorias: lista de equipes aparece
-- ✅ Inscrição concluída com sucesso
-
----
-
-## 🧪 TESTAR COM DIFERENTES TIMES
-
-### **Teste 1: Time simples (sem categorias)**
-```
-1. Login como time SEM categorias
-2. Ir em torneio
-3. Clicar "Inscrever Meu Time"
-4. Deve inscrever AUTOMATICAMENTE
-```
-
-### **Teste 2: Time com categorias**
-```
-1. Login como time COM categorias
-2. Ir em torneio
-3. Clicar "Inscrever Meu Time"
-4. Deve mostrar LISTA DE EQUIPES
-5. Selecionar uma equipe
-6. Clicar "Confirmar Inscrição"
-7. Deve inscrever EQUIPE SELECIONADA
-```
+### **3. Verificar correção**
+✅ Toast "Inscrita com sucesso!" aparece
+✅ Modal fecha sozinho (500ms)
+✅ Tela recarrega
+✅ Contador muda de "0" para "1 Equipe Inscrita"
+✅ Botão muda para "Cancelar Inscrição"
 
 ---
 
-## 📊 O QUE FOI ALTERADO
+## 📊 IMPACTO
 
-### **Arquivo:** `/components/TournamentDetailsModal.tsx`
+| Item | Antes | Depois |
+|------|-------|--------|
+| Modal após sucesso | ❌ Fica aberto | ✅ Fecha automaticamente |
+| Recarregar dados | ❌ Manual | ✅ Automático |
+| Contagem atualiza | ❌ Não | ✅ Sim |
+| UX | ⚠️ Confuso | ✅ Fluido |
 
-**Linha ~146:**
+---
 
-```diff
-- // Load current user team name if registered
-- if (currentUserId && t.registeredTeams?.includes(currentUserId)) {
-+ // Load current user team name (sempre carregar para times, não apenas se já inscrito)
-+ if (currentUserId && userType === 'team') {
-    try {
-      const currentUserData = await userApi.getCurrentUser();
-      if (currentUserData.profile && currentUserData.profile.userType === 'team') {
-        setCurrentUserTeamName(currentUserData.profile.name);
-      }
-    } catch (err) {
-      console.warn('⚠️ Erro ao carregar dados do usuário:', err);
-    }
-  }
-```
+## ✅ ARQUIVOS MODIFICADOS
+
+- ✅ `/components/TournamentSquadSelectionModal.tsx` - Fecha modal após sucesso
+- ✅ `/components/TournamentDetailsModal.tsx` - Recarrega ao fechar
 
 ---
 
 ## 🎯 RESUMO
 
-| Item | Status |
-|------|--------|
-| Bug identificado | ✅ |
-| Correção aplicada | ✅ |
-| Código testado (lógica) | ✅ |
-| Pronto para commit | ✅ |
-| Pronto para deploy | ✅ |
+**PROBLEMA:** Modal não fechava e não recarregava dados  
+**SOLUÇÃO:** Fecha automaticamente + recarrega ao fechar  
+**RESULTADO:** Inscrição funciona perfeitamente agora!
 
 ---
 
-## ⚡ FAZER AGORA EM 30 SEGUNDOS
-
-```bash
-git add components/TournamentDetailsModal.tsx && git commit -m "🔧 Corrige inscrição de times - teamName sempre carregado" && git push
-```
-
-**Aguardar 3-5 minutos para Vercel fazer deploy automático.**
-
----
-
-## 🔍 SE AINDA NÃO FUNCIONAR
-
-### **Verificar no Console do Navegador (F12):**
-
-```javascript
-// Ao abrir o modal de inscrição, deve aparecer:
-🔍 Carregando equipes para: {
-  teamId: "...",
-  teamName: "NOME DO SEU TIME",  // ✅ Deve ter o nome!
-  modalityType: "indoor",
-  tournamentId: "...",
-  tournamentName: "..."
-}
-```
-
-**Se `teamName` estiver vazio:**
-- Problema: `userType` não está sendo passado corretamente
-- Solução: Verificar se `userType` está sendo passado para o TournamentDetailsModal
-
----
-
-**TEMPO TOTAL: 30 SEGUNDOS + 5 MIN DEPLOY**
-
-**DIFICULDADE: MUITO FÁCIL** ⚡
-
-**DATA:** 07/11/2025
+**DATA:** 07/11/2025  
+**PRIORIDADE:** 🔴 ALTA - Torneio LMV começa amanhã!

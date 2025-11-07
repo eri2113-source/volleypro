@@ -292,6 +292,11 @@ export function TournamentSquadSelectionModal({
       // Limpar seleção
       setSelectedSquadId("");
       
+      // ✅ FECHAR MODAL após sucesso
+      setTimeout(() => {
+        onClose();
+      }, 500); // Delay para usuário ver toast de sucesso
+      
     } catch (error: any) {
       console.error('❌ Erro ao registrar equipe:', error);
       toast.error(error.message || "Erro ao inscrever equipe");

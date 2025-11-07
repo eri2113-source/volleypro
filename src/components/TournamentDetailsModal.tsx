@@ -1112,7 +1112,11 @@ export function TournamentDetailsModal({
       {showSquadSelection && currentUserId && tournament && (
         <TournamentSquadSelectionModal
           open={showSquadSelection}
-          onClose={() => setShowSquadSelection(false)}
+          onClose={() => {
+            setShowSquadSelection(false);
+            // ✅ RECARREGAR ao fechar modal
+            loadTournamentDetails();
+          }}
           tournamentId={tournamentId}
           tournamentName={tournament.name}
           teamId={currentUserId}
