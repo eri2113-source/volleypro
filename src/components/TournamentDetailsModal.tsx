@@ -521,10 +521,11 @@ export function TournamentDetailsModal({
             {canRegister && (
               <Button 
                 onClick={() => setShowSquadSelection(true)}
-                className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+                className="bg-green-600 hover:bg-green-700 text-white shadow-lg"
+                size="lg"
               >
-                <CheckCircle2 className="h-4 w-4 mr-2" />
-                Inscrever Meu Time
+                <CheckCircle2 className="h-5 w-5 mr-2" />
+                ✅ INSCREVER AGORA
               </Button>
             )}
 
