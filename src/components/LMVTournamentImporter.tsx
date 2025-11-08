@@ -80,6 +80,7 @@ export default function LMVTournamentImporter() {
 
   useEffect(() => {
     loadCurrentUser();
+    loadRegisteredTeams();
   }, []);
 
   const loadCurrentUser = async () => {
@@ -91,6 +92,73 @@ export default function LMVTournamentImporter() {
       }
     } catch (error) {
       console.error('Erro ao carregar usuário:', error);
+    }
+  };
+
+  // Buscar times cadastrados no sistema e relacionar com nomes LMV
+  const loadRegisteredTeams = async () => {
+    try {
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/users?type=team`,
+        {
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
+
+      if (!response.ok) return;
+
+      const { users: allTeams } = await response.json();
+      
+      // Mapeamento de nomes LMV para nomes reais de times cadastrados
+      // Inclui variações comuns de como os times podem estar cadastrados
+      const teamNameMatches: { [key: string]: string[] } = {
+        'ALPHA A': ['ALPHA', 'ALPHA A', 'ALPHA SPORTS', 'ALPHASPORTS', 'ALPHA-A', 'TIME ALPHA'],
+        'SOBRINHOS A': ['SOBRINHOS', 'SOBRINHOS A', 'OS SOBRINHOS', 'SOBRINHOS-A', 'TIME SOBRINHOS'],
+        'SOBRINHOS B': ['SOBRINHOS B', 'SOBRINHOS 2', 'SOBRINHOS-B', 'SOBRINHOS II'],
+        'CASTRO ALVES': ['CASTRO', 'CASTRO ALVES', 'CASTROS ALVES', 'CASTRO-ALVES', 'TIME CASTRO'],
+        'THE BLACKS': ['BLACKS', 'THE BLACKS', 'BLACK', 'OS BLACKS'],
+        'GLADIADORES': ['GLADIADORES', 'GLAD', 'GLADIADOR', 'TIME GLADIADORES'],
+        'MARKA SPORTS': ['MARKA', 'MARKA SPORTS', 'MARKASPORTS', 'MARKA-SPORTS', 'TIME MARKA'],
+      };
+
+      const logosMap: { [key: string]: string } = {};
+
+      // Para cada time LMV, tentar encontrar o time real cadastrado
+      Object.entries(teamNameMatches).forEach(([lmvName, possibleNames]) => {
+        const foundTeam = allTeams.find((team: any) => {
+          const teamNameUpper = (team.name || '').toUpperCase().trim();
+          
+          // Tentar match exato primeiro
+          const exactMatch = possibleNames.some(name => 
+            teamNameUpper === name.toUpperCase()
+          );
+          
+          if (exactMatch) return true;
+          
+          // Tentar match parcial (contém ou está contido)
+          return possibleNames.some(name => {
+            const nameUpper = name.toUpperCase();
+            return teamNameUpper.includes(nameUpper) || nameUpper.includes(teamNameUpper);
+          });
+        });
+
+        if (foundTeam && foundTeam.photoUrl) {
+          logosMap[lmvName] = foundTeam.photoUrl;
+          console.log(`✅ Logo encontrado para ${lmvName}:`, foundTeam.name, '→', foundTeam.photoUrl.substring(0, 50) + '...');
+        } else {
+          console.log(`⚠️ Logo NÃO encontrado para ${lmvName}`);
+        }
+      });
+
+      setTeamLogos(logosMap);
+      
+      if (Object.keys(logosMap).length > 0) {
+        toast.success(`${Object.keys(logosMap).length} logos de times encontrados automaticamente!`);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar times:', error);
     }
   };
 
@@ -243,6 +311,10 @@ export default function LMVTournamentImporter() {
     }
 
     setLoading(true);
+    console.log('🚀 Iniciando exportação de partidas...');
+    console.log('📋 Torneio ID:', tournamentId);
+    console.log('📊 Total de partidas:', matches.length);
+    
     try {
       const supabase = createClient();
       const { data: { session } } = await supabase.auth.getSession();
@@ -254,9 +326,15 @@ export default function LMVTournamentImporter() {
 
       // Extrair apenas o ID do torneio (remover prefixo se houver)
       const cleanTournamentId = tournamentId.replace('tournament:', '');
+      console.log('🔑 Tournament ID limpo:', cleanTournamentId);
       
       // Criar partidas via backend
-      for (const match of matches) {
+      let successCount = 0;
+      let errorCount = 0;
+      
+      for (let i = 0; i < matches.length; i++) {
+        const match = matches[i];
+        console.log(`\n📤 Exportando partida ${i + 1}/${matches.length}:`, match.teamA, 'vs', match.teamB);
         const matchData = {
           tournamentId: cleanTournamentId,
           round: match.key,
@@ -267,7 +345,9 @@ export default function LMVTournamentImporter() {
           scheduledDate: match.date,
           scheduledTime: match.time,
           court: match.quadra,
-          category: match.category,
+          arena: match.arena || 'Ginásio Municipal',
+          category: match.category || 'masculino',
+          division: 'Adulto',
           sets: {
             teamA: [
               match.set1A !== 'x' ? parseInt(match.set1A) : null,
@@ -283,26 +363,47 @@ export default function LMVTournamentImporter() {
           status: 'scheduled',
         };
 
-        const response = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${cleanTournamentId}/matches`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${session.access_token}`,
-            },
-            body: JSON.stringify(matchData),
-          }
-        );
+        console.log('📝 Dados da partida:', matchData);
+
+        const url = `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${cleanTournamentId}/matches`;
+        console.log('🌐 URL:', url);
+
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify(matchData),
+        });
+
+        console.log('📡 Response status:', response.status, response.statusText);
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          console.error('Erro ao criar partida:', errorData);
-          throw new Error(errorData.error || 'Erro ao criar partida');
+          console.error('❌ Erro ao criar partida:', errorData);
+          errorCount++;
+          // Não parar a execução, continuar com próxima partida
+          console.warn(`⚠️ Partida ${i + 1} falhou, continuando...`);
+        } else {
+          const result = await response.json();
+          console.log('✅ Partida criada:', result);
+          successCount++;
         }
       }
 
-      toast.success(`${matches.length} partidas exportadas com sucesso!`);
+      console.log('\n📊 Resumo da exportação:');
+      console.log(`✅ Sucesso: ${successCount}`);
+      console.log(`❌ Erros: ${errorCount}`);
+      console.log(`📝 Total: ${matches.length}`);
+
+      if (successCount > 0) {
+        toast.success(`${successCount} partida(s) exportada(s) com sucesso!`);
+      }
+      
+      if (errorCount > 0) {
+        toast.warning(`${errorCount} partida(s) falharam. Verifique o console.`);
+      }
     } catch (error: any) {
       console.error('Erro ao exportar partidas:', error);
       toast.error(error.message || 'Erro ao exportar para o banco de dados');
@@ -342,10 +443,34 @@ export default function LMVTournamentImporter() {
       {matches.length > 0 && (
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Trophy className="w-5 h-5" />
-              Gerenciar Logos e Chaves
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Trophy className="w-5 h-5" />
+                Gerenciar Logos e Chaves
+              </CardTitle>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={loadRegisteredTeams}
+                disabled={loading}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Recarregar Logos
+              </Button>
+            </div>
+            <p className="text-sm text-muted-foreground mt-2">
+              Os logos são buscados automaticamente dos times cadastrados. Clique em "Recarregar" para atualizar ou no ícone de lápis para editar manualmente.
+            </p>
+            <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-green-500 rounded-full" />
+                <span>Logo real encontrado</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 bg-gray-400 rounded-full" />
+                <span>Placeholder SVG</span>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -353,22 +478,31 @@ export default function LMVTournamentImporter() {
               <div>
                 <h3 className="mb-3">Chave A</h3>
                 <div className="space-y-2">
-                  {['CASTRO ALVES', 'GLADIADORES', 'SOBRINHOS B', 'THE BLACKS'].map(team => (
-                    <div key={team} className="bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <img src={getTeamLogo(team)} alt={team} className="w-8 h-8 object-contain rounded" />
-                        <span>{team}</span>
+                  {['CASTRO ALVES', 'GLADIADORES', 'SOBRINHOS B', 'THE BLACKS'].map(team => {
+                    const mappedName = TEAM_NAME_MAPPING[team] || team;
+                    const hasRealLogo = teamLogos[mappedName] && !teamLogos[mappedName].startsWith('data:');
+                    return (
+                      <div key={team} className="bg-green-50 dark:bg-green-900/20 px-3 py-2 rounded flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-1">
+                          <div className="relative">
+                            <img src={getTeamLogo(team)} alt={team} className="w-8 h-8 object-contain rounded" />
+                            {hasRealLogo && (
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" title="Logo real encontrado" />
+                            )}
+                          </div>
+                          <span className="text-sm">{team}</span>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditingLogo({ team, url: getTeamLogo(team) })}
+                          className="text-xs"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </Button>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setEditingLogo({ team, url: getTeamLogo(team) })}
-                        className="text-xs"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
@@ -376,22 +510,31 @@ export default function LMVTournamentImporter() {
               <div>
                 <h3 className="mb-3">Chave B</h3>
                 <div className="space-y-2">
-                  {['ALPHA A', 'MARKA SPORTS', 'SOBRINHOS A'].map(team => (
-                    <div key={team} className="bg-orange-50 dark:bg-orange-900/20 px-3 py-2 rounded flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <img src={getTeamLogo(team)} alt={team} className="w-8 h-8 object-contain rounded" />
-                        <span>{team}</span>
+                  {['ALPHA A', 'MARKA SPORTS', 'SOBRINHOS A'].map(team => {
+                    const mappedName = TEAM_NAME_MAPPING[team] || team;
+                    const hasRealLogo = teamLogos[mappedName] && !teamLogos[mappedName].startsWith('data:');
+                    return (
+                      <div key={team} className="bg-orange-50 dark:bg-orange-900/20 px-3 py-2 rounded flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-1">
+                          <div className="relative">
+                            <img src={getTeamLogo(team)} alt={team} className="w-8 h-8 object-contain rounded" />
+                            {hasRealLogo && (
+                              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full border-2 border-white" title="Logo real encontrado" />
+                            )}
+                          </div>
+                          <span className="text-sm">{team}</span>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditingLogo({ team, url: getTeamLogo(team) })}
+                          className="text-xs"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                        </Button>
                       </div>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setEditingLogo({ team, url: getTeamLogo(team) })}
-                        className="text-xs"
-                      >
-                        <Edit2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

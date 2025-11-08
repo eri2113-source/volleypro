@@ -7657,6 +7657,11 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/led-config', authMiddl
   }
 });
 
+// ============= REGISTER TOURNAMENT EDITOR ROUTES =============
+console.log('📝 Registrando rotas de edição de torneios...');
+addTournamentEditorRoutes(app, kv, authMiddleware);
+console.log('✅ Rotas de edição de torneios registradas');
+
 // ============= START SERVER =============
 // Initialize server asynchronously to register LiveKit routes
 (async () => {

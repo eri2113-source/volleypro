@@ -5,6 +5,74 @@ export function addTournamentEditorRoutes(app: any, kv: any, authMiddleware: any
 
   // ============= EDIÇÃO DE PARTIDAS =============
 
+  // Create a new match (organizer only)
+  app.post('/make-server-0ea22bba/tournaments/:tournamentId/matches', authMiddleware, async (c: any) => {
+    try {
+      const userId = c.get('userId');
+      const tournamentId = c.req.param('tournamentId');
+      
+      console.log('➕ Criando nova partida:', { tournamentId, userId });
+      
+      // Verify tournament access
+      const tournamentKey = `tournament:${tournamentId}`;
+      const tournament = await kv.get(tournamentKey);
+      
+      if (!tournament) {
+        console.error('❌ Tournament not found:', tournamentId);
+        return c.json({ error: 'Tournament not found' }, 404);
+      }
+      
+      // Check if user is organizer
+      if (tournament.organizerId !== userId && tournament.createdBy !== userId) {
+        console.error('❌ Unauthorized: user is not organizer');
+        return c.json({ error: 'Only organizer can create matches' }, 403);
+      }
+      
+      // Get match data from request
+      const matchData = await c.req.json();
+      
+      console.log('📝 Match data received:', JSON.stringify(matchData, null, 2));
+      
+      // Generate unique match ID
+      const matchId = crypto.randomUUID();
+      const matchKey = `match:${tournamentId}:${matchId}`;
+      
+      // Create match object
+      const newMatch = {
+        id: matchId,
+        tournamentId,
+        round: matchData.round || 'Group Stage',
+        teamA: matchData.teamA,
+        teamB: matchData.teamB,
+        teamALogo: matchData.teamALogo || null,
+        teamBLogo: matchData.teamBLogo || null,
+        scheduledDate: matchData.scheduledDate || null,
+        scheduledTime: matchData.scheduledTime || null,
+        court: matchData.court || null,
+        category: matchData.category || tournament.categories?.[0] || 'masculino',
+        division: matchData.division || tournament.divisions?.[0] || 'Adulto',
+        sets: matchData.sets || { teamA: [], teamB: [] },
+        status: matchData.status || 'scheduled',
+        createdAt: new Date().toISOString(),
+        createdBy: userId
+      };
+      
+      // Save match to KV store
+      await kv.set(matchKey, newMatch);
+      
+      console.log('✅ Partida criada com sucesso:', matchKey);
+      
+      return c.json({ 
+        success: true,
+        match: newMatch 
+      });
+    } catch (error: any) {
+      console.error('❌ Error creating match:', error);
+      console.error('❌ Stack:', error.stack);
+      return c.json({ error: error.message }, 500);
+    }
+  });
+
   // Get all matches for a tournament
   app.get('/make-server-0ea22bba/tournaments/:tournamentId/matches', async (c: any) => {
     try {
