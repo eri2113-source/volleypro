@@ -13,7 +13,7 @@ export function addTournamentEditorRoutes(app: any, kv: any, authMiddleware: any
       
       console.log('➕ Criando nova partida:', { tournamentId, userId });
       
-      // Verify tournament access
+      // Verify tournament accessContia
       const tournamentKey = `tournament:${tournamentId}`;
       const tournament = await kv.get(tournamentKey);
       
