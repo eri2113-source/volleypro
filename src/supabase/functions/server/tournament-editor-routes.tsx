@@ -13,12 +13,27 @@ export function addTournamentEditorRoutes(app: any, kv: any, authMiddleware: any
       
       console.log('➕ Criando nova partida:', { tournamentId, userId });
       
-      // Verify tournament accessContia
+      // Verify tournament access
       const tournamentKey = `tournament:${tournamentId}`;
+      console.log('🔍 Buscando torneio com chave:', tournamentKey);
+      
       const tournament = await kv.get(tournamentKey);
+      
+      console.log('🔍 Resultado da busca:', {
+        found: !!tournament,
+        tournamentData: tournament ? {
+          id: tournament.id,
+          name: tournament.name,
+          createdBy: tournament.createdBy,
+          organizerId: tournament.organizerId,
+          hasCreatedBy: !!tournament.createdBy,
+          hasOrganizerId: !!tournament.organizerId
+        } : null
+      });
       
       if (!tournament) {
         console.error('❌ Tournament not found:', tournamentId);
+        console.error('❌ Chave buscada:', tournamentKey);
         return c.json({ error: 'Tournament not found' }, 404);
       }
       
