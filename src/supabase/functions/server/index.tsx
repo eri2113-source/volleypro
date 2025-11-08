@@ -2148,6 +2148,57 @@ app.post('/make-server-0ea22bba/tournaments/:tournamentId/draw', authMiddleware,
   }
 });
 
+// Create match in tournament (organizer only)
+app.post('/make-server-0ea22bba/tournaments/:tournamentId/matches', authMiddleware, async (c) => {
+  try {
+    const userId = c.get('userId');
+    const tournamentId = c.req.param('tournamentId');
+    const matchData = await c.req.json();
+    
+    console.log('📝 Creating match for tournament:', tournamentId);
+    
+    const tournamentKey = `tournament:${tournamentId}`;
+    const tournament = await kv.get(tournamentKey);
+    if (!tournament) {
+      return c.json({ error: 'Tournament not found' }, 404);
+    }
+    
+    // Verificar se é o organizador
+    if (tournament.createdBy !== userId && tournament.organizerId !== userId) {
+      return c.json({ error: 'Only organizer can create matches' }, 403);
+    }
+    
+    // Gerar ID da partida
+    const matchId = `match:${tournamentId}:${crypto.randomUUID()}`;
+    
+    const match = {
+      id: matchId,
+      tournamentId,
+      round: matchData.round || 'group',
+      teamA: matchData.teamA,
+      teamB: matchData.teamB,
+      teamALogo: matchData.teamALogo,
+      teamBLogo: matchData.teamBLogo,
+      scheduledDate: matchData.scheduledDate,
+      scheduledTime: matchData.scheduledTime,
+      court: matchData.court,
+      category: matchData.category,
+      sets: matchData.sets || { teamA: [], teamB: [] },
+      status: matchData.status || 'scheduled',
+      createdAt: new Date().toISOString(),
+    };
+    
+    await kv.set(matchId, match);
+    
+    console.log(`✅ Match created: ${matchId}`);
+    
+    return c.json({ match });
+  } catch (error: any) {
+    console.error('❌ Error creating match:', error);
+    return c.json({ error: error.message }, 500);
+  }
+});
+
 // Update match result (organizer only)
 app.put('/make-server-0ea22bba/tournaments/:tournamentId/matches/:matchId', authMiddleware, async (c) => {
   try {

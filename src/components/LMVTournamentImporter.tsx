@@ -102,18 +102,26 @@ export default function LMVTournamentImporter() {
       return teamLogos[mappedName];
     }
 
-    // Logos placeholder dos times LMV
-    const defaultLogos: { [key: string]: string } = {
-      'ALPHA A': 'https://via.placeholder.com/80/3b82f6/ffffff?text=ALPHA+A',
-      'SOBRINHOS A': 'https://via.placeholder.com/80/22c55e/ffffff?text=SOBR+A',
-      'CASTRO ALVES': 'https://via.placeholder.com/80/ef4444/ffffff?text=CASTRO',
-      'THE BLACKS': 'https://via.placeholder.com/80/1f2937/ffffff?text=BLACKS',
-      'SOBRINHOS B': 'https://via.placeholder.com/80/22c55e/ffffff?text=SOBR+B',
-      'GLADIADORES': 'https://via.placeholder.com/80/f59e0b/ffffff?text=GLAD',
-      'MARKA SPORTS': 'https://via.placeholder.com/80/8b5cf6/ffffff?text=MARKA',
+    // Logos SVG base64 dos times LMV
+    const createSVGLogo = (text: string, bgColor: string, textColor: string = 'white') => {
+      const svg = `<svg width="80" height="80" xmlns="http://www.w3.org/2000/svg">
+        <rect width="80" height="80" fill="${bgColor}" rx="8"/>
+        <text x="50%" y="50%" text-anchor="middle" dy=".3em" fill="${textColor}" font-family="Arial, sans-serif" font-size="14" font-weight="bold">${text}</text>
+      </svg>`;
+      return `data:image/svg+xml;base64,${btoa(svg)}`;
     };
 
-    return defaultLogos[mappedName] || 'https://via.placeholder.com/80/6b7280/ffffff?text=TIME';
+    const defaultLogos: { [key: string]: string } = {
+      'ALPHA A': createSVGLogo('ALPHA', '#3b82f6'),
+      'SOBRINHOS A': createSVGLogo('SOBR A', '#22c55e'),
+      'CASTRO ALVES': createSVGLogo('CASTRO', '#ef4444'),
+      'THE BLACKS': createSVGLogo('BLACKS', '#1f2937'),
+      'SOBRINHOS B': createSVGLogo('SOBR B', '#10b981'),
+      'GLADIADORES': createSVGLogo('GLAD', '#f59e0b'),
+      'MARKA SPORTS': createSVGLogo('MARKA', '#8b5cf6'),
+    };
+
+    return defaultLogos[mappedName] || createSVGLogo('TIME', '#6b7280');
   };
 
   const updateTeamLogo = (teamName: string, logoUrl: string) => {
@@ -149,6 +157,9 @@ export default function LMVTournamentImporter() {
         startDate: '2025-11-07',
         endDate: '2025-11-09',
         location: 'Múltiplas Quadras',
+        arena: 'Ginásio Municipal',
+        city: 'Cidade',
+        state: 'Estado',
         format: 'groups',
         modalityType: 'indoor',
         registrationDeadline: '2025-11-07',
@@ -234,30 +245,67 @@ export default function LMVTournamentImporter() {
     setLoading(true);
     try {
       const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      // Salvar todas as partidas no banco de dados
-      const matchesData = matches.map(match => ({
-        tournament_id: tournamentId,
-        round: match.key,
-        team_a: match.teamA,
-        team_b: match.teamB,
-        score_a: [match.set1A !== 'x' ? parseInt(match.set1A) : null, match.set2A !== 'x' ? parseInt(match.set2A) : null, match.set3A !== 'x' ? parseInt(match.set3A) : null].filter(s => s !== null),
-        score_b: [match.set1B !== 'x' ? parseInt(match.set1B) : null, match.set2B !== 'x' ? parseInt(match.set2B) : null, match.set3B !== 'x' ? parseInt(match.set3B) : null].filter(s => s !== null),
-        scheduled_time: `${match.date} ${match.time}`,
-        court: match.quadra,
-        status: 'scheduled',
-      }));
+      if (!session) {
+        toast.error('Sessão expirada. Faça login novamente.');
+        return;
+      }
 
-      const { error } = await supabase
-        .from('tournament_matches')
-        .insert(matchesData);
+      // Extrair apenas o ID do torneio (remover prefixo se houver)
+      const cleanTournamentId = tournamentId.replace('tournament:', '');
+      
+      // Criar partidas via backend
+      for (const match of matches) {
+        const matchData = {
+          tournamentId: cleanTournamentId,
+          round: match.key,
+          teamA: match.teamA,
+          teamB: match.teamB,
+          teamALogo: match.teamALogo || getTeamLogo(match.teamA),
+          teamBLogo: match.teamBLogo || getTeamLogo(match.teamB),
+          scheduledDate: match.date,
+          scheduledTime: match.time,
+          court: match.quadra,
+          category: match.category,
+          sets: {
+            teamA: [
+              match.set1A !== 'x' ? parseInt(match.set1A) : null,
+              match.set2A !== 'x' ? parseInt(match.set2A) : null,
+              match.set3A !== 'x' ? parseInt(match.set3A) : null
+            ].filter(s => s !== null),
+            teamB: [
+              match.set1B !== 'x' ? parseInt(match.set1B) : null,
+              match.set2B !== 'x' ? parseInt(match.set2B) : null,
+              match.set3B !== 'x' ? parseInt(match.set3B) : null
+            ].filter(s => s !== null)
+          },
+          status: 'scheduled',
+        };
 
-      if (error) throw error;
+        const response = await fetch(
+          `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${cleanTournamentId}/matches`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify(matchData),
+          }
+        );
 
-      toast.success('Partidas exportadas para o banco de dados!');
-    } catch (error) {
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Erro ao criar partida:', errorData);
+          throw new Error(errorData.error || 'Erro ao criar partida');
+        }
+      }
+
+      toast.success(`${matches.length} partidas exportadas com sucesso!`);
+    } catch (error: any) {
       console.error('Erro ao exportar partidas:', error);
-      toast.error('Erro ao exportar para o banco de dados');
+      toast.error(error.message || 'Erro ao exportar para o banco de dados');
     } finally {
       setLoading(false);
     }
@@ -563,6 +611,9 @@ export default function LMVTournamentImporter() {
                 value={editingLogo?.url || ''}
                 onChange={(e) => setEditingLogo(prev => prev ? { ...prev, url: e.target.value } : null)}
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                💡 Dica: Use sites como <a href="https://imgbb.com" target="_blank" className="text-blue-500 underline">ImgBB</a> para hospedar suas imagens
+              </p>
             </div>
             {editingLogo?.url && (
               <div className="border rounded-lg p-4 flex flex-col items-center gap-2">
