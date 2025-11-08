@@ -1366,6 +1366,7 @@ app.post('/make-server-0ea22bba/tournaments', authMiddleware, async (c) => {
       id: tournamentId,
       name,
       organizerId: userId,
+      createdBy: userId, // ✅ Adicionar campo createdBy para consistência
       organizerName: userProfile.name,
       startDate,
       endDate,

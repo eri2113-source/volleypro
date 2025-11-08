@@ -23,13 +23,15 @@ export function addTournamentEditorRoutes(app: any, kv: any, authMiddleware: any
       }
       
       // Check if user is organizer or creator
-      const isCreator = tournament.createdBy === userId;
+      // ✅ Suportar torneios antigos que usam organizerId
+      const isCreator = tournament.createdBy === userId || tournament.organizerId === userId;
       const organizerCheck = await kv.get(`tournament:${tournamentId}:organizer:${userId}`);
       const isOrganizer = !!organizerCheck;
       
       console.log('🔐 Verificando permissões:', { 
         userId, 
         createdBy: tournament.createdBy, 
+        organizerId: tournament.organizerId,
         isCreator, 
         isOrganizer,
         hasOrganizerRecord: !!organizerCheck
@@ -125,7 +127,8 @@ export function addTournamentEditorRoutes(app: any, kv: any, authMiddleware: any
       }
       
       // Check if user is organizer or creator
-      const isCreator = tournament.createdBy === userId;
+      // ✅ Suportar torneios antigos que usam organizerId
+      const isCreator = tournament.createdBy === userId || tournament.organizerId === userId;
       const organizerCheck = await kv.get(`tournament:${tournamentId}:organizer:${userId}`);
       const isOrganizer = !!organizerCheck;
       
@@ -179,7 +182,8 @@ export function addTournamentEditorRoutes(app: any, kv: any, authMiddleware: any
       }
       
       // Check if user is organizer or creator
-      const isCreator = tournament.createdBy === userId;
+      // ✅ Suportar torneios antigos que usam organizerId
+      const isCreator = tournament.createdBy === userId || tournament.organizerId === userId;
       const organizerCheck = await kv.get(`tournament:${tournamentId}:organizer:${userId}`);
       const isOrganizer = !!organizerCheck;
       
