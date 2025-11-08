@@ -41,13 +41,14 @@ import { FigmaMakeAccessControl } from "./components/FigmaMakeAccessControl";
 import { VercelAccessControl } from "./components/VercelAccessControl";
 import { FigmaMakeWarning } from "./components/FigmaMakeWarning";
 import { TournamentDetails } from "./components/TournamentDetails";
+import LMVTournamentImporter from "./components/LMVTournamentImporter";
 import { authApi, userApi } from "./lib/api";
 import { showConsoleHelp } from "./utils/consoleHelp";
 import { useFigmaMakeAccess } from "./hooks/useFigmaMakeAccess";
 import { createClient } from "./utils/supabase/client";
 import { Button } from "./components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./components/ui/popover";
-import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, Megaphone, MoreHorizontal, Flag, Camera, Video, FileText } from "lucide-react";
+import { LogOut, User, Home, Users, Shield, Trophy, Store, Radio, Mail, Crown, Megaphone, MoreHorizontal, Flag, Camera, Video, FileText, Upload } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
 import { toast } from "sonner@2.0.3";
 
@@ -435,6 +436,8 @@ export default function App() {
           return <Teams onSelectTeam={setSelectedTeam} {...authProps} />;
         case "tournaments":
           return <Tournaments {...authProps} onViewDetails={setSelectedTournament} />;
+        case "lmv-import":
+          return <LMVTournamentImporter />;
         case "showcase":
           return <Showcase onSelectAthlete={setSelectedAthlete} {...authProps} />;
         case "lives":
@@ -584,6 +587,7 @@ export default function App() {
     { id: "lives", label: "Lives", icon: Radio },
     { id: "invitations", label: "Convites", icon: Mail },
     { id: "referees", label: "Arbitragem", icon: Flag },
+    { id: "lmv-import", label: "Importar LMV", icon: Upload },
     { id: "polls", label: "Recursos", icon: FileText },
     { id: "photos", label: "Fotos", icon: Camera },
     { id: "videos", label: "Vídeos", icon: Video },

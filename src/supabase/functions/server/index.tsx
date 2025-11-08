@@ -3217,14 +3217,28 @@ app.delete('/make-server-0ea22bba/admin/tournaments/:tournamentId', authMiddlewa
       return c.json({ error: 'Master access required' }, 403);
     }
     
-    // Ensure tournament ID has proper prefix
-    const tournamentId = tournamentIdParam.startsWith('tournament:') 
-      ? tournamentIdParam 
-      : `tournament:${tournamentIdParam}`;
+    // Try multiple variations to find the tournament
+    const possibleIds = [
+      tournamentIdParam, // As is
+      `tournament:${tournamentIdParam}`, // With prefix
+      tournamentIdParam.replace('tournament:', ''), // Without prefix
+    ];
     
-    const tournament = await kv.get(tournamentId);
+    let tournament = null;
+    let tournamentId = '';
+    
+    // Try each possible ID until we find the tournament
+    for (const id of possibleIds) {
+      const result = await kv.get(id);
+      if (result) {
+        tournament = result;
+        tournamentId = id;
+        break;
+      }
+    }
+    
     if (!tournament) {
-      console.error(`❌ Tournament not found: ${tournamentId}`);
+      console.error(`❌ Tournament not found. Tried IDs:`, possibleIds);
       return c.json({ error: 'Tournament not found' }, 404);
     }
     
