@@ -22,10 +22,22 @@ export function addTournamentEditorRoutes(app: any, kv: any, authMiddleware: any
         return c.json({ error: 'Tournament not found' }, 404);
       }
       
-      // Check if user is organizer
-      if (tournament.organizerId !== userId && tournament.createdBy !== userId) {
-        console.error('❌ Unauthorized: user is not organizer');
-        return c.json({ error: 'Only organizer can create matches' }, 403);
+      // Check if user is organizer or creator
+      const isCreator = tournament.createdBy === userId;
+      const organizerCheck = await kv.get(`tournament:${tournamentId}:organizer:${userId}`);
+      const isOrganizer = !!organizerCheck;
+      
+      console.log('🔐 Verificando permissões:', { 
+        userId, 
+        createdBy: tournament.createdBy, 
+        isCreator, 
+        isOrganizer,
+        hasOrganizerRecord: !!organizerCheck
+      });
+      
+      if (!isCreator && !isOrganizer) {
+        console.error('❌ Unauthorized: user is not creator or organizer');
+        return c.json({ error: 'Only tournament creator or organizers can create matches' }, 403);
       }
       
       // Get match data from request
@@ -112,9 +124,13 @@ export function addTournamentEditorRoutes(app: any, kv: any, authMiddleware: any
         return c.json({ error: 'Tournament not found' }, 404);
       }
       
-      // Check if user is organizer
-      if (tournament.organizerId !== userId && tournament.createdBy !== userId) {
-        return c.json({ error: 'Only organizer can edit matches' }, 403);
+      // Check if user is organizer or creator
+      const isCreator = tournament.createdBy === userId;
+      const organizerCheck = await kv.get(`tournament:${tournamentId}:organizer:${userId}`);
+      const isOrganizer = !!organizerCheck;
+      
+      if (!isCreator && !isOrganizer) {
+        return c.json({ error: 'Only tournament creator or organizers can edit matches' }, 403);
       }
       
       // Get match data from request
@@ -162,9 +178,13 @@ export function addTournamentEditorRoutes(app: any, kv: any, authMiddleware: any
         return c.json({ error: 'Tournament not found' }, 404);
       }
       
-      // Check if user is organizer
-      if (tournament.organizerId !== userId && tournament.createdBy !== userId) {
-        return c.json({ error: 'Only organizer can delete matches' }, 403);
+      // Check if user is organizer or creator
+      const isCreator = tournament.createdBy === userId;
+      const organizerCheck = await kv.get(`tournament:${tournamentId}:organizer:${userId}`);
+      const isOrganizer = !!organizerCheck;
+      
+      if (!isCreator && !isOrganizer) {
+        return c.json({ error: 'Only tournament creator or organizers can delete matches' }, 403);
       }
       
       // Delete match
