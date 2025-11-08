@@ -81,6 +81,7 @@ export default function LMVTournamentImporter() {
   useEffect(() => {
     loadCurrentUser();
     loadRegisteredTeams();
+    loadExistingTournament();
   }, []);
 
   const loadCurrentUser = async () => {
@@ -92,6 +93,92 @@ export default function LMVTournamentImporter() {
       }
     } catch (error) {
       console.error('Erro ao carregar usuário:', error);
+    }
+  };
+
+  // Carregar torneio LMV existente do banco de dados
+  const loadExistingTournament = async () => {
+    try {
+      console.log('🔍 Buscando torneio LMV existente...');
+      
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments`,
+        {
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
+
+      if (!response.ok) return;
+
+      const data = await response.json();
+      
+      // Procurar por torneio LMV (verificar nome)
+      const lmvTournament = data.tournaments?.find((t: any) => 
+        t.name?.includes('Liga Municipal de Voleibol') || 
+        t.name?.includes('LMV')
+      );
+
+      if (!lmvTournament) {
+        console.log('ℹ️ Nenhum torneio LMV encontrado');
+        return;
+      }
+
+      console.log('✅ Torneio LMV encontrado:', lmvTournament.name);
+      setTournamentId(lmvTournament.id);
+
+      // Carregar partidas do torneio
+      const matchesResponse = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${lmvTournament.id}/matches`,
+        {
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
+
+      if (!matchesResponse.ok) {
+        console.log('⚠️ Não foi possível carregar as partidas');
+        return;
+      }
+
+      const matchesData = await matchesResponse.json();
+      
+      if (matchesData.matches && matchesData.matches.length > 0) {
+        console.log(`✅ ${matchesData.matches.length} partidas carregadas do banco`);
+        
+        // Converter partidas do banco para o formato do componente
+        const loadedMatches: Match[] = matchesData.matches.map((m: any, index: number) => ({
+          id: m.id || `match-${index}`,
+          jogNumber: index + 1,
+          category: m.category || 'M',
+          date: m.scheduledDate || '',
+          day: '',
+          time: m.scheduledTime || '',
+          key: m.round || '',
+          chave: '',
+          quadra: m.court || '',
+          teamA: m.teamA || '',
+          teamB: m.teamB || '',
+          set1A: m.sets?.teamA?.[0]?.toString() || 'x',
+          set1B: m.sets?.teamB?.[0]?.toString() || 'x',
+          set2A: m.sets?.teamA?.[1]?.toString() || 'x',
+          set2B: m.sets?.teamB?.[1]?.toString() || 'x',
+          set3A: m.sets?.teamA?.[2]?.toString() || 'x',
+          set3B: m.sets?.teamB?.[2]?.toString() || 'x',
+          teamALogo: m.teamALogo || '',
+          teamBLogo: m.teamBLogo || '',
+        }));
+
+        setMatches(loadedMatches);
+        toast.success(`Torneio LMV carregado: ${loadedMatches.length} partidas`);
+      } else {
+        console.log('ℹ️ Torneio encontrado mas sem partidas cadastradas');
+      }
+    } catch (error) {
+      console.error('Erro ao carregar torneio existente:', error);
+      // Não mostrar erro para o usuário, apenas log
     }
   };
 
@@ -328,13 +415,32 @@ export default function LMVTournamentImporter() {
       const cleanTournamentId = tournamentId.replace('tournament:', '');
       console.log('🔑 Tournament ID limpo:', cleanTournamentId);
       
-      // Criar partidas via backend
+      // Buscar partidas existentes do banco
+      const existingMatchesResponse = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${cleanTournamentId}/matches`,
+        {
+          headers: {
+            Authorization: `Bearer ${publicAnonKey}`,
+          },
+        }
+      );
+
+      let existingMatches: any[] = [];
+      if (existingMatchesResponse.ok) {
+        const data = await existingMatchesResponse.json();
+        existingMatches = data.matches || [];
+        console.log(`📦 ${existingMatches.length} partidas já existem no banco`);
+      }
+
+      // Criar/Atualizar partidas via backend
       let successCount = 0;
       let errorCount = 0;
+      let updateCount = 0;
       
       for (let i = 0; i < matches.length; i++) {
         const match = matches[i];
-        console.log(`\n📤 Exportando partida ${i + 1}/${matches.length}:`, match.teamA, 'vs', match.teamB);
+        console.log(`\n📤 Processando partida ${i + 1}/${matches.length}:`, match.teamA, 'vs', match.teamB);
+        
         const matchData = {
           tournamentId: cleanTournamentId,
           round: match.key,
@@ -363,13 +469,33 @@ export default function LMVTournamentImporter() {
           status: 'scheduled',
         };
 
-        console.log('📝 Dados da partida:', matchData);
+        // Verificar se a partida já existe (comparar times)
+        const existingMatch = existingMatches.find(m => 
+          m.teamA === matchData.teamA && 
+          m.teamB === matchData.teamB &&
+          m.round === matchData.round
+        );
 
-        const url = `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${cleanTournamentId}/matches`;
+        let url: string;
+        let method: string;
+
+        if (existingMatch) {
+          // Atualizar partida existente
+          console.log(`🔄 Atualizando partida existente: ${existingMatch.id}`);
+          url = `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${cleanTournamentId}/matches/${existingMatch.id}`;
+          method = 'PUT';
+        } else {
+          // Criar nova partida
+          console.log('➕ Criando nova partida');
+          url = `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments/${cleanTournamentId}/matches`;
+          method = 'POST';
+        }
+
+        console.log('📝 Dados da partida:', matchData);
         console.log('🌐 URL:', url);
 
         const response = await fetch(url, {
-          method: 'POST',
+          method,
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.access_token}`,
@@ -381,29 +507,37 @@ export default function LMVTournamentImporter() {
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
-          console.error('❌ Erro ao criar partida:', errorData);
+          console.error('❌ Erro ao processar partida:', errorData);
           errorCount++;
-          // Não parar a execução, continuar com próxima partida
           console.warn(`⚠️ Partida ${i + 1} falhou, continuando...`);
         } else {
           const result = await response.json();
-          console.log('✅ Partida criada:', result);
-          successCount++;
+          console.log('✅ Partida processada:', result);
+          if (existingMatch) {
+            updateCount++;
+          } else {
+            successCount++;
+          }
         }
       }
 
       console.log('\n📊 Resumo da exportação:');
-      console.log(`✅ Sucesso: ${successCount}`);
+      console.log(`✅ Criadas: ${successCount}`);
+      console.log(`🔄 Atualizadas: ${updateCount}`);
       console.log(`❌ Erros: ${errorCount}`);
       console.log(`📝 Total: ${matches.length}`);
 
-      if (successCount > 0) {
-        toast.success(`${successCount} partida(s) exportada(s) com sucesso!`);
+      const totalSuccess = successCount + updateCount;
+      if (totalSuccess > 0) {
+        toast.success(`${successCount} criadas, ${updateCount} atualizadas!`);
       }
       
       if (errorCount > 0) {
         toast.warning(`${errorCount} partida(s) falharam. Verifique o console.`);
       }
+
+      // Recarregar partidas do banco para sincronizar
+      await loadExistingTournament();
     } catch (error: any) {
       console.error('Erro ao exportar partidas:', error);
       toast.error(error.message || 'Erro ao exportar para o banco de dados');
