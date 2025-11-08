@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Backend VolleyPro</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .result {
+            background: #f7fafc;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .result.show {
+            display: block;
+        }
+        
+        .result pre {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .status.success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .status.error {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+        
+        .status.warning {
+            background: #feebc8;
+            color: #7c2d12;
+        }
+        
+        .info {
+            background: #e6fffa;
+            border-left: 4px solid #38b2ac;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        
+        .info strong {
+            color: #234e52;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+            display: none;
+        }
+        
+        .spinner.show {
+            display: block;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Teste Backend VolleyPro</h1>
+        <p class="subtitle">Diagnóstico rápido para identificar problemas</p>
+        
+        <button onclick="testarBackend()">🚀 Testar Conexão Backend</button>
+        <button onclick="testarTorneios()">🏆 Buscar Torneios</button>
+        <button onclick="limparCache()">🧹 Limpar Cache + Recarregar</button>
+        
+        <div class="spinner" id="spinner"></div>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const PROJECT_ID = 'wfjknvtqwuqwwczayvod'; // SUBSTITUA pelo seu Project ID
+        const API_BASE = `https://${PROJECT_ID}.supabase.co/functions/v1/make-server-0ea22bba`;
+        
+        function showSpinner() {
+            document.getElementById('spinner').classList.add('show');
+            document.getElementById('result').classList.remove('show');
+        }
+        
+        function hideSpinner() {
+            document.getElementById('spinner').classList.remove('show');
+        }
+        
+        function showResult(html) {
+            hideSpinner();
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = html;
+            resultDiv.classList.add('show');
+        }
+        
+        async function testarBackend() {
+            showSpinner();
+            
+            let html = '<h2>🔍 Diagnóstico Completo</h2>';
+            
+            // 1. Verificar se está online
+            html += `<p><strong>📡 Conexão Internet:</strong> ${navigator.onLine ? '✅ Online' : '❌ Offline'}</p>`;
+            
+            // 2. Verificar localStorage
+            const token = localStorage.getItem('volleypro_token');
+            const userId = localStorage.getItem('volleypro_user_id');
+            html += `<p><strong>💾 Token Salvo:</strong> ${token ? '✅ Sim' : '❌ Não (não logado)'}</p>`;
+            html += `<p><strong>👤 User ID:</strong> ${userId || '(não logado)'}</p>`;
+            
+            // 3. Testar endpoint básico
+            html += '<br><h3>🌐 Testando Endpoint de Torneios...</h3>';
+            
+            try {
+                const startTime = Date.now();
+                const response = await fetch(`${API_BASE}/tournaments`);
+                const endTime = Date.now();
+                const duration = endTime - startTime;
+                
+                html += `<p><strong>⏱️ Tempo de Resposta:</strong> ${duration}ms</p>`;
+                html += `<p><strong>📊 Status HTTP:</strong> <span class="status ${response.ok ? 'success' : 'error'}">${response.status} ${response.statusText}</span></p>`;
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    html += `<p><strong>✅ Backend Funcionando!</strong></p>`;
+                    html += `<p><strong>🏆 Torneios Encontrados:</strong> ${data.tournaments ? data.tournaments.length : 0}</p>`;
+                    
+                    if (data.tournaments && data.tournaments.length > 0) {
+                        html += '<br><h4>📋 Primeiros 3 Torneios:</h4>';
+                        html += '<pre>' + JSON.stringify(data.tournaments.slice(0, 3), null, 2) + '</pre>';
+                    } else {
+                        html += '<div class="info"><strong>⚠️ Nenhum torneio cadastrado ainda</strong><br>Isso é normal se o sistema acabou de ser instalado.</div>';
+                    }
+                } else {
+                    const errorText = await response.text();
+                    html += `<p class="status error">❌ Erro no Backend</p>`;
+                    html += '<pre>' + errorText + '</pre>';
+                }
+            } catch (error) {
+                html += `<p class="status error">❌ Falha ao Conectar</p>`;
+                html += '<pre>' + error.message + '</pre>';
+                
+                if (error.message.includes('Failed to fetch')) {
+                    html += '<div class="info"><strong>💡 Possíveis Causas:</strong><br>';
+                    html += '• Backend (Edge Function) não está rodando<br>';
+                    html += '• CORS bloqueando requisição<br>';
+                    html += '• Firewall ou antivírus bloqueando<br>';
+                    html += '• Problema de DNS/rede</div>';
+                }
+            }
+            
+            // 4. Verificar URLs
+            html += '<br><h3>🔗 URLs Importantes</h3>';
+            html += `<p><strong>API Base:</strong><br><code>${API_BASE}</code></p>`;
+            html += `<p><strong>Endpoint Torneios:</strong><br><code>${API_BASE}/tournaments</code></p>`;
+            
+            showResult(html);
+        }
+        
+        async function testarTorneios() {
+            showSpinner();
+            
+            let html = '<h2>🏆 Teste Específico: Listar Torneios</h2>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/tournaments`);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    if (data.tournaments && data.tournaments.length > 0) {
+                        html += `<p class="status success">✅ Sucesso! ${data.tournaments.length} torneio(s) encontrado(s)</p>`;
+                        html += '<h3>📋 Lista Completa:</h3>';
+                        html += '<pre>' + JSON.stringify(data.tournaments, null, 2) + '</pre>';
+                    } else {
+                        html += '<p class="status warning">⚠️ Backend funcionando, mas nenhum torneio cadastrado</p>';
+                        html += '<div class="info"><strong>✅ O sistema está OK!</strong><br>';
+                        html += 'Você só precisa criar o primeiro torneio.<br><br>';
+                        html += '<strong>Como criar:</strong><br>';
+                        html += '1. Faça login no site<br>';
+                        html += '2. Vá em "Torneios"<br>';
+                        html += '3. Clique em "Criar Torneio"</div>';
+                    }
+                } else {
+                    const errorText = await response.text();
+                    html += `<p class="status error">❌ Erro ${response.status}</p>`;
+                    html += '<pre>' + errorText + '</pre>';
+                }
+            } catch (error) {
+                html += '<p class="status error">❌ Falha na Conexão</p>';
+                html += '<pre>' + error.message + '</pre>';
+            }
+            
+            showResult(html);
+        }
+        
+        function limparCache() {
+            if (confirm('⚠️ Isso vai:\n\n• Limpar cache do navegador\n• Fazer logout\n• Recarregar a página\n\nContinuar?')) {
+                // Limpar tudo
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Tentar limpar cache (nem todos navegadores suportam)
+                if ('caches' in window) {
+                    caches.keys().then(names => {
+                        names.forEach(name => caches.delete(name));
+                    });
+                }
+                
+                // Recarregar forçando bypass do cache
+                window.location.reload(true);
+            }
+        }
+        
+        // Executar teste automático ao carregar
+        window.addEventListener('load', () => {
+            setTimeout(testarBackend, 500);
+        });
+    </script>
+</body>
+</html>

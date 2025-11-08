@@ -110,11 +110,15 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
     }
 
     try {
-      await tournamentApi.registerTeam(tournamentId);
-      toast.success("Time inscrito no torneio!");
+      console.log('🔥 Inscrevendo time:', { tournamentId, teamId: currentUser.id });
+      
+      // CORREÇÃO: Usar registerSquad com null para time completo
+      await tournamentApi.registerSquad(tournamentId, currentUser.id, null);
+      
+      toast.success("Time inscrito no torneio com sucesso!");
       loadTournaments();
     } catch (error: any) {
-      console.error("Error registering for tournament:", error);
+      console.error("❌ Erro ao inscrever time:", error);
       toast.error(error.message || "Erro ao inscrever time");
     }
   }
@@ -548,16 +552,33 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                     </div>
                   </div>
                   <div className="flex gap-2 flex-wrap">
+                    {/* Botão de Inscrição - FUNCIONA DE VERDADE */}
+                    {currentUser?.userType === 'team' && tournament.modalityType !== 'beach' && (
+                      <Button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('🔥 BOTÃO INSCREVER CLICADO:', {
+                            tournamentId: tournament.id,
+                            tournamentName: tournament.name,
+                            teamId: currentUser.id,
+                            teamName: currentUser.name
+                          });
+                          handleRegister(tournament.id);
+                        }}
+                        disabled={!isAuthenticated}
+                        className="bg-gradient-to-r from-green-500 to-emerald-600 hover:opacity-90"
+                      >
+                        🏐 Inscrever Time
+                      </Button>
+                    )}
+                    
+                    {/* Botão Ver Detalhes */}
                     <Button 
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log('🎯 Button clicked - Opening tournament for registration:', {
+                        console.log('🎯 Abrindo detalhes do torneio:', {
                           tournamentId: tournament.id,
-                          tournamentName: tournament.name,
-                          modalityType: tournament.modalityType,
-                          currentUserId: currentUser?.id,
-                          currentUserType: currentUser?.userType,
-                          isAuthenticated
+                          tournamentName: tournament.name
                         });
                         
                         // Se tem callback onViewDetails, usar ele (nova página completa)
@@ -569,11 +590,12 @@ export function Tournaments({ isAuthenticated: authProp, onLoginPrompt, onViewDe
                         }
                       }}
                       disabled={!isAuthenticated}
-                      className="bg-gradient-to-r from-primary to-secondary hover:opacity-90"
+                      variant={currentUser?.userType === 'team' && tournament.modalityType !== 'beach' ? 'outline' : 'default'}
+                      className={currentUser?.userType !== 'team' || tournament.modalityType === 'beach' ? 'bg-gradient-to-r from-primary to-secondary hover:opacity-90' : ''}
                     >
                       {tournament.modalityType === 'beach' 
-                        ? '🏖️ Inscrever-se' 
-                        : (currentUser?.userType === 'team' ? '🏐 Inscrever Time' : 'Ver Detalhes')
+                        ? '🏖️ Inscrever-se (Beach)' 
+                        : 'Ver Detalhes'
                       }
                     </Button>
                     <Button 
