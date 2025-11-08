@@ -146,18 +146,24 @@ export default function LMVTournamentImporter() {
       const tournamentData = {
         name: 'Liga Municipal de Voleibol 2025 - 2ª Etapa - Masculino',
         description: 'Segunda etapa da Liga Municipal de Voleibol 2025 - Categoria Masculina',
-        start_date: '2025-11-07',
-        end_date: '2025-11-09',
+        startDate: '2025-11-07',
+        endDate: '2025-11-09',
         location: 'Múltiplas Quadras',
         format: 'groups',
-        category: 'indoor',
-        sport_type: 'indoor',
-        registration_deadline: '2025-11-07',
-        max_teams: 7,
-        creator_id: creatorId,
-        status: 'active',
-        is_beach: false,
+        modalityType: 'indoor',
+        registrationDeadline: '2025-11-07',
+        maxTeams: 7,
+        categories: ['masculino'],
+        divisions: ['Adulto'],
       };
+
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast.error('Sessão expirada. Faça login novamente.');
+        return;
+      }
 
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/make-server-0ea22bba/tournaments`,
@@ -165,14 +171,16 @@ export default function LMVTournamentImporter() {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${publicAnonKey}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify(tournamentData),
         }
       );
 
       if (!response.ok) {
-        throw new Error('Erro ao criar torneio');
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Erro ao criar torneio:', errorData);
+        throw new Error(errorData.error || 'Erro ao criar torneio');
       }
 
       const { tournament } = await response.json();
