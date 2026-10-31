@@ -97,8 +97,8 @@ export default function App() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('clear_cache') === 'true') {
       console.log("🧹 Limpando cache forçado via URL...");
-      localStorage.clear();
-      sessionStorage.clear();
+      for (const key of Object.keys(localStorage)) { if (key.startsWith('volleypro_')) localStorage.removeItem(key); }
+      sessionStorage.removeItem('volleypro_session_active');
       if ('caches' in window) {
         caches.keys().then(names => {
           names.forEach(name => caches.delete(name));
@@ -233,8 +233,7 @@ export default function App() {
             // Salvar tokens no localStorage
             if (typeof window !== 'undefined') {
               try {
-                localStorage.setItem('volleypro_token', session.access_token);
-                localStorage.setItem('volleypro_user_id', session.user.id);
+                                localStorage.setItem('volleypro_user_id', session.user.id);
                 sessionStorage.setItem('volleypro_session_active', 'true');
               } catch (e) {
                 console.error("Erro ao salvar tokens:", e);
@@ -248,8 +247,7 @@ export default function App() {
             // Limpar dados locais
             if (typeof window !== 'undefined') {
               try {
-                localStorage.removeItem('volleypro_token');
-                localStorage.removeItem('volleypro_user_id');
+                                localStorage.removeItem('volleypro_user_id');
                 sessionStorage.removeItem('volleypro_session_active');
               } catch (e) {
                 console.error("Erro ao limpar tokens:", e);
@@ -259,8 +257,7 @@ export default function App() {
             console.log("🔄 Token atualizado");
             if (session && typeof window !== 'undefined') {
               try {
-                localStorage.setItem('volleypro_token', session.access_token);
-              } catch (e) {
+                              } catch (e) {
                 console.error("Erro ao atualizar token:", e);
               }
             }
@@ -304,8 +301,7 @@ export default function App() {
       // Garantir que o token está salvo no localStorage
       if (typeof window !== 'undefined') {
         try {
-          localStorage.setItem('volleypro_token', session.access_token);
-          localStorage.setItem('volleypro_user_id', session.user.id);
+                    localStorage.setItem('volleypro_user_id', session.user.id);
           sessionStorage.setItem('volleypro_session_active', 'true');
           console.log("✅ Token salvo no localStorage");
         } catch (e) {
