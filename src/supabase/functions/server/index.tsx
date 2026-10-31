@@ -312,7 +312,7 @@ setTimeout(() => {
 // Auth middleware (required auth)
 async function authMiddleware(c: any, next: any) {
   const authHeader = c.req.header('Authorization');
-  console.log('🔐 Auth Header:', authHeader ? `Bearer ${authHeader.substring(7, 20)}...` : 'Missing');
+  console.log('🔐 Auth header present:', Boolean(authHeader));
   
   const accessToken = authHeader?.split(' ')[1];
   
@@ -427,6 +427,9 @@ app.post('/make-server-0ea22bba/auth/signup', async (c) => {
     const supabaseClient = await initializeSupabase();
     const kvStore = await initializeKV();
     const { email, password, name, userType, position, city, nickname } = await c.req.json();
+    if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof password !== 'string' || password.length < 8 || password.length > 128 || typeof name !== 'string' || name.length > 120 || !['athlete', 'team', 'fan'].includes(userType)) {
+      return c.json({ error: 'Invalid registration data (minimum password length: 8)' }, 400);
+    }
     
     // ⚠️ VALIDAÇÃO: Bloquear domínios obviamente falsos/temporários
     const invalidDomains = ['test.com', 'fake.com', 'exemplo.com', 'temp.com', 'temporario.com', 'teste.com'];
@@ -439,11 +442,20 @@ app.post('/make-server-0ea22bba/auth/signup', async (c) => {
       }, 400);
     }
     
-    const { data, error } = await supabaseClient.auth.admin.createUser({
-      email,
+    // Public signup must use Supabase Auth, not admin.createUser:
+    // signUp sends the confirmation email when Confirm Email is enabled.
+    const { createClient: createPublicClient } = await import('npm:@supabase/supabase-js');
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
+    if (!anonKey || !supabaseUrl) {
+      return c.json({ error: 'Signup is not configured' }, 503);
+    }
+    const publicClient = createPublicClient(supabaseUrl, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    const { data, error } = await publicClient.auth.signUp({
+      email: email.trim().toLowerCase(),
       password,
-      email_confirm: true, // Auto-confirm since email server hasn't been configured
-      user_metadata: { name, userType },
+      options: { data: { name, userType } },
     });
 
     if (error) {
@@ -457,6 +469,7 @@ app.post('/make-server-0ea22bba/auth/signup', async (c) => {
       return c.json({ error: error.message }, 400);
     }
 
+    if (!data.user) return c.json({ error: 'Signup did not return a user' }, 502);
     // Create user profile in KV store
     const profile = {
       id: data.user.id,
