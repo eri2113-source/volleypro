@@ -41,8 +41,8 @@ export function resetClient() {
   if (typeof window !== 'undefined') {
     // Limpar qualquer sessão antiga problemática
     try {
-      localStorage.removeItem('supabase.auth.token');
-      sessionStorage.clear();
+      // Supabase SDK manages its own stored session.
+      sessionStorage.removeItem('volleypro_session_active');
     } catch (e) {
       console.error('Error clearing storage:', e);
     }
