@@ -110,11 +110,11 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
         additionalData
       );
 
-      console.log("✅ Usuário criado! Fazendo login...");
+      console.log("✅ Cadastro recebido; aguardando confirmação por email.");
 
       // Email verification is required; do not attempt a password login before confirmation.
       // Mostrar toast de sucesso
-      toast.success(`🎉 Bem-vindo ao VolleyPro, ${signUpName}!`, {
+      toast.success('Confira sua caixa de entrada', {
         description: "Confirme seu email antes de entrar na conta."
       });
 
@@ -145,7 +145,7 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
       } else if (err.message?.toLowerCase().includes("invalid email")) {
         errorMessage = "Email inválido. Verifique o formato do email.";
       } else if (err.message?.toLowerCase().includes("password")) {
-        errorMessage = "A senha deve ter no mínimo 6 caracteres.";
+        errorMessage = "A senha deve ter no mínimo 8 caracteres.";
       } else if (err.message?.toLowerCase().includes("network") || 
                  err.message?.toLowerCase().includes("fetch")) {
         errorMessage = "Erro de conexão. Verifique sua internet.";
