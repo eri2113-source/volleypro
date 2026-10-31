@@ -312,7 +312,7 @@ setTimeout(() => {
 // Auth middleware (required auth)
 async function authMiddleware(c: any, next: any) {
   const authHeader = c.req.header('Authorization');
-  console.log('🔐 Auth Header:', authHeader ? `Bearer ${authHeader.substring(7, 20)}...` : 'Missing');
+  console.log('🔐 Auth header present:', Boolean(authHeader));
   
   const accessToken = authHeader?.split(' ')[1];
   
@@ -427,6 +427,9 @@ app.post('/make-server-0ea22bba/auth/signup', async (c) => {
     const supabaseClient = await initializeSupabase();
     const kvStore = await initializeKV();
     const { email, password, name, userType, position, city, nickname } = await c.req.json();
+    if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || typeof password !== 'string' || password.length < 8 || password.length > 128 || typeof name !== 'string' || name.length > 120 || !['athlete', 'team', 'fan'].includes(userType)) {
+      return c.json({ error: 'Invalid registration data (minimum password length: 8)' }, 400);
+    }
     
     // ⚠️ VALIDAÇÃO: Bloquear domínios obviamente falsos/temporários
     const invalidDomains = ['test.com', 'fake.com', 'exemplo.com', 'temp.com', 'temporario.com', 'teste.com'];
@@ -442,7 +445,7 @@ app.post('/make-server-0ea22bba/auth/signup', async (c) => {
     const { data, error } = await supabaseClient.auth.admin.createUser({
       email,
       password,
-      email_confirm: true, // Auto-confirm since email server hasn't been configured
+      email_confirm: false, // Require email verification
       user_metadata: { name, userType },
     });
 
