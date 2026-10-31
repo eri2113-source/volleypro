@@ -91,8 +91,8 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
         throw new Error("Email inválido. Use um email válido.");
       }
 
-      if (signUpPassword.length < 6) {
-        throw new Error("A senha deve ter no mínimo 6 caracteres");
+      if (signUpPassword.length < 8) {
+        throw new Error("A senha deve ter no mínimo 8 caracteres");
       }
 
       // Nome padrão derivado do email
@@ -112,25 +112,17 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
 
       console.log("✅ Usuário criado! Fazendo login...");
 
-      // Auto login após cadastro
-      await authApi.signIn(
-        signUpEmail.trim().toLowerCase(),
-        signUpPassword
-      );
-
-      console.log("✅ Login automático concluído!");
-
+      // Email verification is required; do not attempt a password login before confirmation.
       // Mostrar toast de sucesso
       toast.success(`🎉 Bem-vindo ao VolleyPro, ${signUpName}!`, {
-        description: "Sua conta foi criada com sucesso!"
+        description: "Confirme seu email antes de entrar na conta."
       });
 
       // Aguardar um pouco para garantir que tudo foi salvo
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Chamar callbacks
-      onSuccess();
-      
+      // Registration is pending email confirmation; keep the user unauthenticated.
       // Fechar modal após pequeno delay
       setTimeout(() => {
         onClose();
@@ -370,7 +362,7 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="signup-password">Senha (mínimo 6 caracteres)</Label>
+              <Label htmlFor="signup-password">Senha (mínimo 8 caracteres)</Label>
               <Input
                 id="signup-password"
                 type="password"
