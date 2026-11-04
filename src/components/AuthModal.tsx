@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "./ui/select";
 import { authApi } from "../lib/api";
+import { createClient } from "../utils/supabase/client";
 import { Shield, AlertCircle } from "lucide-react";
 import { toast } from "sonner@2.0.3";
 import { ForgotPasswordModal } from "./ForgotPasswordModal";
@@ -73,6 +74,27 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
   useEffect(() => {
     setError("");
   }, [activeTab, userType]);
+
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setLoading(true);
+    try {
+      const { error: oauthError } = await createClient().auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: window.location.origin + "/",
+          queryParams: { prompt: "select_account" },
+        },
+      });
+      if (oauthError) throw oauthError;
+      // A autenticação é concluída pelo Supabase após o retorno do Google.
+    } catch (err: any) {
+      const message = err?.message || "Não foi possível iniciar o acesso com Google.";
+      setError(message);
+      toast.error(message);
+      setLoading(false);
+    }
+  };
 
   const handleSignUp = async () => {
     console.log("🚀 [Chrome-Optimized] Iniciando cadastro...");
@@ -262,6 +284,19 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
               Entre ou crie sua conta para acessar a rede social do vôlei
             </DialogDescription>
           </DialogHeader>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="mt-5 w-full"
+          onClick={handleGoogleSignIn}
+          disabled={loading}
+        >
+          Continuar com Google
+        </Button>
+        <p className="mt-2 text-center text-xs text-muted-foreground">
+          Ou use seu e-mail e senha abaixo
+        </p>
 
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "signin" | "signup")} className="mt-6">
           <TabsList className="grid w-full grid-cols-2">
