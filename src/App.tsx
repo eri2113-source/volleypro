@@ -212,12 +212,8 @@ export default function App() {
         
         console.log("🚀 [Chrome-Optimized] Inicializando aplicação...");
         
-        // Verificar autenticação inicial
-        await checkAuth();
-        
-        if (!mounted) return;
-        
-        // Listener para detectar mudanças de autenticação
+        // Registrar o listener ANTES de consultar a sessão: o retorno
+        // OAuth pode chegar durante a inicialização do Supabase.
         const supabase = createClient();
         
         const { data: authListener } = supabase.auth.onAuthStateChange(async (event: string, session: any) => {
@@ -225,7 +221,7 @@ export default function App() {
           
           console.log("🔄 Auth state changed:", event);
           
-          if (event === 'SIGNED_IN' && session) {
+          if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'USER_UPDATED') && session) {
             console.log("✅ Usuário autenticado!");
             setIsAuthenticated(true);
             setUserEmail(session.user.email || null);
@@ -270,6 +266,9 @@ export default function App() {
         authUnsubscribe = () => {
           authListener?.subscription?.unsubscribe();
         };
+
+        // getSession aguarda a inicialização e o processamento do callback PKCE.
+        await checkAuth();
       } catch (error) {
         console.error("❌ Erro na inicialização:", error);
       }
